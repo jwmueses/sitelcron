@@ -1,0 +1,138 @@
+<?xml version='1.0' encoding='ISO-8859-1'?><wsdl:definitions xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:tns="http://ws.saitel.com.ec/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:ns1="http://schemas.xmlsoap.org/soap/http" name="Recaudacion" targetNamespace="http://ws.saitel.com.ec/">
+  <wsdl:types>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://ws.saitel.com.ec/" elementFormDefault="unqualified" targetNamespace="http://ws.saitel.com.ec/" version="1.0">
+
+  <xs:element name="consulta" type="tns:consulta"/>
+
+  <xs:element name="consultaResponse" type="tns:consultaResponse"/>
+
+  <xs:element name="facturar" type="tns:facturar"/>
+
+  <xs:element name="facturarResponse" type="tns:facturarResponse"/>
+
+  <xs:element name="reversar" type="tns:reversar"/>
+
+  <xs:element name="reversarResponse" type="tns:reversarResponse"/>
+
+  <xs:complexType name="facturar">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="clave" type="xs:string"/>
+      <xs:element minOccurs="0" name="idRegistroConsulta" type="xs:string"/>
+      <xs:element minOccurs="0" name="numDocumento" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="facturarResponse">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="return" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="consulta">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="clave" type="xs:string"/>
+      <xs:element minOccurs="0" name="dni" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="consultaResponse">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="return" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="reversar">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="clave" type="xs:string"/>
+      <xs:element minOccurs="0" name="idRegistroConsulta" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="reversarResponse">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="return" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+</xs:schema>
+  </wsdl:types>
+  <wsdl:message name="facturar">
+    <wsdl:part element="tns:facturar" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="facturarResponse">
+    <wsdl:part element="tns:facturarResponse" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="consultaResponse">
+    <wsdl:part element="tns:consultaResponse" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="consulta">
+    <wsdl:part element="tns:consulta" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="reversarResponse">
+    <wsdl:part element="tns:reversarResponse" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="reversar">
+    <wsdl:part element="tns:reversar" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:portType name="Recaudacion">
+    <wsdl:operation name="facturar">
+      <wsdl:input message="tns:facturar" name="facturar">
+    </wsdl:input>
+      <wsdl:output message="tns:facturarResponse" name="facturarResponse">
+    </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="consulta">
+      <wsdl:input message="tns:consulta" name="consulta">
+    </wsdl:input>
+      <wsdl:output message="tns:consultaResponse" name="consultaResponse">
+    </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="reversar">
+      <wsdl:input message="tns:reversar" name="reversar">
+    </wsdl:input>
+      <wsdl:output message="tns:reversarResponse" name="reversarResponse">
+    </wsdl:output>
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="RecaudacionSoapBinding" type="tns:Recaudacion">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="facturar">
+      <soap:operation soapAction="" style="document"/>
+      <wsdl:input name="facturar">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="facturarResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="consulta">
+      <soap:operation soapAction="" style="document"/>
+      <wsdl:input name="consulta">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="consultaResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="reversar">
+      <soap:operation soapAction="" style="document"/>
+      <wsdl:input name="reversar">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="reversarResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="Recaudacion">
+    <wsdl:port binding="tns:RecaudacionSoapBinding" name="RecaudacionPort">
+      <soap:address location="http://192.168.217.21:8443/serviciosweb/Recaudacion"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
