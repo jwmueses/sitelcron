@@ -34,10 +34,10 @@ public class Parametro {
     private static final String esta_usuario = "postgres";
     private static final String esta_clave = "Gi%9875.-*5+$)";  
     
-    private static final String _svrMail = "smtp.gmail.com";
-    private static final int _svrMailPuerto = 465;
-    private static final String _remitante = "facturacion.sait1@gmail.com";
-    private static final String _remitanteClave = "gls19.*Tu";
+    private static final String _svrMail = "smtp-relay.sendinblue.com";
+    private static final int _svrMailPuerto = 587;
+    private static final String _remitante = "notificaciones_no_reply@saitel.ec";
+    private static final String _remitanteClave = "W021PYwDrOTHtNqM";
     private static final String _rutaArchivos = "/opt/lampp/htdocs/anexos/fe/"; //    /opt/lampp/htdocs/anexos/fe/        /home/sistemas/Documents/fe/    
     private static final String _servicioWebEnvio = "https://cel.sri.gob.ec/comprobantes-electronicos-ws/RecepcionComprobantesOffline?wsdl";
     private static final String _servicioWebAutoriza = "https://cel.sri.gob.ec/comprobantes-electronicos-ws/AutorizacionComprobantesOffline?wsdl";

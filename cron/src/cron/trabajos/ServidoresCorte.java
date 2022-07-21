@@ -466,6 +466,84 @@ public class ServidoresCorte implements Job{
         
     }
     
+    public void ejecutar()
+    {
+        DataBase objDataBase = new DataBase( Parametro.getIp(), Parametro.getPuerto(), Parametro.getBaseDatos(), Parametro.getUsuario(), Parametro.getClave() );
+        Notificacion objNotificacion = new Notificacion( Parametro.getIp(), Parametro.getPuerto(), Parametro.getBaseDatos(), Parametro.getUsuario(), Parametro.getClave() );
+        
+        try{
+            
+            // emision de prefacturas con clientes que tienen anticipos
+                    System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando emisión de facturas a clientes con anticipos");
+                    try{
+                        
+                        String doc_ip = Parametro.getDocumentalIp();      //  127.0.0.1     pruebas = 192.168.217.16
+                        int doc_puerto = Parametro.getDocumentalPuerto();
+                        String doc_db = Parametro.getDocumentalBaseDatos();
+                        String doc_usuario = Parametro.getDocumentalUsuario();
+                        String doc_clave = Parametro.getDocumentalClave();
+                        DataBase objDocumental = new DataBase( doc_ip, doc_puerto, doc_db, doc_usuario, doc_clave );
+                
+                        FacturaVenta objFacturaVenta = new FacturaVenta( objDocumental, Parametro.getIp(), Parametro.getPuerto(), Parametro.getBaseDatos(), Parametro.getUsuario(), Parametro.getClave() );
+
+    //                    ResultSet rsRubrosAdicionales = objDataBase.consulta("SELECT * FROM vta_prefactura_rubro WHERE id_instalacion in(select id_instalacion from vta_prefactura_todas as F where (select sum(A.saldo) from tbl_cliente_anticipo as A where F.id_cliente=A.id_cliente) >= F.total and fecha_emision is null)");
+    //                    String rubrosAdicionales[][] = Matriz.ResultSetAMatriz(rsRubrosAdicionales);
+
+
+                        //  anticipos
+                        ResultSet rsAnticipos = objDataBase.consulta("select id_cliente_anticipo, id_cliente, saldo, id_instalacion from tbl_cliente_anticipo where saldo > 0 and modo_bajada='i' order by id_cliente, saldo desc;");
+                        String matAnticipos[][] = Matriz.ResultSetAMatriz(rsAnticipos);
+
+
+                        ResultSet rsConveniosTarjetas = objDataBase.consulta("select id_instalacion \n" +
+                        "from vta_instalacion \n" +
+                        "where num_cuenta<>'' and num_cuenta is not null and estado_servicio in ('a', 'c', 'r', 's') and fecha_instalacion is not null and ((forma_pago ='TAR' and set_convenio_tarjeta=true) or (forma_pago ='CTA')) \n" +
+                        " and set_convenio_tarjeta=true \n"
+                        + "union \n"
+                        + "select F.id_instalacion from vta_prefactura_todas as F inner join tbl_instalacion as I  on F.id_instalacion=I.id_instalacion \n"
+                        + "where num_cuenta<>'' and fecha_emision is null and num_cuenta is not null and I.estado_servicio in ('a', 'c', 'r', 's') and I.fecha_instalacion is not null and forma_pago in ('TAR', 'CTA')" +
+                        "order by id_instalacion");
+                        String matConveniosTarjetas[][] = Matriz.ResultSetAMatriz(rsConveniosTarjetas);
+
+
+                        //  emisión con forma de pago anticipo
+    //                    ResultSet rsFacturar = objDataBase.consulta("select *, total as total_comision from vta_prefactura_todas as F where (select sum(A.saldo) from tbl_cliente_anticipo as A where F.id_cliente=A.id_cliente and F.id_instalacion=A.id_instalacion) >= F.total and fecha_emision is null order by periodo;");                   
+                        ResultSet rsFacturar = objDataBase.consulta("with tmpPre as( \n" +
+                            "select id_instalacion, min(periodo) as periodo \n" +
+                            "from tbl_prefactura \n" +
+                            "where fecha_emision is null \n" +
+                            "group by id_instalacion "+ 
+                            "), \n" +
+                            "tmpAnt as( \n" +
+                            "select id_instalacion, id_cliente, sum(saldo) as saldo \n" +
+                            "from tbl_cliente_anticipo \n" +
+                            "where saldo>1.7 and modo_bajada='i' \n" +
+                            "group by id_instalacion, id_cliente \n" +
+                            ") \n" +
+                            "select *, total as total_comision from vta_prefactura_todas as F \n" +
+                            "where (select saldo from tmpAnt as A where F.id_instalacion=A.id_instalacion and F.id_cliente=A.id_cliente) >= F.total \n" +
+                            "and (id_instalacion, periodo) in(select id_instalacion, periodo from tmpPre) \n" +
+                            "and fecha_emision is null order by periodo;");                   
+                        objFacturaVenta.emitir(rsFacturar, matAnticipos, matConveniosTarjetas, 100);
+
+                        objFacturaVenta.cerrarConexiones();
+                    }catch(Exception e){
+                        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": " + e.getMessage());
+                    }finally{
+                        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de emisión de facturas a clientes con anticipos");
+                    }
+            
+        }catch(Exception e){
+                System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + " Error en el proceso general de script de cortes: " + e.getMessage());
+        }finally{
+            objDataBase.ejecutar("update tbl_configuracion set valor='false' where parametro='bloqueo_servidores_ftp'");
+            objDataBase.cerrar();
+            objNotificacion.cerrar();
+        }
+        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": finalizando emisión de facturas a clientes con anticipos");
+        
+    }
+    
     public String [][] getColasServidor(DataBase objDataBase, String subred, String id_sucursal)
     {
         String ip = "127.0.0.1";

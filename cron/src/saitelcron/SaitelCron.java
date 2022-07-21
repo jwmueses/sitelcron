@@ -366,19 +366,8 @@ public class SaitelCron implements Daemon{
 //        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando emisión de facturas a clientes con anticipos pruebas");
 //        try{
 //            
-//
-//            ResultSet rsRubrosAdicionales = objDataBase.consulta("SELECT * FROM vta_prefactura_rubro WHERE id_instalacion in(select id_instalacion from vta_prefactura_todas as F where (select sum(A.saldo) from tbl_cliente_anticipo as A where F.id_cliente=A.id_cliente) >= F.total and fecha_emision is null)");
-//            String rubrosAdicionales[][] = Matriz.ResultSetAMatriz(rsRubrosAdicionales);
-//
-//
-//            //  anticipos
-//            ResultSet rsAnticipos = objDataBase.consulta("select id_cliente_anticipo, id_cliente, saldo, id_instalacion from tbl_cliente_anticipo where saldo >= 1 order by id_cliente, saldo desc;");
-//            String matAnticipos[][] = Matriz.ResultSetAMatriz(rsAnticipos);
-//
-//
-//            //  emisión con forma de pago anticipo
-//            ResultSet rsFacturar = objDataBase.consulta("select *, total as total_comision from vta_prefactura_todas as F where (select sum(A.saldo) from tbl_cliente_anticipo as A where F.id_cliente=A.id_cliente and F.id_instalacion=A.id_instalacion) >= F.total and fecha_emision is null;");                   
-//            objFacturaVenta.emitir(rsFacturar, rubrosAdicionales, matAnticipos, 100);
+//            ServidoresCorte sv = new ServidoresCorte();
+//            sv.ejecutar();
 //
 //        }catch(Exception e){
 //            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": " + e.getMessage());
