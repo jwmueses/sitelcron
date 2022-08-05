@@ -36,10 +36,10 @@ public class Recaudacion {
     private static final String clave = "Gi%9875.-*5+$)"; //  postgres    A0Lpni2       Gi%9875.-*5+$)
     private static final String _dir = "/opt/lampp/htdocs/anexos/fe/"; //       /home/saitel/Documentos/fe/      /opt/lampp/htdocs/anexos/fe/
     
-    private static final String _svrMail = "smtp-relay.sendinblue.com";      //      facturacion.saitelapp.ec    
+    private static final String _svrMail = "pro.turbo-smtp.com";      //      facturacion.saitelapp.ec    
     private static final int _svrMailPuerto = 587;              //      587
     private static final String _remitante = "notificaciones_no_reply@saitel.ec"; //  relay@facturacion.saitelapp.ec
-    private static final String _remitanteClave = "W021PYwDrOTHtNqM";   //  relay&%$saitel
+    private static final String _remitanteClave = "R0dR9m7F";   //  relay&%$saitel
     
     /**
      * Web service operation
