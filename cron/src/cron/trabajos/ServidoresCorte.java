@@ -442,14 +442,14 @@ public class ServidoresCorte implements Job{
                         objDocumental.cerrar();
                     }
                     
-                    if(errConexion.compareTo("")!=0) {
-                        objNotificacion.setMensaje( errConexion );
-                        objNotificacion.notificar("ftp_conexion", null, null);
-                    }
-                    if(errColas.compareTo("")!=0 || errListas.compareTo("")!=0) {
-                        objNotificacion.setMensaje( errColas + errListas );
-                        objNotificacion.notificar("ftp_transferencia", null, null);
-                    }
+//                    if(errConexion.compareTo("")!=0) {
+//                        objNotificacion.setMensaje( errConexion );
+//                        objNotificacion.notificar("ftp_conexion", null, null);
+//                    }
+//                    if(errColas.compareTo("")!=0 || errListas.compareTo("")!=0) {
+//                        objNotificacion.setMensaje( errColas + errListas );
+//                        objNotificacion.notificar("ftp_transferencia", null, null);
+//                    }
             
                 } else {   //  control de permitir cortes
                     System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + " Ejecucion de cortes desabilitado, parametro 'permitir_cortes_cron' = false" );

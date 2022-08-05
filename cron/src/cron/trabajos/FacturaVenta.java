@@ -121,15 +121,18 @@ public class FacturaVenta extends DataBase{
 
 
         try{
-            ResultSet rsRecalcular = this.consulta("select id_prefactura from tbl_prefactura where por_emitir_factura=true and (recalcular=true or total_internet=0) union select id_prefactura from tbl_prefactura as F where (select sum(A.saldo) from tbl_cliente_anticipo as A where F.id_instalacion=A.id_instalacion) >= F.total and fecha_emision is null");
-            while(rsRecalcular.next()){
-                String idPrefactura = rsRecalcular.getString("id_prefactura")!=null ? rsRecalcular.getString("id_prefactura") : "-1";
+//            ResultSet rsRecalcular = this.consulta("select id_prefactura from tbl_prefactura where por_emitir_factura=true and (recalcular=true or total_internet=0) union select id_prefactura from tbl_prefactura as F where (select sum(A.saldo) from tbl_cliente_anticipo as A where F.id_instalacion=A.id_instalacion) >= F.total and fecha_emision is null");
+            while(rs.next()){
+                String idPrefactura = rs.getString("id_prefactura")!=null ? rs.getString("id_prefactura") : "-1";
                 System.out.println(idPrefactura);
                 this.consulta("select proc_calcularPreFactura("+idPrefactura+", false);");
             }
-            rsRecalcular.close();
         }catch(Exception e){
             e.printStackTrace();
+        } finally {
+            try{
+                rs.beforeFirst();
+            }catch(Exception ex){ex.printStackTrace();}
         }
          
         

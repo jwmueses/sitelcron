@@ -1,12 +1,11 @@
-/**	
+/**
  * @version 1.0
  * @package jm.web.
- * @author Jorge Washington Mueses Cevallos.	
- * @copyright Copyright (C) 2008 por Jorge W. Mueses Cevallos. 
- * Todos los derechos reservados.
+ * @author Jorge Washington Mueses Cevallos.
+ * @copyright Copyright (C) 2008 por Jorge W. Mueses Cevallos. Todos los
+ * derechos reservados.
  * @license http://www.gnu.org/copyleft/gpl.html GNU/GPL.
-*/
-
+ */
 package cron.trabajos;
 
 import java.io.File;
@@ -28,133 +27,8 @@ import javax.mail.internet.InternetAddress;
 
 public class Correo {
 
-    private String error = "";
-    private String dirEnvio = "";
-    private Session session;
-    private Transport transport;
-    
-    public Correo(String svrSMTP, int puerto, String dirEnv, String clave)
-    {
-        this.dirEnvio = dirEnv;
-        try {
-            
-            Properties props = System.getProperties();
-            props.put("mail.transport.protocol", "smtp");
-            props.put("mail.smtp.port", puerto);
-            props.put("mail.smtp.ssl.enable", "true");
-            props.put("mail.smtp.starttls.enable", "false");
-            props.put("mail.smtp.auth", "true");
-            this.session = Session.getDefaultInstance(props);
-            
-            this.transport = session.getTransport();
-            this.transport.connect(svrSMTP, dirEnv, clave);
-            
-        } catch (Exception me) {
-            this.error = me.getMessage();
-            System.out.println("Error al conectarse al servidor de correo: " + me.getMessage());
-        }
-    }
+    static String error = "";
 
-    
-    
-    public boolean enviar(String dirA, String dirAcc, String dirAbcc, String asunto, StringBuilder txt, boolean esHTML, List adjuntos)
-    {
-        try{
-            ////////
-            InternetAddress[] destTo = null;
-            InternetAddress[] destCc = null;
-            InternetAddress[] destbcc = null;
-            String[] tmp = null;
-            if (dirA.trim().compareTo("") != 0) {
-                dirA = dirA.replace(";", ",");
-                tmp = dirA.split(",");
-                destTo = new InternetAddress[tmp.length];
-                for (int i = 0; i < tmp.length; i++) {
-                    destTo[i] = new InternetAddress(tmp[i]);
-                }
-            }
-            if (dirAcc.trim().compareTo("") != 0) {
-                dirAcc = dirAcc.replace(";", ",");
-                tmp = dirAcc.split(",");
-                destCc = new InternetAddress[tmp.length];
-                for (int i = 0; i < tmp.length; i++) {
-                    destCc[i] = new InternetAddress(tmp[i]);
-                }
-            }
-            if (dirAbcc.trim().compareTo("") != 0) {
-                dirAbcc = dirAbcc.replace(";", ",");
-                tmp = dirAbcc.split(",");
-                destbcc = new InternetAddress[tmp.length];
-                for (int i = 0; i < tmp.length; i++) {
-                    destbcc[i] = new InternetAddress(tmp[i]);
-                }
-            }
-            /////////
-            MimeMessage msg = new MimeMessage(session);
-            msg.setFrom(new InternetAddress(this.dirEnvio, "SAITEL"));
-            if (destTo != null) {
-                msg.setRecipients(Message.RecipientType.TO, destTo);
-            }
-            if (destCc != null) {
-                msg.setRecipients(Message.RecipientType.CC, destCc);
-            }
-            if (destbcc != null) {
-                msg.setRecipients(Message.RecipientType.BCC, destbcc);
-            }
-            msg.setSubject(asunto);
-            msg.setSentDate(new Date());
-            msg.setHeader("X-SES-CONFIGURATION-SET", "ConfigSet");
-            MimeBodyPart messageBodyPart = new MimeBodyPart();
-            messageBodyPart.setContent(txt.toString(), "text/html");
-            Multipart multipart = new MimeMultipart();
-            multipart.addBodyPart(messageBodyPart);
-
-            //Se adjuntan los archivos al correo
-            if (adjuntos != null) {
-                Iterator it = adjuntos.iterator();
-                while (it.hasNext()) {
-                    String rutaAdjunto = (String) it.next();
-                    messageBodyPart = new MimeBodyPart();
-                    File f = new File(rutaAdjunto);
-                    if (f.exists()) {
-                        DataSource source = new FileDataSource(rutaAdjunto);
-                        messageBodyPart.setDataHandler(new DataHandler(source));
-                        messageBodyPart.setFileName(f.getName());
-                        multipart.addBodyPart(messageBodyPart);
-                    }
-                }
-            }
-
-            //Se junta el mensaje y los archivos adjuntos
-            msg.setContent(multipart);
-            
-            this.transport.sendMessage(msg, msg.getAllRecipients());
-            
-        } catch (Exception me) {
-            this.error = me.getMessage();
-            System.out.println("Error al enviar correo: " + me.getMessage());
-            return false;
-        }
-        return true;
-    }
-    
-    
-    public void cerrar()
-    {
-        try{
-            this.transport.close();
-        } catch (Exception me) {
-            this.error = me.getMessage();
-        }
-    }
-    
-    
-    public String getError() {
-        return this.error;
-    }
-    
-    
-    
     /**
      * Funci�n que env�a un correo electr�nico desde un servidor SMTP de un
      * remitente a un destinatario.
@@ -171,8 +45,8 @@ public class Correo {
      * @return TRue si el correo es enviado satisfactoriamente o false en caso
      * contrario.
      */
-    public static boolean enviar(String svrSMTP, int puerto, String dirEnv, String clave, String dirA, 
-            String dirAcc, String dirAbcc, String asunto, StringBuilder txt, boolean esHTML, List adjuntos) {
+    public static boolean enviar(String svrSMTP, int puerto, String dirEnv, String clave, String dirA, String dirAcc, String dirAbcc, String asunto,
+            StringBuilder txt, boolean esHTML, List adjuntos) {
         String CONFIGSET = "ConfigSet";
         try {
             ////////
@@ -208,7 +82,7 @@ public class Correo {
             Properties props = System.getProperties();
             props.put("mail.transport.protocol", "smtp");
             props.put("mail.smtp.port", puerto);
-            props.put("mail.smtp.ssl.enable", "true");
+            props.put("mail.smtp.ssl.enable", "false");
             props.put("mail.smtp.starttls.enable", "false");
             props.put("mail.smtp.auth", "true");
             Session session = Session.getDefaultInstance(props);
@@ -250,15 +124,228 @@ public class Correo {
             //Se junta el mensaje y los archivos adjuntos
             msg.setContent(multipart);
             Transport t = session.getTransport();
+            System.out.println("Sending...");
             t.connect(svrSMTP, dirEnv, clave);
             t.sendMessage(msg, msg.getAllRecipients());
             t.close();
-//            System.out.println("Correo enviado a: " + dirA);
         } catch (Exception me) {
-            System.out.println("Error al enviar correo: " + me.getMessage());
+            Correo.error = me.getMessage();
+            System.out.println("Error al enviar correo: " + me);
             return false;
         }
         return true;
     }
 
+    public static boolean enviar(String svrSMTP, int puerto, String dirEnv, String clave, String dirA, String dirAcc, String dirAbcc, String asunto,
+            StringBuilder txt, boolean esHTML, List adjuntos, Properties propiedades) {
+        String CONFIGSET = "ConfigSet";
+        Properties parametros = propiedades != null ? propiedades : new Properties();
+        String starttls = parametros.getProperty("starttls");
+        try {
+            ////////
+            InternetAddress[] destTo = null;
+            InternetAddress[] destCc = null;
+            InternetAddress[] destbcc = null;
+            String[] tmp = null;
+            if (dirA.trim().compareTo("") != 0) {
+                dirA = dirA.replace(";", ",");
+                tmp = dirA.split(",");
+                destTo = new InternetAddress[tmp.length];
+                for (int i = 0; i < tmp.length; i++) {
+                    destTo[i] = new InternetAddress(tmp[i]);
+                }
+            }
+            if (dirAcc.trim().compareTo("") != 0) {
+                dirAcc = dirAcc.replace(";", ",");
+                tmp = dirAcc.split(",");
+                destCc = new InternetAddress[tmp.length];
+                for (int i = 0; i < tmp.length; i++) {
+                    destCc[i] = new InternetAddress(tmp[i]);
+                }
+            }
+            if (dirAbcc.trim().compareTo("") != 0) {
+                dirAbcc = dirAbcc.replace(";", ",");
+                tmp = dirAbcc.split(",");
+                destbcc = new InternetAddress[tmp.length];
+                for (int i = 0; i < tmp.length; i++) {
+                    destbcc[i] = new InternetAddress(tmp[i]);
+                }
+            }
+            /////////
+            Properties props = System.getProperties();
+            props.put("mail.transport.protocol", "smtp");
+            props.put("mail.smtp.port", puerto);
+            props.put("mail.smtp.ssl.enable", "false");
+            props.put("mail.smtp.starttls.enable", starttls);
+            props.put("mail.smtp.auth", "true");
+            Session session = Session.getDefaultInstance(props);
+            MimeMessage msg = new MimeMessage(session);
+            msg.setFrom(new InternetAddress(dirEnv, "SAITEL"));
+            if (destTo != null) {
+                msg.setRecipients(Message.RecipientType.TO, destTo);
+            }
+            if (destCc != null) {
+                msg.setRecipients(Message.RecipientType.CC, destCc);
+            }
+            if (destbcc != null) {
+                msg.setRecipients(Message.RecipientType.BCC, destbcc);
+            }
+            msg.setSubject(asunto);
+            msg.setSentDate(new Date());
+            msg.setHeader("X-SES-CONFIGURATION-SET", CONFIGSET);
+            MimeBodyPart messageBodyPart = new MimeBodyPart();
+            messageBodyPart.setContent(txt.toString(), "text/html");
+            Multipart multipart = new MimeMultipart();
+            multipart.addBodyPart(messageBodyPart);
+
+            //Se adjuntan los archivos al correo
+            if (adjuntos != null) {
+                Iterator it = adjuntos.iterator();
+                while (it.hasNext()) {
+                    String rutaAdjunto = (String) it.next();
+                    messageBodyPart = new MimeBodyPart();
+                    File f = new File(rutaAdjunto);
+                    if (f.exists()) {
+                        DataSource source = new FileDataSource(rutaAdjunto);
+                        messageBodyPart.setDataHandler(new DataHandler(source));
+                        messageBodyPart.setFileName(f.getName());
+                        multipart.addBodyPart(messageBodyPart);
+                    }
+                }
+            }
+
+            //Se junta el mensaje y los archivos adjuntos
+            msg.setContent(multipart);
+            Transport t = session.getTransport();
+            System.out.println("Sending...");
+            t.connect(svrSMTP, dirEnv, clave);
+            t.sendMessage(msg, msg.getAllRecipients());
+            t.close();
+        } catch (Exception me) {
+            Correo.error = me.getMessage();
+            System.out.println("Error al enviar correo: " + me);
+            return false;
+        }
+        return true;
+    }
+
+    public static String getError() {
+        return Correo.error;
+    }
+    /////
+
+//    public static boolean enviar(String svrSMTP, int puerto, String dirEnv, String clave, String FROMNAME, String dirA, String dirAcc, String dirAbcc, String asunto,
+//            StringBuilder txt, boolean esHTML, List adjuntos) {
+//        String CONFIGSET = "ConfigSet";
+//        try {
+//            Properties props = System.getProperties();
+//            props.put("mail.transport.protocol", "smtp");
+//            props.put("mail.smtp.port", puerto);
+//            props.put("mail.smtp.ssl.enable", "false");
+//            props.put("mail.smtp.starttls.enable", "false");
+//            props.put("mail.smtp.auth", "true");
+//            Session session = Session.getDefaultInstance(props);
+//            MimeMessage msg = new MimeMessage(session);
+//            msg.setFrom(new InternetAddress(dirEnv, FROMNAME));
+//            msg.setRecipient(Message.RecipientType.TO, new InternetAddress(dirA));
+//            msg.setRecipients(Message.RecipientType.CC, dirAcc);
+//            msg.setRecipients(Message.RecipientType.BCC, dirAbcc);
+//            msg.setSubject(asunto);
+//            msg.setSentDate(new Date());
+//            msg.setHeader("X-SES-CONFIGURATION-SET", CONFIGSET);
+//            MimeBodyPart messageBodyPart = new MimeBodyPart();
+//            messageBodyPart.setContent(txt.toString(), "text/html");
+//            Multipart multipart = new MimeMultipart();
+//            multipart.addBodyPart(messageBodyPart);
+//
+//            //Se adjuntan los archivos al correo
+//            if (adjuntos != null) {
+//                Iterator it = adjuntos.iterator();
+//                while (it.hasNext()) {
+//                    String rutaAdjunto = (String) it.next();
+//                    messageBodyPart = new MimeBodyPart();
+//                    File f = new File(rutaAdjunto);
+//                    if (f.exists()) {
+//                        DataSource source = new FileDataSource(rutaAdjunto);
+//                        messageBodyPart.setDataHandler(new DataHandler(source));
+//                        messageBodyPart.setFileName(f.getName());
+//                        multipart.addBodyPart(messageBodyPart);
+//                    }
+//                }
+//            }
+//
+//            //Se junta el mensaje y los archivos adjuntos
+//            msg.setContent(multipart);
+//            Transport t = session.getTransport();
+//            System.out.println("Sending...");
+//            t.connect(svrSMTP, dirEnv, clave);
+//            t.sendMessage(msg, msg.getAllRecipients());
+//            t.close();
+//        } catch (Exception me) {
+//            Correo.error = me.getMessage();
+//            System.out.println("Error al enviar correo: " + me);
+//            return false;
+//        }
+//        return true;
+//    }
+    public static String ModeloHtml(String tipo, String titulo, String generado, String cuerpo, String titulonota, String cuerponota) {
+        String html = "";
+        html += "<div id=':22c' class='a3s aXjCH ' role='gridcell' tabindex='-1'>";
+        html += " <table style='border-color:#1d54ff' width='550' cellspacing='0' cellpadding='0' border='0' align='center'>";
+        html += "     <tbody>";
+        html += "        <tr>";
+        html += "          <td width='573' valign='top'>";
+        html += "             <table width='550' cellspacing='0' cellpadding='0' border='0'>";
+        html += "                 <tbody>";
+        html += "                     <tr style='background: rgba(0, 0, 0, 0.20);'>";
+        html += "                        <td style='font-size:  35px; '><img src='http://138.185.137.120/html/images/logosfondo.png' alt='' tabindex='0' width='250' height='75' border='0'>#tipo#</td>";
+        html += "                    </tr>";
+        html += "                </tbody>";
+        html += "            </table>";
+        html += "         </td>";
+        html += "     </tr>";
+        html += "   <tr>";
+        html += "        <td width='550' valign='top'>";
+        html += "            <table width='550' cellspacing='0' cellpadding='0' border='0'>";
+        html += "                <tbody>";
+        html += "                  <tr>";
+        html += "                      <td style='width:1px;border-left:solid 1px #1d54ff' width='1' bgcolor='#FFFFFF'></td>";
+        html += "                      <td width='17'>&nbsp;</td>";
+        html += "                      <td class='m_4307618135234332710negro8' width='516' valign='top'>";
+        html += "                          <p>&nbsp;</p>";
+        html += "                          <p>#titulo#</p>";
+        html += "                          <p>#generado#</p>";
+        html += "                        <p><strong>Estimado/a</strong>&nbsp;.</p>";
+        html += "                        #cuerpo#";
+        html += "                        <p>Proveedor de Servicio de Internet: <strong> - </strong></p>";
+        html += "                       <p>En caso de no haber realizado esta operación comuníquese inmediatamente a <strong>1700 SAITEL - 0996724835</strong></p>";
+        html += "                      <p>Asesor Virtual<br><strong>Saitel</strong></p>";
+        html += "                 </td>";
+        html += "                   <td width='17'>&nbsp;</td>";
+        html += "                     <td style='width:1px;border-right:solid 1px #1d54ff' width='1' bgcolor='#FFFFFF'></td>";
+        html += "                  </tr>";
+        html += "                  <tr><td colspan='5' style='width:1px;border-top:solid 1px #1d54ff'></td></tr>";
+        html += "                 </tbody>";
+        html += "              </table>";
+        html += "            </td>";
+        html += "         </tr>";
+        html += "     </tbody>";
+        html += " </table>";
+        html += " <p>&nbsp;</p>";
+        html += "  <table width='100%' cellspacing='1' cellpadding='3' border='0' bgcolor='B1B0B1' align='center'>";
+        html += "      <tbody>";
+        html += "         <tr>";
+        html += "             <td class='m_4307618135234332710gris7' bgcolor='#FFFFFF'><strong><span class='m_4307618135234332710verde7'><span style='color:#89a83e'>#titulonota#</span></span></strong><span style='color:#89a83e'><span class='m_4307618135234332710verde7'>:</span></span>#cuerponota#</td>";
+        html += "         </tr>";
+        html += "      </tbody>";
+        html += "   </table>";
+        html += "</div>";
+        html = html.replace("#tipo#", tipo);
+        html = html.replace("#titulo#", titulo);
+        html = html.replace("#generado#", generado);
+        html = html.replace("#cuerpo#", cuerpo);
+        html = html.replace("#titulonota#", titulonota);
+        html = html.replace("#cuerponota#", cuerponota);
+        return html;
+    }
 }

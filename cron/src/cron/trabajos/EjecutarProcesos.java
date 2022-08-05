@@ -469,18 +469,18 @@ public class EjecutarProcesos  implements Job{
                 
 //                System.out.println(email + ", " + mailcc + " => " + msg + "\n\r");
                 
-                Correo.enviar(Parametro.getSvrMail(), 
-                            Parametro.getSvrMailPuerto(), 
-                            Parametro.getRemitente(), 
-                            Parametro.getRemitenteClave(), 
-                            email, 
-                            mailcc, 
-                            "", 
-                            "NOTIFICACION, AVISO DE SALIDA A VACACIONES", 
-                            new StringBuilder(msg), 
-                            true,
-                            null
-                );
+//                Correo.enviar(Parametro.getSvrMail(), 
+//                            Parametro.getSvrMailPuerto(), 
+//                            Parametro.getRemitente(), 
+//                            Parametro.getRemitenteClave(), 
+//                            email, 
+//                            mailcc, 
+//                            "", 
+//                            "NOTIFICACION, AVISO DE SALIDA A VACACIONES", 
+//                            new StringBuilder(msg), 
+//                            true,
+//                            null
+//                );
             }
         } catch(Exception e){
             e.printStackTrace();

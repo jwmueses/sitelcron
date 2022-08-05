@@ -102,7 +102,7 @@ public class SaitelCron implements Daemon{
             
             
             
-            //  GENERACION DE PRE-FACTURAS
+            //  GENERACION DE PRE-FACTURAS EL 1 DE CADA MES
             //  CALCULOS DE PREFACTURAS NUEVAS            
             JobDetail trabajo3 = JobBuilder.newJob(Prefactura.class)
                     .withIdentity("prefacturar", "saitel").build();
@@ -362,8 +362,27 @@ public class SaitelCron implements Daemon{
 //        DataBase objDocumental = new DataBase( "127.0.0.1", Parametro.getDocumentalPuerto(), Parametro.getDocumentalBaseDatos(), "postgres", "postgres" );
 //        DataBase objDataBase = new DataBase( "127.0.0.1", Parametro.getPuerto(), Parametro.getBaseDatos(), "postgres", "postgres" );
 //        FacturaVenta objFacturaVenta = new FacturaVenta( objDocumental, "127.0.0.1", Parametro.getPuerto(), Parametro.getBaseDatos(), "postgres", "postgres" );
-//            
-//        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando emisión de facturas a clientes con anticipos pruebas");
+
+
+
+//        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando prueba de envio de correo");
+//        
+//        Correo.enviar( Parametro.getSvrMail(), 
+//                        Parametro.getSvrMailPuerto(), 
+//                        Parametro.getRemitente(), 
+//                        Parametro.getRemitenteClave(), 
+//                        "sistemas@saitel.ec", 
+//                        "", 
+//                        "",
+//                        "PRUEBA DE ENVIO DE CORREO",
+//                        new StringBuilder("HOLA MUNDO"), 
+//                        true, 
+//                        null);
+//        
+//        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalizando prueba de envio de correo");
+        
+        
+        
 //        try{
 //            
 //            ServidoresCorte sv = new ServidoresCorte();
