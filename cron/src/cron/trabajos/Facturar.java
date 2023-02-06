@@ -33,6 +33,23 @@ public class Facturar implements Job{
         DataBase objDocumental = new DataBase( doc_ip, doc_puerto, doc_db, doc_usuario, doc_clave );
         
         this.objDataBase = new DataBase( Parametro.getIp(), Parametro.getPuerto(), Parametro.getBaseDatos(), Parametro.getUsuario(), Parametro.getClave() );
+        
+        
+        
+        
+        
+        // generacion de prefacturas faltantes
+        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de generación de prefacturas faltantes del período actual");
+        this.objDataBase.consulta("select proc_generarPrefacturasFaltantes();");
+        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de generación de prefacturas faltantes del período actual");
+
+            
+            
+            
+            
+        
+        
+        
         System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de emisión de facturas del cash");
         
 //        String DOCS_ELECTRONICOS = Parametro.getRutaArchivos();
@@ -241,7 +258,7 @@ public class Facturar implements Job{
                     + "and set_convenio_cuenta=true \n"
                     + "and ((I.convenio_pago ='1' and periodo=('"+periodoActual+"'::date - '1 month'::interval)::date ) or (I.convenio_pago ='0' and periodo='"+periodoActual+"'))";
             
-            ResultSet rs = this.objDataBase.consulta("select *, total+comision_cash as total_comision from vta_prefactura_todas where por_emitir_factura=true"
+            ResultSet rs = this.objDataBase.consulta("select *, total+comision_cash as total_comision from vta_prefactura_todas where por_emitir_destino='Pichincha' and por_emitir_factura=true"
                     + (Fecha.getDia()==1 ? clientesConvenioTarjeta : "") );
             
             //  instalaciones que tienen convenios de debito

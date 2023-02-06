@@ -12,6 +12,9 @@ import ec.gob.sri.wsc.DirectorioConfiguracion;
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
 
 /**
  *
@@ -696,7 +699,12 @@ public class DocumentosElectronicosSri{
         
         
         
-        
+            String _DIR_PDF = Parametro.getRutaArchivos() + "pdfs/";
+            Properties propiedades = new Properties();
+            propiedades.setProperty("starttls", "false");
+            propiedades.setProperty("ssl", "true");
+            
+            
 //            Correo correo = new Correo( Parametro.getSvrMail(), Parametro.getSvrMailPuerto(), Parametro.getRemitente(), Parametro.getRemitenteClave() );
 
 
@@ -803,87 +811,93 @@ public class DocumentosElectronicosSri{
 //
 //
 //
-//                System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Envío de correos de retenciones a proveedores");
-//                // RETENCIONES
-//
-//                if(pkRetencionesAutorizadas.compareTo("")!=0){
-//                    try{
-//                        ResultSet rsP = objDataBase.consulta("select rc.id_retencion_compra, p.razon_social, rc.ret_num_serie||'-'||rc.ret_num_retencion as num_retencion, "
-//                            + "rc.ret_fecha_emision, rc.ret_ejercicio_fiscal, rc.ret_impuesto_retenido, rc.ret_ejercicio_fiscal_mes, rc.emision, rc.clave_acceso, p.email "
-//                            + "from tbl_retencion_compra rc, tbl_factura_compra fc, tbl_proveedor p "
-//                            + "where estado_documento='a' and rc.id_factura_compra=fc.id_factura_compra and fc.id_proveedor=p.id_proveedor "
-//                            + "and rc.clave_acceso in ("+pkRetencionesAutorizadas.substring(0, pkRetencionesAutorizadas.length()-1)+");");
-//
-//                        while(rsP.next()){
-//                            String id_retencion_compra=rsP.getString("id_retencion_compra");
-//                            String nombres=rsP.getString("razon_social");
-//                            String serie_factura=rsP.getString("num_retencion");
-//                            String fecha_emision=rsP.getString("ret_fecha_emision");
-//                            String retenido=rsP.getString("ret_impuesto_retenido");
-//                            String ejercicio_fiscal=rsP.getString("ret_ejercicio_fiscal_mes")+"-"+rsP.getString("ret_ejercicio_fiscal");
-//                            String clave_acceso=rsP.getString("clave_acceso");
-//                            String email=rsP.getString("email");
-//
-//                            String documento_xml="";
-//                            try{
-//                                ResultSet res = objDocumental.consulta("select documentotexto from tbl_documentos where tabla='tbl_retencion_compra' and id_tabla="+id_retencion_compra);
-//                                if(res.next()){
-//                                    documento_xml = res.getString("documentotexto")!=null ? res.getString("documentotexto") : "";
-//                                    res.close();
-//                                }
-//                            }catch(Exception e){
-//                                e.printStackTrace();
-//                            }
-//
-//                            //String path = String.valueOf(request.getRequestURL());
-//                            //path = path.substring(0, path.lastIndexOf("/"));
-//                            frmGeneraPdf pdf= new frmGeneraPdf();
-//                            documento_xml=pdf.quitarTildes(documento_xml);
-//                            String xml = _DIR_PDF + this.getArchivoXml(_DIR_PDF, clave_acceso, documento_xml);
-//                            pdf.GenerarFactura(objDataBase, xml, _DIR_PDF, clave_acceso);
-//
-//                            List adjuntos=new ArrayList();
-//                            adjuntos.add(xml+".xml");
-//                            adjuntos.add(xml+".pdf");
-//                            StringBuilder mensaje=new StringBuilder();
-//
-//                            mensaje.append("<i>Estimado Proveedor.</i><br />");
-//                            mensaje.append("<b>"+nombres+"</b /><br /><br />");
-//                            mensaje.append("Con el prop&oacute;sito de brindarle un mejor servicio, SAITEL cambi&oacute; sus facturas f&iacute;sicas por electr&oacute;nicas, lo que le permitir&aacute; contar con informaci&oacute;n "
-//                                    + "inmediata sobre los valores facturados y fechas l&iacute;mites de pago. Con esta medida adem&aacute;s, contribuimos a la preservaci&oacute;n del medio ambiente.<br />"
-//                                    +"El archivo adjunto corresponde a la Factura Electr&oacute;nica, tributaria y legalmente v&aacute;lida para las declaraciones de impuestos ante el SRI.<br /><br />");
-//                            mensaje.append("<b>Resumen</b><br />");
-//                            mensaje.append("<b>No. DE FACTURA: </b>"+serie_factura+"<br>");
-//                            mensaje.append("<b>FECHA DE EMISION: </b>"+fecha_emision+"<br>");
-//                            mensaje.append("<b>RETENCION DEL EJERCICIO FICAL: </b>"+ejercicio_fiscal+"<br>");
-//                            mensaje.append("<b>IMPUESTO RETENIDO: </b>"+retenido+"<br>");
-//                            mensaje.append("<b>CLAVE DE ACCESO: </b>"+clave_acceso+"<br /><br />");
-//                            mensaje.append("También puede realizar la impresi&oacute;n de su documento en pdf <a href='http://www.saitel.ec/pag/electronico.html' target='_blank'> www.saitel.ec</a><br><br>");
-//                            mensaje.append("Atentamente.<br>");
-//                            mensaje.append("<b>Soluciones Inform&aacute;ticas Avanzadas y Telecomunicaciones SAITEL</b><br />");
-//                            mensaje.append("<b>IMPORTANTE:</b><br>Este correo es informativo, favor no responder al mismo, ya que no se encuentra habilitada para recibir mensajes.<b>");
-//
-////                            correo.enviar(email, "", "", "SAITEL - RETENCION ELECTRONICA", mensaje, true, adjuntos);
-//                            Correo.enviar( Parametro.getSvrMail(), 
-//                                    Parametro.getSvrMailPuerto(), 
-//                                    Parametro.getRemitente(), 
-//                                    Parametro.getRemitenteClave(), 
-//                                    email, 
-//                                    "", 
-//                                    "",
-//                                    "SAITEL - RETENCION ELECTRONICA",
-//                                    mensaje, 
-//                                    true, 
-//                                    adjuntos);
-//
-//                        } 
-//                    }catch(Exception e){
-//                        e.printStackTrace();
-//                    }
-//                }
-//
-//                System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de envío de correos de retenciones a proveedores");
-//
+                System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Envío de correos de retenciones a proveedores");
+                // RETENCIONES
+
+                if(pkRetencionesAutorizadas.compareTo("")!=0){
+                    try{
+                        ResultSet rsP = objDataBase.consulta("select rc.id_retencion_compra, p.razon_social, rc.ret_num_serie||'-'||rc.ret_num_retencion as num_retencion, "
+                            + "rc.ret_fecha_emision, rc.ret_ejercicio_fiscal, rc.ret_impuesto_retenido, rc.ret_ejercicio_fiscal_mes, rc.emision, rc.clave_acceso, p.email "
+                            + "from tbl_retencion_compra rc, tbl_factura_compra fc, tbl_proveedor p "
+                            + "where estado_documento='a' and rc.id_factura_compra=fc.id_factura_compra and fc.id_proveedor=p.id_proveedor "
+                            + "and rc.clave_acceso in ("+pkRetencionesAutorizadas.substring(0, pkRetencionesAutorizadas.length()-1)+");");
+
+                        while(rsP.next()){
+                            
+                            String email=rsP.getString("email");
+                            
+                            if( email.compareTo("") != 0 ) {
+                                String id_retencion_compra=rsP.getString("id_retencion_compra");
+                                String nombres=rsP.getString("razon_social");
+                                String num_retencion=rsP.getString("num_retencion");
+                                String fecha_emision=rsP.getString("ret_fecha_emision");
+                                String retenido=rsP.getString("ret_impuesto_retenido");
+                                String ejercicio_fiscal=rsP.getString("ret_ejercicio_fiscal_mes")+"-"+rsP.getString("ret_ejercicio_fiscal");
+                                String clave_acceso=rsP.getString("clave_acceso");
+
+
+                                String documento_xml="";
+                                try{
+                                    ResultSet res = objDocumental.consulta("select documentotexto from tbl_documentos where tabla='tbl_retencion_compra' and id_tabla="+id_retencion_compra);
+                                    if(res.next()){
+                                        documento_xml = res.getString("documentotexto")!=null ? res.getString("documentotexto") : "";
+                                        res.close();
+                                    }
+                                }catch(Exception e){
+                                    e.printStackTrace();
+                                }
+
+                                //String path = String.valueOf(request.getRequestURL());
+                                //path = path.substring(0, path.lastIndexOf("/"));
+                                frmGeneraPdf pdf= new frmGeneraPdf();
+                                documento_xml=pdf.quitarTildes(documento_xml);
+                                String xml = _DIR_PDF + this.getArchivoXml(_DIR_PDF, clave_acceso, documento_xml);
+                                pdf.GenerarFactura(objDataBase, xml, _DIR_PDF, clave_acceso);
+
+                                List adjuntos=new ArrayList();
+                                adjuntos.add(xml+".xml");
+                                adjuntos.add(xml+".pdf");
+                                StringBuilder mensaje=new StringBuilder();
+
+                                mensaje.append("<i>Estimado Proveedor.</i><br />");
+                                mensaje.append("<b>"+nombres+"</b /><br /><br />");
+                                mensaje.append("Con el prop&oacute;sito de brindarle un mejor servicio, SAITEL cambi&oacute; sus facturas f&iacute;sicas por electr&oacute;nicas, lo que le permitir&aacute; contar con informaci&oacute;n "
+                                        + "inmediata sobre los valores facturados y fechas l&iacute;mites de pago. Con esta medida adem&aacute;s, contribuimos a la preservaci&oacute;n del medio ambiente.<br />"
+                                        +"El archivo adjunto corresponde a la Factura Electr&oacute;nica, tributaria y legalmente v&aacute;lida para las declaraciones de impuestos ante el SRI.<br /><br />");
+                                mensaje.append("<b>Resumen</b><br />");
+                                mensaje.append("<b>No. DE RETENCION: </b>"+num_retencion+"<br>");
+                                mensaje.append("<b>FECHA DE EMISION: </b>"+fecha_emision+"<br>");
+                                mensaje.append("<b>RETENCION DEL EJERCICIO FICAL: </b>"+ejercicio_fiscal+"<br>");
+                                mensaje.append("<b>IMPUESTO RETENIDO: </b>"+retenido+"<br>");
+                                mensaje.append("<b>CLAVE DE ACCESO: </b>"+clave_acceso+"<br /><br />");
+                                mensaje.append("También puede realizar la impresi&oacute;n de su documento en pdf <a href='http://www.saitel.ec/pag/electronico.html' target='_blank'> www.saitel.ec</a><br><br>");
+                                mensaje.append("Atentamente.<br>");
+                                mensaje.append("<b>Soluciones Inform&aacute;ticas Avanzadas y Telecomunicaciones SAITEL</b><br />");
+                                mensaje.append("<b>IMPORTANTE:</b><br>Este correo es informativo, favor no responder al mismo, ya que no se encuentra habilitada para recibir mensajes.<b>");
+
+                                Correo.enviar( Parametro.getSvrMail(), 
+                                        Parametro.getSvrMailPuerto(), 
+                                        Parametro.getRemitente(), 
+                                        Parametro.getRemitenteClave(), 
+                                        email, 
+                                        "", 
+                                        "",
+                                        "SAITEL - RETENCION ELECTRONICA",
+                                        mensaje, 
+                                        true, 
+                                        adjuntos,
+                                        propiedades);
+                            }
+                            
+                        } 
+                        
+                    }catch(Exception e){
+                        e.printStackTrace();
+                    }
+                }
+
+                System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de envío de correos de retenciones a proveedores");
+
 //
 //
 //

@@ -36,7 +36,7 @@ public class FinAnio {
                 sql.add("truncate table tbl_privilegio_31;");
                 sql.add("insert into tbl_privilegio_31 select id_rol, id_pagina from tbl_privilegio;");
                 if( objDataBase.transacciones(sql) ){
-                    if(!objDataBase.ejecutar("delete from tbl_privilegio where id_rol not in(1, 2, 19) and " +
+                    if(!objDataBase.ejecutar("delete from tbl_privilegio where id_rol not in(1, 2, 19, 20, 42, 52) and " +
                         "id_pagina in (select id_pagina from tbl_pagina where pagina in( " +
                         "'plan_cuentas','bancos','diario','mayor','comprobantes','caja_chica','bancos_pagos','anulados','sri','estados', " +
                         "'requesiciones','ordenesdecompra','ordenesdeconsumo','bodegapersonal', " +

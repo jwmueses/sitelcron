@@ -160,19 +160,19 @@ public class Contabilizar implements Job{
     }
     
     
-    private String getEmailEmpleado (DataBase objDataBase, String alias)
-    {
-        String email = "";
-        try{
-            ResultSet rs = objDataBase.consulta("select email from tbl_empleado where alias='"+alias+"'");
-            if(rs.next()){
-                email = rs.getString(1)!=null ? rs.getString(1) : "";
-                rs.close();
-            }
-        }catch(Exception e){
-            e.printStackTrace();
-        }    
-        return email;
-    }
+//    private String getEmailEmpleado (DataBase objDataBase, String alias)
+//    {
+//        String email = "";
+//        try{
+//            ResultSet rs = objDataBase.consulta("select email from tbl_empleado where alias='"+alias+"'");
+//            if(rs.next()){
+//                email = rs.getString(1)!=null ? rs.getString(1) : "";
+//                rs.close();
+//            }
+//        }catch(Exception e){
+//            e.printStackTrace();
+//        }    
+//        return email;
+//    }
      
 }

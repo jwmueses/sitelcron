@@ -8,6 +8,7 @@ package cron.trabajos;
 import java.sql.ResultSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 
 /**
  *
@@ -16,9 +17,18 @@ import java.util.List;
 public class Notificacion extends DataBase {
     
     private String mensajeHtml= "";
+    Properties propiedades = new Properties();
+    
+    public Notificacion()
+    {
+        propiedades.setProperty("starttls", "false");
+        propiedades.setProperty("ssl", "true");
+    }
     
     public Notificacion(String m, int p, String db, String u, String c){
         super(m, p, db, u, c);
+        propiedades.setProperty("starttls", "false");
+        propiedades.setProperty("ssl", "true");
     }
     
     public void setMensaje(String mensaje)
@@ -56,7 +66,8 @@ public class Notificacion extends DataBase {
                             asunto, 
                             new StringBuilder(mensajeHtml), 
                             true,
-                            adjuntos
+                            adjuntos,
+                            propiedades
                 ) ){
                     this.mensajeHtml = "";
                     return true;

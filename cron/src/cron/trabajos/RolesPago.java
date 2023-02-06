@@ -48,7 +48,8 @@ public class RolesPago implements Job{
             if(rsSueldoBasico.next()){
                 sueldoBasico= (rsSueldoBasico.getString(1)!=null) ? rsSueldoBasico.getString(1) : "0";
             }
-            ResultSet rsEmpleados = objDataBase.consulta("select e.id_empleado, (date_trunc('month',current_date)-cast('1 month' as interval)+cast('25 day' as interval)) as fecha_inicial,(date_trunc('month',current_date)+cast('24 day' as interval)) as fecha_final,\n" +
+//            + "getultimodiafecha(now()::date) as fecha_final, \n" +
+            ResultSet rsEmpleados = objDataBase.consulta("select e.id_empleado, date_trunc('month', now())::date as fecha_inicial, getultimodiafecha(now()::date)::date as fecha_final, \n" +
             "e.empleado, ((max(s.sueldo)*e.semana)/30)::numeric(13,2) as sueldo, \n" +
             "((s.sueldo/240)*2)::numeric(13,2) as extra, \n" +
             "((s.sueldo/240)*1.5)::numeric(13,2) as suplementaria,\n" +
@@ -56,13 +57,13 @@ public class RolesPago implements Job{
             "(select array_to_string(array_agg(id_empleado_hora_extra), ',') from vta_empleado_horas_extras he where tipo='e' and he.id_empleado=e.id_empleado and he.estado='a' and he.id_rol_pagos is null) as extraid, \n" +
             "(select (sum(num_horas)*60)+sum(num_minutos) from vta_empleado_horas_extras he where tipo='s' and he.id_empleado=e.id_empleado and he.estado='a' and he.id_rol_pagos is null group by empleado) as supleTot, \n" +
             "(select array_to_string(array_agg(id_empleado_hora_extra), ',') from vta_empleado_horas_extras he where tipo='s' and he.id_empleado=e.id_empleado and he.estado='a' and he.id_rol_pagos is null) as supleid, \n" +
-            "(select sum(monto) from tbl_rubro_cont c join tbl_rubro_cont_det d on c.id_rubro_cont=d.id_rubro_cont where deducible=true and movimiento=true and d.id_empleado=e.id_empleado and d.periodo between (date_trunc('month',current_date)-cast('1 month' as interval)+cast('25 day' as interval)) and (date_trunc('month',current_date)+cast('24 day' as interval))) as sumDeducible,\n" +
+            "(select sum(monto) from tbl_rubro_cont c join tbl_rubro_cont_det d on c.id_rubro_cont=d.id_rubro_cont where deducible=true and movimiento=true and d.id_empleado=e.id_empleado and d.periodo between date_trunc('month', now())::date and getultimodiafecha(now()::date)::date ) as sumDeducible, \n" +
             "case e.id_area \n" +
-            "	when (select id_area from tbl_area where area like '%VENTAS%') then (select comision from tbl_instalacion_comision c where c.id_sucursal=e.id_sucursal and c.fecha_inicio=(date_trunc('month',current_date)-cast('1 month' as interval)+cast('25 day' as interval)))\n" +
+            "	when (select id_area from tbl_area where area like '%VENTAS%') then (select comision from tbl_instalacion_comision c where c.id_sucursal=e.id_sucursal and c.fecha_inicio between date_trunc('month', now())::date and getultimodiafecha(now()::date)::date ) \n" +
             "	else -2\n" +
             "end as comisionVentas,\n" +
             "case e.id_rol \n" +
-            "	when (select id_rol from tbl_rol where rol like '%JEFE_MAR%') then (select comision from tbl_instalacion_comision c where c.id_sucursal=0 and c.fecha_inicio=(date_trunc('month',current_date)-cast('1 month' as interval)+cast('25 day' as interval)))\n" +
+            "	when (select id_rol from tbl_rol where rol like '%JEFE_MAR%') then (select comision from tbl_instalacion_comision c where c.id_sucursal=0 and c.fecha_inicio between date_trunc('month', now())::date and getultimodiafecha(now()::date)::date ) \n" +
             "	else -2\n" +
             "end as comisionJefeVentas,\n" +
             "cobra_14_mensual, cobra_f_r,cobra_13_mensual,\n" + 
