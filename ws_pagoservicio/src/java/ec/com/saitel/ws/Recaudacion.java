@@ -29,11 +29,11 @@ import javax.jws.WebParam;
 @WebService(serviceName = "Recaudacion")
 public class Recaudacion {
 
-    private static final String maquina = "127.0.0.1";    //   192.168.217.16       127.0.0.1
+    private static final String maquina = "192.168.217.16";    //   192.168.217.16       127.0.0.1
     private static final int puerto = 5432;
     private static final String db = "db_isp";
     private static final String usuario = "postgres";
-    private static final String clave = "Gi%9875.-*5+$)"; //  postgres    A0Lpni2       Gi%9875.-*5+$)
+    private static final String clave = "Gi%9875.-*5+$)("; //  postgres    A0Lpni2       Gi%9875.-*5+$)
     private static final String _dir = "/opt/lampp/htdocs/anexos/fe/"; //       /home/saitel/Documentos/fe/      /opt/lampp/htdocs/anexos/fe/
     
     private static final String _svrMail = "pro.turbo-smtp.com";      //      facturacion.saitelapp.ec    
@@ -163,7 +163,7 @@ public class Recaudacion {
                                 
 
                                     // realizo la consulta y devolver los datos
-                                    ResultSet rs = objDB.consulta("select id_prefactura, razon_social, plan, direccion_instalacion, txt_periodo, subtotal, subtotal_0, subtotal_2, iva_2, total, id_instalacion from vta_prefactura where lower(ruc)='"+dni.toLowerCase()+"' "+idInstalaciones+" order by id_instalacion, id_prefactura");
+                                    ResultSet rs = objDB.consulta("select id_prefactura, razon_social, plan, direccion_instalacion, txt_periodo, subtotal, subtotal_0, subtotal_2, iva_2, total, id_instalacion, contrapartida_pichincha from vta_prefactura where lower(ruc)='"+dni.toLowerCase()+"' "+idInstalaciones+" order by id_instalacion, id_prefactura");
                                     if(objDB.getFilas(rs)>0){
                                         String aux = "";
                                         while(rs.next()){
@@ -212,6 +212,10 @@ public class Recaudacion {
                                                 xml.append("<total_pagar>");
                                                 xml.append(rs.getString("total")!=null ? rs.getString("total") : "0.00");
                                                 xml.append("</total_pagar>");
+                                                
+                                                xml.append("<contrapartida_pichincha>");
+                                                xml.append(rs.getString("contrapartida_pichincha")!=null ? rs.getString("contrapartida_pichincha") : "");
+                                                xml.append("</contrapartida_pichincha>");
 
                                                 xml.append("</prefactura>");
                                             }
