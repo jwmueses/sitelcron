@@ -20,6 +20,7 @@ public class Contabilizar implements Job{
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
         
+        CorreoSaitel objCorreo = new CorreoSaitel( Parametro.getRed_social_ip(), Parametro.getRed_social_esquema(), Parametro.getRed_social_puerto(), Parametro.getRed_social_db(), Parametro.getRed_social_usuario(), Parametro.getRed_social_clave() );
         DataBase objDataBase = new DataBase( Parametro.getIp(), Parametro.getPuerto(), Parametro.getBaseDatos(), Parametro.getUsuario(), Parametro.getClave() );
         System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de contabilización de ventas");
         try{
@@ -37,7 +38,7 @@ public class Contabilizar implements Job{
                 }
                 
                 String vendedor = rs.getString("vendedor")!=null ? rs.getString("vendedor") : "";
-                //String mailEmpleado = this.getEmailEmpleado(objDataBase, vendedor);
+                String mailEmpleado = this.getEmailEmpleado(objDataBase, vendedor);
                 if(vendedor.contains("virtual")){
                     if(dia >= 1 && dia <= 10){
                         continue;
@@ -48,17 +49,22 @@ public class Contabilizar implements Job{
                     if(rsContabilizar.next()){
                         String ok = rsContabilizar.getString(1)!=null ? rsContabilizar.getString(1) : "error";
                         if(ok.compareTo("t")!=0){
-                            System.out.println("Error en la contabilización del usuario " + vendedor + ". " + objDataBase.getError());
-                            //Correo.enviar(Parametro.getSvrMail(), Parametro.getSvrMailPuerto(), Parametro.getRemitente(), Parametro.getRemitenteClave(), "contabilidad@saitel.ec", mailEmpleado, "sistemas@saitel.ec", "NO CONTABILIZACION DEL USUARIO " + vendedor, new StringBuilder(msg), true);
+                            
+                            String msg = "Error en la contabilización del usuario " + vendedor + ". " + objDataBase.getError();
+                            System.out.println(msg);
+                            objCorreo.enviar(mailEmpleado, "NO CONTABILIZACION DEL USUARIO " + vendedor, msg, null);
+                            
                         }else{
                             System.out.println("Contabilización del usuario " + vendedor);
                         }
                         rsContabilizar.close();
                     }
                 }catch(Exception e){
+                    
                     String msg = "Error en la contabilización del usuario " + vendedor + ". " + e.getMessage() + ". " + objDataBase.getError();
                     System.out.println(msg);
-                    //Correo.enviar(Parametro.getSvrMail(), Parametro.getSvrMailPuerto(), Parametro.getRemitente(), Parametro.getRemitenteClave(), "contabilidad@saitel.ec", mailEmpleado, "sistemas@saitel.ec", "NO CONTABILIZACION DEL USUARIO " + vendedor, new StringBuilder(msg), true);
+                    objCorreo.enviar(mailEmpleado, "NO CONTABILIZACION DEL USUARIO " + vendedor, msg, null);
+                    
                 }
                 
             }
@@ -77,7 +83,7 @@ public class Contabilizar implements Job{
                 }
                 
                 String vendedor = rs1.getString("vendedor")!=null ? rs1.getString("vendedor") : "";
-                //String mailEmpleado = this.getEmailEmpleado(objDataBase, vendedor);
+                String mailEmpleado = this.getEmailEmpleado(objDataBase, vendedor);
                 if(vendedor.contains("virtual")){
                     if(dia >= 1 && dia <= 10){
                         continue;
@@ -88,7 +94,9 @@ public class Contabilizar implements Job{
                     if(rsContabilizar.next()){
                         String ok = rsContabilizar.getString(1)!=null ? rsContabilizar.getString(1) : "error";
                         if(ok.compareTo("t")!=0){
-                            System.out.println("Error en la contabilización del usuario " + vendedor + ". " + objDataBase.getError());
+                            String msg = "Error en la contabilización del usuario " + vendedor + ". " + objDataBase.getError();
+                            System.out.println(msg);
+                            objCorreo.enviar(mailEmpleado, "NO CONTABILIZACION DEL USUARIO " + vendedor, msg, null);
                             //Correo.enviar(Parametro.getSvrMail(), Parametro.getSvrMailPuerto(), Parametro.getRemitente(), Parametro.getRemitenteClave(), "contabilidad@saitel.ec", mailEmpleado, "sistemas@saitel.ec", "NO CONTABILIZACION DEL USUARIO " + vendedor, new StringBuilder(msg), true);
                         }else{
                             System.out.println("Contabilización del usuario " + vendedor);
@@ -98,6 +106,7 @@ public class Contabilizar implements Job{
                 }catch(Exception e){
                     String msg = "Error en la contabilización del usuario " + vendedor + ". " + e.getMessage() + ". " + objDataBase.getError();
                     System.out.println(msg);
+                    objCorreo.enviar(mailEmpleado, "NO CONTABILIZACION DEL USUARIO " + vendedor, msg, null);
                     //Correo.enviar(Parametro.getSvrMail(), Parametro.getSvrMailPuerto(), Parametro.getRemitente(), Parametro.getRemitenteClave(), "contabilidad@saitel.ec", mailEmpleado, "sistemas@saitel.ec", "NO CONTABILIZACION DEL USUARIO " + vendedor, new StringBuilder(msg), true);
                 }
                 
@@ -110,6 +119,7 @@ public class Contabilizar implements Job{
             String msg = Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de contabilización de ventas";
             System.out.println(msg);
             objDataBase.cerrar();
+            objCorreo.cerrar();
             //Correo.enviar(Parametro.getSvrMail(), Parametro.getSvrMailPuerto(), Parametro.getRemitente(), Parametro.getRemitenteClave(), "contabilidad@saitel.ec", "sistemas@saitel.ec", "", "CONTABILIZACION", new StringBuilder(msg), true);
         }
         
@@ -160,19 +170,19 @@ public class Contabilizar implements Job{
     }
     
     
-//    private String getEmailEmpleado (DataBase objDataBase, String alias)
-//    {
-//        String email = "";
-//        try{
-//            ResultSet rs = objDataBase.consulta("select email from tbl_empleado where alias='"+alias+"'");
-//            if(rs.next()){
-//                email = rs.getString(1)!=null ? rs.getString(1) : "";
-//                rs.close();
-//            }
-//        }catch(Exception e){
-//            e.printStackTrace();
-//        }    
-//        return email;
-//    }
+    private String getEmailEmpleado (DataBase objDataBase, String alias)
+    {
+        String email = "";
+        try{
+            ResultSet rs = objDataBase.consulta("select email from tbl_empleado where alias='"+alias+"'");
+            if(rs.next()){
+                email = rs.getString(1)!=null ? rs.getString(1) : "";
+                rs.close();
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }    
+        return email;
+    }
      
 }

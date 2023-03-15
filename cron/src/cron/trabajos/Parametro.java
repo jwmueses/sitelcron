@@ -34,6 +34,13 @@ public class Parametro {
     private static final String esta_usuario = "postgres";
     private static final String esta_clave = "Gi%9875.-*5+$)";  
     
+    private static final String red_social_ip = "127.0.0.1";
+    private static final String red_social_esquema = "correo";
+    private static final int red_social_puerto = 5432;
+    private static final String red_social_db = "db_red_social";
+    private static final String red_social_usuario = "us_red_social";
+    private static final String red_social_clave = "4tPQ5^1lnUu#gLuh1F0#";  
+    
     private static final String _svrMail = "mail.saitel.ec";
     private static final int _svrMailPuerto = 465;
     private static final String _remitante = "notificaciones.financiero@saitel.ec";
@@ -41,6 +48,31 @@ public class Parametro {
     private static final String _rutaArchivos = "/opt/lampp/htdocs/anexos/fe/"; //    /opt/lampp/htdocs/anexos/fe/        /home/sistemas/Documents/fe/    
     private static final String _servicioWebEnvio = "https://cel.sri.gob.ec/comprobantes-electronicos-ws/RecepcionComprobantesOffline?wsdl";
     private static final String _servicioWebAutoriza = "https://cel.sri.gob.ec/comprobantes-electronicos-ws/AutorizacionComprobantesOffline?wsdl";
+    
+
+    public static String getRed_social_ip() {
+        return red_social_ip;
+    }
+
+    public static String getRed_social_esquema() {
+        return red_social_esquema;
+    }
+
+    public static int getRed_social_puerto() {
+        return red_social_puerto;
+    }
+
+    public static String getRed_social_db() {
+        return red_social_db;
+    }
+
+    public static String getRed_social_usuario() {
+        return red_social_usuario;
+    }
+
+    public static String getRed_social_clave() {
+        return red_social_clave;
+    }
     
     public static String getIp()
     {

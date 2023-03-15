@@ -30,10 +30,12 @@ public class FacturaVenta extends DataBase{
     
     DataBase objDocumental;
     String diaCortesCreditos = "10";
+    CorreoSaitel objCorreo = null;
     
     public FacturaVenta(DataBase objDocumental, String m, int p, String db, String u, String c){
         super(m, p, db, u, c);
 
+        this.objCorreo = new CorreoSaitel( Parametro.getRed_social_ip(), Parametro.getRed_social_esquema(), Parametro.getRed_social_puerto(), Parametro.getRed_social_db(), Parametro.getRed_social_usuario(), Parametro.getRed_social_clave() );
         this.objDocumental = objDocumental;
     }
     
@@ -124,7 +126,6 @@ public class FacturaVenta extends DataBase{
 //            ResultSet rsRecalcular = this.consulta("select id_prefactura from tbl_prefactura where por_emitir_factura=true and (recalcular=true or total_internet=0) union select id_prefactura from tbl_prefactura as F where (select sum(A.saldo) from tbl_cliente_anticipo as A where F.id_instalacion=A.id_instalacion) >= F.total and fecha_emision is null");
             while(rs.next()){
                 String idPrefactura = rs.getString("id_prefactura")!=null ? rs.getString("id_prefactura") : "-1";
-                System.out.println(idPrefactura);
                 this.consulta("select proc_calcularPreFactura("+idPrefactura+", false);");
             }
         }catch(Exception e){
@@ -216,15 +217,15 @@ public class FacturaVenta extends DataBase{
                         idFormaPago="98";
                         formaPagoCodInterno="a";
                         
-                        float totalPagar = Float.parseFloat(total_pagar);
-                        float minTotalPagarACredito = Float.parseFloat(total_pagar) * pminValorVajaCredito / 100;
-                        float abonos = 0;
-                        float axUltimoAbono = 0;
+                        double totalPagar = Float.parseFloat(total_pagar);
+                        double minTotalPagarACredito = Float.parseFloat(total_pagar) * pminValorVajaCredito / 100;
+                        double abonos = 0;
+                        double axUltimoAbono = 0;
                         String axIdCliAnt = "";
                         String axMontoVajar = "";
                         for(int i=0; i<matAnticipos.length; i++){
                             if(matAnticipos[i][1].compareTo(id_cliente)==0 && matAnticipos[i][3].compareTo(id_instalacion)==0){    //  verificao si el cliente tiene registrado anticipo
-                                if( Float.parseFloat(matAnticipos[i][2]) >= totalPagar){    //  si el anticipo cubre el total de la factura 
+                                if( Double.parseDouble(matAnticipos[i][2]) >= totalPagar){    //  si el anticipo cubre el total de la factura 
                                     idCliAnt = matAnticipos[i][0];
                                     monto_vajar = total_pagar;
                                     break;
@@ -486,7 +487,7 @@ public class FacturaVenta extends DataBase{
                                 String documentoXml = DOCS_ELECTRONICOS + "generados/" + claveAcceso + ".xml";
                                 objFE.salvar(documentoXml);
                                 String error = objFE.getError();
-
+                                System.out.println("factura generada " + error);
                                 if(error.compareTo("")==0){
                                     estadoDocumento = "g";
                                     String archivoSalida = claveAcceso + ".xml";
@@ -495,7 +496,7 @@ public class FacturaVenta extends DataBase{
                                     error = firmaDigital.getError();
                                     
                     
-
+                                    System.out.println("factura firmado " + error);
                                     if(error.compareTo("")==0){
                                         estadoDocumento = "f";
                                         autorizacionXml = this.getStringFromFile(DOCS_ELECTRONICOS + "firmados/" + claveAcceso + ".xml");
@@ -546,6 +547,7 @@ public class FacturaVenta extends DataBase{
                 }catch(Exception e){
                     String msg = "Error en la emision de la prefactura ID: " + id_prefactura + ". " + e.getMessage() + ". " + this.getError();
                     System.out.println(msg);
+                    objCorreo.enviar("sistemas@saitel.ec", "Error en la emision de prefactura" , msg, null);
                     //Correo.enviar(Parametro.getSvrMail(), Parametro.getSvrMailPuerto(), Parametro.getRemitente(), Parametro.getRemitenteClave(), "contabilidad@saitel.ec", mailEmpleado, "sistemas@saitel.ec", "NO CONTABILIZACION DEL USUARIO " + vendedor, new StringBuilder(msg), true);
                 }
                 
@@ -709,8 +711,9 @@ public class FacturaVenta extends DataBase{
                 res.close();
             }
         }catch(Exception e){
-            System.out.println("Error al emitir la factura " + serie_factura + "-" + num_factura + " del cliente con RUC " + ruc + ". " + this.getError() + e.getMessage() );
-            e.printStackTrace();
+            String msg = "Error al emitir la factura " + serie_factura + "-" + num_factura + " del cliente con RUC " + ruc + ". " + this.getError() + e.getMessage();
+            System.out.println( msg );
+            objCorreo.enviar("sistemas@saitel.ec", "Error en la emision de prefactura" , msg, null);
         }
         return idFact;
     }
@@ -771,7 +774,7 @@ public class FacturaVenta extends DataBase{
                             rs1.close();
                         }
                     }else{
-                        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": no se encontro documetno en documento de factura ID " + id_factura_venta + " en DB documental");
+                        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": no se encontro documento en documento de factura ID " + id_factura_venta + " en DB documental");
                     }
                 }
                 r.close();
@@ -847,6 +850,7 @@ public class FacturaVenta extends DataBase{
         //this.objDocumental.cerrar();
         try{
             super.cerrar();
+            this.objCorreo.cerrar();
         }catch (Exception ec) {
             System.out.println(ec.getMessage());
         }

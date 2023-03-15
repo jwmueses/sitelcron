@@ -6,7 +6,6 @@
 package cron.trabajos;
 
 import java.sql.ResultSet;
-import java.util.Calendar;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -24,24 +23,29 @@ public class Comisiones implements Job{
         
         
         int diaHoy = Fecha.getDia();
-        int diaCorteComision = 25;
+        int diaCorteComision = 28;
         try{
             ResultSet rs = objDataBase.consulta("select valor from tbl_configuracion where parametro='dia_corte_comision'");
             if(rs.next()){
-                diaCorteComision = rs.getString(1)!=null ? rs.getInt(1) : 25;
+                diaCorteComision = rs.getString(1)!=null ? rs.getInt(1) : 28;
                 rs.close();
             }
         }catch(Exception e){
             e.printStackTrace();
         }
         
-        Calendar cal = Calendar.getInstance();
-        int hora = cal.get(Calendar.HOUR_OF_DAY);
+        if( diaCorteComision >= 32 ){
+            diaCorteComision = Fecha.getUltimoDiaMes( Fecha.getAnio() , Fecha.getMes() );
+        }
+        
+//        Calendar cal = Calendar.getInstance();
+//        int hora = cal.get(Calendar.HOUR_OF_DAY);
         
         
         
         
-        if( (diaHoy == diaCorteComision && hora >= 23) || diaHoy > diaCorteComision ){
+//        if( (diaHoy == diaCorteComision && hora >= 23) || diaHoy > diaCorteComision ){
+        if( diaHoy >= diaCorteComision ){
             System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de actualización de estados de instalaciones.");
             objDataBase.consulta("select proc_robot();");
             System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de actualización de estados de instalaciones");
@@ -53,7 +57,7 @@ public class Comisiones implements Job{
             System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando cálculos de comisiones");
             try{
                 objDataBase.consulta("select generarComisiones();");
-                objDataBase.consulta("select generarcomisionesFreeLance();");
+//                objDataBase.consulta("select generarcomisionesFreeLance();");
             }finally{
                 System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalizando cálculos de comisiones");
             }

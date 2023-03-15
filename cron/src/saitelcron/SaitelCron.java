@@ -167,7 +167,7 @@ public class SaitelCron implements Daemon{
             Trigger disparador4 = TriggerBuilder.newTrigger()
 	                    .withIdentity("cada25DeCadaMes", "saitel")
 	                    .startAt(new Date(System.currentTimeMillis()))
-	                    .withSchedule( CronScheduleBuilder.cronSchedule( "0 0 23 25 * ?")) //  segundos, minuto, hora, dia del mes, mes, dia de la semana, año      
+	                    .withSchedule( CronScheduleBuilder.cronSchedule( "0 0 0 L * ?")) //  segundos, minuto, hora, dia del mes, mes, dia de la semana, año      
                             //.withSchedule( CronScheduleBuilder.cronSchedule( "50 00 16 * * ?")) //  segundos, minuto, hora, dia del mes, mes, dia de la semana, año    
 	                    .build();
             
@@ -187,7 +187,7 @@ public class SaitelCron implements Daemon{
             Trigger disparador4_1 = TriggerBuilder.newTrigger()
 	                    .withIdentity("cada25DeCadaMesALas23_30", "saitel")
 	                    .startAt(new Date(System.currentTimeMillis()))
-	                    .withSchedule( CronScheduleBuilder.cronSchedule( "00 00 00 L * ?")) //  segundos, minuto, hora, dia del mes, mes, dia de la semana, año      
+	                    .withSchedule( CronScheduleBuilder.cronSchedule( "00 30 00 L * ?")) //  segundos, minuto, hora, dia del mes, mes, dia de la semana, año      
 //                            .withSchedule( CronScheduleBuilder.cronSchedule( "0 30 23 20 * ?")) //  fin de anio.  segundos, minuto, hora, dia del mes, mes, dia de la semana, año    
 	                    .build();
             

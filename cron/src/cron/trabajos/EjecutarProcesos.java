@@ -424,6 +424,8 @@ public class EjecutarProcesos  implements Job{
         
         //  ENVIO DE NOTIFICACIONES DE VACACIONES VIA CORREO 
         
+        CorreoSaitel objCorreo = new CorreoSaitel( Parametro.getRed_social_ip(), Parametro.getRed_social_esquema(), Parametro.getRed_social_puerto(), Parametro.getRed_social_db(), Parametro.getRed_social_usuario(), Parametro.getRed_social_clave() );
+        
         System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando envio de notificaciones de vacaciones");
         try{
             ResultSet rs1 = objDataBase.consulta("select * from tbl_notificaciones_html where nombre_notificacion='mail_notificacion_planificacion_vacaciones';");
@@ -454,18 +456,20 @@ public class EjecutarProcesos  implements Job{
                 "select A.*, E.id_sucursal, E.nombre, E.apellido, E.email from A inner join tbl_empleado as E on E.id_empleado = A.id_empleado \n" +
                 "where estado and not eliminado and generar_rol and (fecha - '14 day'::interval)::date = now()::date;");
             while(rs.next()){
-                int idSucursal = rs.getString("id_sucursal")!=null ? rs.getInt("id_sucursal") : 1;
+//                int idSucursal = rs.getString("id_sucursal")!=null ? rs.getInt("id_sucursal") : 1;
                 String nombre = rs.getString("nombre")!=null ? rs.getString("nombre") : "";
                 String apellido = rs.getString("apellido")!=null ? rs.getString("apellido") : "";
                 String fechaVacaciones = rs.getString("fecha")!=null ? rs.getString("fecha") : "";
                 String dias = rs.getString("dias")!=null ? rs.getString("dias") : "";
                 String email = rs.getString("email")!=null ? rs.getString("email") : "";
                 
-                String mailcc = matRs1[0][ 5+idSucursal ];
+//                String mailcc = matRs1[0][ 5+idSucursal ];
                 String msg = matRs1[0][ 2 ]
                                 .replace("_EMPLEADO_", nombre + " " + apellido)
                                 .replace("_FECHA_", fechaVacaciones)
                                 .replace("_DIAS_", dias);
+                
+                objCorreo.enviar(email, "NOTIFICACION, AVISO DE SALIDA A VACACIONES", msg, null);
                 
 //                System.out.println(email + ", " + mailcc + " => " + msg + "\n\r");
                 
@@ -485,6 +489,7 @@ public class EjecutarProcesos  implements Job{
         } catch(Exception e){
             e.printStackTrace();
         } finally{
+            objCorreo.cerrar();
             System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización envio de notificaciones de vacaciones");
         }
         
@@ -578,6 +583,26 @@ public class EjecutarProcesos  implements Job{
             System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de carga de respaldo de timbrados de sucursales");
         }    
             
+        
+        
+        
+        
+        
+        
+        
+        
+        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando cambio de clientes a tercera edad");
+        try{
+            objDataBase.consulta("update tbl_cliente set fecha_cambio_3_edad=now() " +
+                    "where id_cliente in(select id_cliente from tbl_cliente where date_trunc('day'::text, age(now(), fecha_nacimiento::timestamp with time zone)) = '65 years' )");
+        } finally{
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de cambio de clientes a tercera edad");
+        }
+        
+        
+        
+        
+        
         
         
         

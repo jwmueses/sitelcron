@@ -138,9 +138,9 @@ public class Facturar implements Job{
 //                "SP.descuento, tipo, round((P.precio_costo + (P.precio_costo * P.utilidad_min / 100)), 4), I.codigo, P.id_plan_cuenta_venta, P.id_iva, id_plan_cuenta_venta_servicio, id_plan_cuenta_venta_bien order by id_sucursal, id_producto");
 //            String matDetalleFactura[][] = Matriz.ResultSetAMatriz(rsDetalleFactura);
             
-            int anio = Fecha.getAnio();
-            int mes= Fecha.getMes();
-            String periodoHasta = anio + "-" + mes + "-" + Fecha.getUltimoDiaMes(anio, mes);
+//            int anio = Fecha.getAnio();
+//            int mes= Fecha.getMes();
+//            String periodoHasta = anio + "-" + mes + "-" + Fecha.getUltimoDiaMes(anio, mes);
 // rubros para el el 1 de cada mes por convenios de debitos
 //String unionConvenios = " or (forma_pago in('TAR', 'CTA') and num_cuenta<>'' and num_cuenta is not null)";
 //        
@@ -258,7 +258,7 @@ public class Facturar implements Job{
                     + "and set_convenio_cuenta=true \n"
                     + "and ((I.convenio_pago ='1' and periodo=('"+periodoActual+"'::date - '1 month'::interval)::date ) or (I.convenio_pago ='0' and periodo='"+periodoActual+"'))";
             
-            ResultSet rs = this.objDataBase.consulta("select *, total+comision_cash as total_comision from vta_prefactura_todas where por_emitir_destino='Pichincha' and por_emitir_factura=true"
+            ResultSet rs = this.objDataBase.consulta("select *, total+comision_cash as total_comision from vta_prefactura_todas where por_emitir_destino in('Pichincha', 'WesternUnion') and por_emitir_factura=true"
                     + (Fecha.getDia()==1 ? clientesConvenioTarjeta : "") );
             
             //  instalaciones que tienen convenios de debito

@@ -18,8 +18,10 @@ public class ServidoresCorte implements Job{
     boolean noct_inst_prepago = false;
     boolean noct_inst_postpago = false;
     boolean noct_aplica_cambio_plan = false;
+    CorreoSaitel objCorreo = null;
     
 //  PROMOCIONES GENERALES
+    
     String matPromociones[][];
     
     @Override
@@ -33,14 +35,12 @@ public class ServidoresCorte implements Job{
         long finEmisionFacturas = Fecha.getTimeStamp(fecha_actual, "18:40");
         long timeActual = Fecha.getTimeStamp(fecha_actual, Fecha.getHora());
         
-        
+        this.objCorreo = new CorreoSaitel( Parametro.getRed_social_ip(), Parametro.getRed_social_esquema(), Parametro.getRed_social_puerto(), Parametro.getRed_social_db(), Parametro.getRed_social_usuario(), Parametro.getRed_social_clave() );
         DataBase objDataBase = new DataBase( Parametro.getIp(), Parametro.getPuerto(), Parametro.getBaseDatos(), Parametro.getUsuario(), Parametro.getClave() );
         Notificacion objNotificacion = new Notificacion( Parametro.getIp(), Parametro.getPuerto(), Parametro.getBaseDatos(), Parametro.getUsuario(), Parametro.getClave() );
         
         try{
-                
             if(timeActual >= iniEjecucion && timeActual <= finEjecucion ){
-                
                 
                 try{
                     ResultSet rs = objDataBase.consulta("SELECT * FROM tbl_promocion_megas order by fecha_creacion desc;");
@@ -73,6 +73,7 @@ public class ServidoresCorte implements Job{
                         rs.close();
                     }
                 }catch(Exception e){
+                    System.out.println("Error obteniendo promociones Megas " + e.getMessage() );
                 }
                 
                 
@@ -87,6 +88,7 @@ public class ServidoresCorte implements Job{
                         rs.close();
                     }
                 }catch(Exception e){
+                    System.out.println("Error obteniendo promociones " + e.getMessage() );
                 }
             
             
@@ -109,9 +111,9 @@ public class ServidoresCorte implements Job{
                         rs.close();
                     }
                 }catch(Exception e){
+                    System.out.println("Error obteniendo configuracion(permitir_cortes_cron) " + e.getMessage() );
                     e.printStackTrace();
                 }
-                
                 
                 
                 if(permitirCortesCron.compareTo("true")==0) {
@@ -162,12 +164,12 @@ public class ServidoresCorte implements Job{
 
 
                     //  se factura hasta las 19:00,  a esta horas empieza la emision de facturasde cash y anticipos
-                    if(timeActual >= finEmisionFacturas){   
+                    if(timeActual <= finEmisionFacturas){   
                         // emision de prefacturas con clientes que tienen anticipos
                         System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando emisión de facturas a clientes con anticipos");
+                        FacturaVenta objFacturaVenta = new FacturaVenta( objDocumental, Parametro.getIp(), Parametro.getPuerto(), Parametro.getBaseDatos(), Parametro.getUsuario(), Parametro.getClave() );
                         try{
-                            FacturaVenta objFacturaVenta = new FacturaVenta( objDocumental, Parametro.getIp(), Parametro.getPuerto(), Parametro.getBaseDatos(), Parametro.getUsuario(), Parametro.getClave() );
-
+                            
         //                    ResultSet rsRubrosAdicionales = objDataBase.consulta("SELECT * FROM vta_prefactura_rubro WHERE id_instalacion in(select id_instalacion from vta_prefactura_todas as F where (select sum(A.saldo) from tbl_cliente_anticipo as A where F.id_cliente=A.id_cliente) >= F.total and fecha_emision is null)");
         //                    String rubrosAdicionales[][] = Matriz.ResultSetAMatriz(rsRubrosAdicionales);
 
@@ -208,10 +210,12 @@ public class ServidoresCorte implements Job{
                                 "and fecha_emision is null order by periodo;");                   
                             objFacturaVenta.emitir(rsFacturar, matAnticipos, matConveniosTarjetas, 100);
 
-                            objFacturaVenta.cerrarConexiones();
                         }catch(Exception e){
-                            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": " + e.getMessage());
+                            String msg = Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": " + e.getMessage();
+                            System.out.println(msg);
+                            this.objCorreo.enviar("sistemas@saitel.ec", "Error emisión de facturas a clientes con anticipos" , msg, null);
                         }finally{
+                            objFacturaVenta.cerrarConexiones();
                             System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de emisión de facturas a clientes con anticipos");
                         }
                         
@@ -377,7 +381,9 @@ public class ServidoresCorte implements Job{
                             }    
 
                         }catch(Exception e){
-                            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + " Error en la generación de scripts: " + e.getMessage());
+                            String msg = Fecha.getFecha("SQL") + " " + Fecha.getHora() + " Error en la generación de scripts: " + e.getMessage();
+                            this.objCorreo.enviar("jefetecnicoibarra@saitel.ec", "Error al tratar de conectarse al servidor FTP" , msg, null);
+                            System.out.println(msg);
                         }
 
                         //  guardar datos en un archivo y enviar al servidor FTP
@@ -407,14 +413,17 @@ public class ServidoresCorte implements Job{
                                     if(axErrColas.compareTo("")!=0 || axErrListas.compareTo("")!=0) {
                                         errColas += axErrColas;
                                         errListas += axErrListas;
+                                        this.objCorreo.enviar("jefetecnicoibarra@saitel.ec", "Error en transferencia de archivos" , errColas + errListas, null);
 //                                        System.out.println(msg);
 //                                        Correo.enviar(Parametro.getSvrMail(), Parametro.getSvrMailPuerto(), Parametro.getRemitente(), Parametro.getRemitenteClave(), "gerencia@saitel.ec", "sistemas@saitel.ec", "", "ERROR EN LA TRANSFERENCIA DE ARCHIVOS FTP", new StringBuilder(msg), true);
 //                                    }else{
 //                                        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Actualización de archivos de cortes en el servidor " + servidor);
                                     }
                                 }else{
-                                    errConexion += Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Error al tratar de conectarse al servidor " + servidor + ": [" + ftp.getError() + "]. <br />";
-                                    System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Error al tratar de conectarse al servidor " + servidor + ": [" + ftp.getError() + "]");
+                                    String msg = Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Error al tratar de conectarse al servidor " + servidor + ": [" + ftp.getError() + "]";
+                                    errConexion += msg + " <br />";
+                                    this.objCorreo.enviar("jefetecnicoibarra@saitel.ec", "Error al tratar de conectarse al servidor FTP" , msg, null);
+                                    System.out.println(msg);
                                     //Correo.enviar(Parametro.getSvrMail(), Parametro.getSvrMailPuerto(), Parametro.getRemitente(), Parametro.getRemitenteClave(), "gerencia@saitel.ec", "sistemas@saitel.ec", "", "INCONVENIENTES EN CONEXION FTP", new StringBuilder(msg), true);
                                 }
                                 ftp.desconectar();
@@ -443,6 +452,7 @@ public class ServidoresCorte implements Job{
                         objDocumental.cerrar();
                     }
                     
+                    
 //                    if(errConexion.compareTo("")!=0) {
 //                        objNotificacion.setMensaje( errConexion );
 //                        objNotificacion.notificar("ftp_conexion", null, null);
@@ -453,15 +463,20 @@ public class ServidoresCorte implements Job{
 //                    }
             
                 } else {   //  control de permitir cortes
-                    System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + " Ejecucion de cortes desabilitado, parametro 'permitir_cortes_cron' = false" );
+                    String msg = Fecha.getFecha("SQL") + " " + Fecha.getHora() + " Ejecucion de cortes desabilitado, parametro 'permitir_cortes_cron' = false";
+                    this.objCorreo.enviar("sistemas@saitel.ec", "Ejecucion de cortes desabilitado" , msg, null);
+                    System.out.println(msg );
                 }
             }   //  control de fechas
             
         }catch(Exception e){
-                System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + " Error en el proceso general de script de cortes: " + e.getMessage());
+            String msg = Fecha.getFecha("SQL") + " " + Fecha.getHora() + " Error en el proceso general de script de cortes: " + e.getMessage();
+            System.out.println(msg);
+            this.objCorreo.enviar("sistemas@saitel.ec", "Error en el proceso general de script de cortes" , msg, null);
         }finally{
             objDataBase.ejecutar("update tbl_configuracion set valor='false' where parametro='bloqueo_servidores_ftp'");
             objDataBase.cerrar();
+            this.objCorreo.cerrar();
             objNotificacion.cerrar();
         }
         
@@ -712,6 +727,7 @@ public class ServidoresCorte implements Job{
         }catch (Exception e) {
             String msg = Fecha.getFecha("SQL") + " " + Fecha.getHora() + ". Error al tratar de escribir en el archivo " + archivo + ". " + e.getMessage();
             System.out.print(msg);
+            this.objCorreo.enviar("jefetecnicoibarra@saitel.ec", "INCONVENIENTES EN GUARDADO DE ARCHIVOS DE CORTES", msg, null);
 //            Correo.enviar(Parametro.getSvrMail(), 
 //                            Parametro.getSvrMailPuerto(), 
 //                            Parametro.getRemitente(), 
@@ -731,7 +747,9 @@ public class ServidoresCorte implements Job{
                     fichero.close();
                 }
             }catch(Exception e2) {
-                System.out.print(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Error al tratar de cerrar el archivo " + archivo + ". " + e2.getMessage());
+                String msg = Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Error al tratar de cerrar el archivo " + archivo + ". " + e2.getMessage();
+                System.out.print(msg);
+                this.objCorreo.enviar("sistemas@saitel.ec", "INCONVENIENTES EN GUARDADO DE ARCHIVOS DE CORTES", msg, null);
             }
         }
         return true;
