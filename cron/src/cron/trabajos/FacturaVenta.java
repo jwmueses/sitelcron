@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -39,7 +40,7 @@ public class FacturaVenta extends DataBase{
         this.objDocumental = objDocumental;
     }
     
-    public void emitir(ResultSet rs, String matAnticipos[][], String matDebitos[][], int pminValorVajaCredito)
+    public void emitir(ResultSet rs, List matAnticipos, String matDebitos[][], int pminValorVajaCredito)
     {
         
         String DOCS_ELECTRONICOS = Parametro.getRutaArchivos();
@@ -133,7 +134,9 @@ public class FacturaVenta extends DataBase{
         } finally {
             try{
                 rs.beforeFirst();
-            }catch(Exception ex){ex.printStackTrace();}
+            }catch(Exception ex){
+                ex.printStackTrace();
+            }
         }
          
         
@@ -153,6 +156,7 @@ public class FacturaVenta extends DataBase{
         try{    
             while(rs.next()){
                 String id_prefactura = rs.getString("id_prefactura")!=null ? rs.getString("id_prefactura") : "-1";
+//                System.out.println("id_prefactura " + id_prefactura);
                 try{
                     String id_instalacion = rs.getString("id_instalacion")!=null ? rs.getString("id_instalacion") : "-1";
                     String id_sucursal = rs.getString("id_sucursal")!=null ? rs.getString("id_sucursal") : "-1";
@@ -214,47 +218,55 @@ public class FacturaVenta extends DataBase{
                     String idCliAnt = "";
                     String monto_vajar = "";
                     if(matAnticipos != null){
-                        idFormaPago="98";
-                        formaPagoCodInterno="a";
-                        
-                        double totalPagar = Float.parseFloat(total_pagar);
-                        double minTotalPagarACredito = Float.parseFloat(total_pagar) * pminValorVajaCredito / 100;
-                        double abonos = 0;
-                        double axUltimoAbono = 0;
-                        String axIdCliAnt = "";
-                        String axMontoVajar = "";
-                        for(int i=0; i<matAnticipos.length; i++){
-                            if(matAnticipos[i][1].compareTo(id_cliente)==0 && matAnticipos[i][3].compareTo(id_instalacion)==0){    //  verificao si el cliente tiene registrado anticipo
-                                if( Double.parseDouble(matAnticipos[i][2]) >= totalPagar){    //  si el anticipo cubre el total de la factura 
-                                    idCliAnt = matAnticipos[i][0];
-                                    monto_vajar = total_pagar;
-                                    break;
-                                } else {        //  si el anticipo no cubre el monto
-                                    abonos += Float.parseFloat(matAnticipos[i][2]);
-                                    axUltimoAbono = Float.parseFloat(matAnticipos[i][2]);
-                                    axIdCliAnt += matAnticipos[i][0] + ",";
-                                    axMontoVajar += matAnticipos[i][2] + ",";
-                                    if(abonos >= totalPagar){     //  si el o los abonos cubren el total se salta al pago
+                        if(!matAnticipos.isEmpty()){    
+                            idFormaPago="98";
+                            formaPagoCodInterno="a";
+
+                            double totalPagar = Float.parseFloat(total_pagar);
+                            double minTotalPagarACredito = Float.parseFloat(total_pagar) * pminValorVajaCredito / 100;
+                            double abonos = 0;
+                            double axUltimoAbono = 0;
+                            String axIdCliAnt = "";
+                            String axMontoVajar = "";
+                            Iterator it = matAnticipos.iterator();
+                            while(it.hasNext()){
+                                String matAnticipo[] = (String[])it.next();
+
+    //                            System.out.println("mat anticipo " + matAnticipo[1] + " - " + matAnticipo[3]);
+
+                                if(matAnticipo[1].compareTo(id_cliente)==0 && matAnticipo[3].compareTo(id_instalacion)==0){    //  verificao si el cliente tiene registrado anticipo
+                                    if( Double.parseDouble(matAnticipo[2]) >= totalPagar){    //  si el anticipo cubre el total de la factura 
+                                        idCliAnt = matAnticipo[0];
+                                        monto_vajar = total_pagar;
                                         break;
+                                    } else {        //  si el anticipo no cubre el monto
+                                        abonos += Float.parseFloat(matAnticipo[2]);
+                                        axUltimoAbono = Float.parseFloat(matAnticipo[2]);
+                                        axIdCliAnt += matAnticipo[0] + ",";
+                                        axMontoVajar += matAnticipo[2] + ",";
+                                        if(abonos >= totalPagar){     //  si el o los abonos cubren el total se salta al pago
+                                            break;
+                                        }
                                     }
                                 }
                             }
-                        }
-                        if(axIdCliAnt.compareTo("")!=0 && abonos>0){
-                            idCliAnt = axIdCliAnt.substring(0, axIdCliAnt.length()-1);
-                            monto_vajar = axMontoVajar = axMontoVajar.substring(0, axMontoVajar.length()-1);
-                            if(abonos == totalPagar){       //  si los abonos cubre el total de la factura se vaja la factura completa
-                                monto_vajar = axMontoVajar;
-                            } else if(abonos > totalPagar){     // se cubre más del total de la factura se vaja la factura completa
-                                        monto_vajar = axMontoVajar.substring( 0, axMontoVajar.lastIndexOf(",") )  + ","  +  Addons.redondear(totalPagar - (abonos - axUltimoAbono) ) + ","; //    el ultimo abono debe ser 
-                            } else if(abonos >= minTotalPagarACredito){     //  si los abono cubren por lo menos el minimo a vajar se vana credito
-                                        monto_vajar = axMontoVajar;
+
+                            if(axIdCliAnt.compareTo("")!=0 && abonos>0){
+                                idCliAnt = axIdCliAnt.substring(0, axIdCliAnt.length()-1);
+                                monto_vajar = axMontoVajar = axMontoVajar.substring(0, axMontoVajar.length()-1);
+                                if(abonos == totalPagar){       //  si los abonos cubre el total de la factura se vaja la factura completa
+                                    monto_vajar = axMontoVajar;
+                                } else if(abonos > totalPagar){     // se cubre más del total de la factura se vaja la factura completa
+                                            monto_vajar = axMontoVajar.substring( 0, axMontoVajar.lastIndexOf(",") )  + ","  +  Addons.redondear(totalPagar - (abonos - axUltimoAbono) ) + ","; //    el ultimo abono debe ser 
+                                } else if(abonos >= minTotalPagarACredito){     //  si los abono cubren por lo menos el minimo a vajar se vana credito
+                                            monto_vajar = axMontoVajar;
+                                }
                             }
                         }
-                    }
+                    }    
+                        
                     
                      
-                    
                     
                     int p = Matriz.enMatriz(matPuntosVirtuales, id_sucursal, 0);
                     if(p!=-1){
@@ -354,15 +366,15 @@ public class FacturaVenta extends DataBase{
                             "WHERE estadocobro=false and id_instalacion="+id_instalacion+" and id_sucursal="+id_sucursal+" and tiporubro='p' and estadocobro='false' and periodo <= '" + fin + "' " +
                             "union all " +
                     //  suministros
-                            "SELECT distinct id_rubro, 'administrador' as usuario, now()::date as fecha_creacion, idproductos::int8 as id_producto, rubro, true as temporal, " +
-                            "now()::date as fecha_inicio, now()::date as fecha_fin, PR.id_sucursal, id_instalacion, " +
-                            "periodo, (monto + (monto * I.porcentaje::numeric / 100))::numeric(13,2) as total, monto as subtotal_12, " +
-                            "(monto * I.porcentaje::numeric / 100)::numeric(13,2) as iva_12, P.codigo, descripcion, porcentaje, I.codigo as codigo_iva, tipo, id_plan_cuenta_venta, " +
-                            "I.id_iva, id_plan_cuenta_venta_servicio, id_plan_cuenta_venta_bien, canproductos, PR.rubro as rubro_prefactura, tiporubro, estadocobro, id_prefactura_rubro " + 
-                            "FROM (((tbl_prefactura_rubro as PR inner join vta_producto_n as P on PR.idproductos::int=P.id_producto) " + 
-                            "inner join tbl_sucursal_producto as SP on P.id_producto=SP.id_producto) " + 
-                            "inner join tbl_iva as I on I.id_iva=SP.id_iva) " + 
-                            "WHERE id_rubro is null and estadocobro=false and tiporubro='p' and id_instalacion=" + id_instalacion + " and periodo<='" + fin + "' " + 
+                            "SELECT distinct PR.id_rubro, 'administrador' as usuario, now()::date as fecha_creacion, PR.idproductos::int8 as id_producto, PR.rubro, true as temporal, \n" +
+                            "now()::date as fecha_inicio, now()::date as fecha_fin, PR.id_sucursal, PR.id_instalacion, \n" +
+                            "PR.periodo, (PR.monto + (PR.monto * I.porcentaje::numeric / 100))::numeric(13,2) as total, PR.monto as subtotal_12, \n" +
+                            "(PR.monto * I.porcentaje::numeric / 100)::numeric(13,2) as iva_12, P.codigo, descripcion, porcentaje, I.codigo as codigo_iva, tipo, id_plan_cuenta_venta, \n" +
+                            "I.id_iva, id_plan_cuenta_venta_servicio, id_plan_cuenta_venta_bien, PR.canproductos, PR.rubro as rubro_prefactura, PR.tiporubro, PR.estadocobro, id_prefactura_rubro \n" +
+                            "FROM (((tbl_prefactura_rubro as PR inner join vta_producto_n as P on PR.idproductos::int=P.id_producto) \n" +
+                            "inner join tbl_sucursal_producto as SP on P.id_producto=SP.id_producto) \n" +
+                            "inner join tbl_iva as I on I.id_iva=SP.id_iva) \n" +
+                            "WHERE PR.id_rubro is null and PR.estadocobro=false and PR.tiporubro='p' and PR.id_instalacion=" + id_instalacion + " and PR.periodo<='" + fin + "' " + 
                     // activos
                             "union all " + 
                             "SELECT distinct id_rubro, 'administrador' as usuario, now()::date as fecha_creacion, idproductos::int8 as id_producto, rubro, " + 
@@ -487,7 +499,7 @@ public class FacturaVenta extends DataBase{
                                 String documentoXml = DOCS_ELECTRONICOS + "generados/" + claveAcceso + ".xml";
                                 objFE.salvar(documentoXml);
                                 String error = objFE.getError();
-                                System.out.println("factura generada " + error);
+                                
                                 if(error.compareTo("")==0){
                                     estadoDocumento = "g";
                                     String archivoSalida = claveAcceso + ".xml";
@@ -495,8 +507,6 @@ public class FacturaVenta extends DataBase{
                                     firmaDigital.execute();
                                     error = firmaDigital.getError();
                                     
-                    
-                                    System.out.println("factura firmado " + error);
                                     if(error.compareTo("")==0){
                                         estadoDocumento = "f";
                                         autorizacionXml = this.getStringFromFile(DOCS_ELECTRONICOS + "firmados/" + claveAcceso + ".xml");
@@ -542,7 +552,6 @@ public class FacturaVenta extends DataBase{
 
                     }else{
                         System.out.println("La sucursal de código " + id_sucursal + "No tiene un punto de emisión virtual");
-                        break;
                     }
                 }catch(Exception e){
                     String msg = "Error en la emision de la prefactura ID: " + id_prefactura + ". " + e.getMessage() + ". " + this.getError();
@@ -551,7 +560,7 @@ public class FacturaVenta extends DataBase{
                     //Correo.enviar(Parametro.getSvrMail(), Parametro.getSvrMailPuerto(), Parametro.getRemitente(), Parametro.getRemitenteClave(), "contabilidad@saitel.ec", mailEmpleado, "sistemas@saitel.ec", "NO CONTABILIZACION DEL USUARIO " + vendedor, new StringBuilder(msg), true);
                 }
                 
-            }
+            }       //  del wile
             objPromocion.cerrar();
         }catch(Exception e){
             System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": " + e.getMessage());
@@ -709,9 +718,12 @@ public class FacturaVenta extends DataBase{
                 
                 
                 res.close();
+            } else{
+                String msg = "Error al ejecutar emision de la factura " + serie_factura + "-" + num_factura + " del cliente con RUC " + ruc + ". " + this.getError();
+                System.out.println( msg );
             }
         }catch(Exception e){
-            String msg = "Error al emitir la factura " + serie_factura + "-" + num_factura + " del cliente con RUC " + ruc + ". " + this.getError() + e.getMessage();
+            String msg = "Error en el proceso de emitir la factura " + serie_factura + "-" + num_factura + " del cliente con RUC " + ruc + ". " + this.getError() + e.getMessage();
             System.out.println( msg );
             objCorreo.enviar("sistemas@saitel.ec", "Error en la emision de prefactura" , msg, null);
         }
@@ -738,7 +750,7 @@ public class FacturaVenta extends DataBase{
     {
         ResultSet rs = this.consulta("SELECT P.id_sucursal, P.id_punto_emision, usuario_caja, fac_num_serie, " + 
             "case when max(num_factura)>0 then max(num_factura)+1 else 1 end, direccion_establecimiento " +
-            "from tbl_punto_emision as P inner join tbl_factura_venta as F on F.serie_factura=P.fac_num_serie " +
+            "from tbl_punto_emision as P left join tbl_factura_venta as F on F.serie_factura=P.fac_num_serie " +
             "where caja_virtual=true " +
             "group by P.id_sucursal, P.id_punto_emision, usuario_caja, fac_num_serie, direccion_establecimiento " +
             "order by id_sucursal");

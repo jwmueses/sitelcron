@@ -99,6 +99,30 @@ public class Matriz {
         return null;
     }
     
+    public static List ResultSetALista(ResultSet rs)
+    {        
+        List rsLista = new ArrayList();
+        try{
+            /*columnas*/
+            ResultSetMetaData mdata = rs.getMetaData();
+            int col = mdata.getColumnCount();
+            /*parsear*/
+            int j=1;
+            while(rs.next()){
+                String vec[] = new String[col+2];
+                for(j=1; j<=col; j++) {
+                    vec[j-1] = (rs.getString(j)!=null) ? rs.getString(j) : "";
+                }
+                vec[j-1]="0";
+                vec[j]="f";
+                rsLista.add(vec);
+            }
+        }catch(Exception e){
+            System.out.print(e.getMessage());
+        }
+        return rsLista;
+    }
+    
     public static String[][] suprimirDuplicados(String mat[][], int j)
     {
         String distintos[][]=null;

@@ -4,6 +4,7 @@ import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.sql.ResultSet;
 import java.util.Date;
+import java.util.List;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -176,8 +177,8 @@ public class ServidoresCorte implements Job{
 
                             //  anticipos
                             ResultSet rsAnticipos = objDataBase.consulta("select id_cliente_anticipo, id_cliente, saldo, id_instalacion from tbl_cliente_anticipo where saldo > 0 and modo_bajada='i' order by id_cliente, saldo desc;");
-                            String matAnticipos[][] = Matriz.ResultSetAMatriz(rsAnticipos);
-
+//                            String matAnticipos[][] = Matriz.ResultSetAMatriz(rsAnticipos);
+                            List matAnticipos = Matriz.ResultSetALista(rsAnticipos);
 
                             ResultSet rsConveniosTarjetas = objDataBase.consulta("select id_instalacion \n" +
                             "from vta_instalacion \n" +
@@ -508,8 +509,9 @@ public class ServidoresCorte implements Job{
 
                         //  anticipos
                         ResultSet rsAnticipos = objDataBase.consulta("select id_cliente_anticipo, id_cliente, saldo, id_instalacion from tbl_cliente_anticipo where saldo > 0 and modo_bajada='i' order by id_cliente, saldo desc;");
-                        String matAnticipos[][] = Matriz.ResultSetAMatriz(rsAnticipos);
-
+//                        String matAnticipos[][] = Matriz.ResultSetAMatriz(rsAnticipos);
+                        List matAnticipos = Matriz.ResultSetALista(rsAnticipos);
+                        
 
                         ResultSet rsConveniosTarjetas = objDataBase.consulta("select id_instalacion \n" +
                         "from vta_instalacion \n" +
