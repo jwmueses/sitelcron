@@ -286,7 +286,8 @@ public class Prefactura implements Job{
         //      actualizacion de saldos de los libros mayores de todo el plan de cuentas
         System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando actualizacion de saldos de los libros mayores de todo el plan de cuentas");
         try{
-            objDataBase.consulta("select proc_actualizaSaldosLibrosTodos('" + Fecha.addW(fecha, 2, -1) + "');");
+            String fechaIni = (Fecha.getAnio()-1) + "-12-31";
+            objDataBase.consulta("select proc_actualizaSaldosLibrosTodos('" + fechaIni + "'::date);");
         }finally{
             System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalizando actualizacion de saldos de los libros mayores de todo el plan de cuentas");
         }
