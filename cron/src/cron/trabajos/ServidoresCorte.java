@@ -33,7 +33,7 @@ public class ServidoresCorte implements Job{
         String fecha_actual = anioActual + "-" + mesActual + "-" + diaActual;
         long iniEjecucion = Fecha.getTimeStamp(fecha_actual, "05:29");
         long finEjecucion = Fecha.getTimeStamp(fecha_actual, "23:59");
-        long finEmisionFacturas = Fecha.getTimeStamp(fecha_actual, "18:40");
+        long finEmisionFacturas = Fecha.getTimeStamp(fecha_actual, "18:55");
         long timeActual = Fecha.getTimeStamp(fecha_actual, Fecha.getHora());
         
         this.objCorreo = new CorreoSaitel( Parametro.getRed_social_ip(), Parametro.getRed_social_esquema(), Parametro.getRed_social_puerto(), Parametro.getRed_social_db(), Parametro.getRed_social_usuario(), Parametro.getRed_social_clave() );
@@ -164,7 +164,7 @@ public class ServidoresCorte implements Job{
 
 
 
-                    //  se factura hasta las 19:00,  a esta horas empieza la emision de facturasde cash y anticipos
+                    //  se factura hasta 15 min antes de las 19:00,  a esta hora empieza la emision de facturasde cash y anticipos
                     if(timeActual <= finEmisionFacturas){   
                         // emision de prefacturas con clientes que tienen anticipos
                         System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando emisión de facturas a clientes con anticipos");
