@@ -148,12 +148,12 @@ public class ServidoresCorte implements Job{
 
 
                     // generacion de prefacturas faltantes
-//                    long horaInicio = Fecha.getTimeStamp( Fecha.getFecha("ISO"), "21:00:00" );
-//                    if(timeActual >= horaInicio){
-//                        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de generación de prefacturas faltantes del período actual");
-//                        objDataBase.consulta("select proc_generarPrefacturasFaltantes();");
-//                        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de generación de prefacturas faltantes del período actual");
-//                    }
+                    long horaInicio = Fecha.getTimeStamp( Fecha.getFecha("ISO"), "17:30:00" );
+                    if( (diaActual <= 10 && timeActual >= horaInicio) || diaActual >= 11 ){
+                        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de generación de prefacturas faltantes del período actual");
+                        objDataBase.consulta("select proc_generarPrefacturasFaltantes();");
+                        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de generación de prefacturas faltantes del período actual");
+                    }
                     
 
 
