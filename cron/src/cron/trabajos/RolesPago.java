@@ -59,11 +59,11 @@ public class RolesPago implements Job{
             "(select array_to_string(array_agg(id_empleado_hora_extra), ',') from vta_empleado_horas_extras he where tipo='s' and he.id_empleado=e.id_empleado and he.estado='a' and he.id_rol_pagos is null) as supleid, \n" +
             "(select sum(monto) from tbl_rubro_cont c join tbl_rubro_cont_det d on c.id_rubro_cont=d.id_rubro_cont where deducible=true and movimiento=true and d.id_empleado=e.id_empleado and d.periodo between date_trunc('month', now())::date and getultimodiafecha(now()::date)::date ) as sumDeducible, \n" +
             "case e.id_area \n" +
-            "	when (select id_area from tbl_area where area like '%VENTAS%') then (select comision from tbl_instalacion_comision c where c.id_sucursal=e.id_sucursal and c.fecha_inicio between date_trunc('month', (now()-'1 month'::interval) )::date and getultimodiafecha(now()::date)::date ) \n" +
+            "	when (select id_area from tbl_area where area like '%VENTAS%') then (select distinct comision from tbl_instalacion_comision c where c.id_sucursal=e.id_sucursal and c.fecha_inicio between date_trunc('month', (now()-'1 month'::interval) )::date and getultimodiafecha(now()::date)::date ) \n" +
             "	else -2\n" +
             "end as comisionVentas,\n" +
             "case e.id_rol \n" +
-            "	when (select id_rol from tbl_rol where rol like '%JEFE_MAR%') then (select comision from tbl_instalacion_comision c where c.id_sucursal=0 and c.fecha_inicio between date_trunc('month', (now()-'1 month'::interval) )::date and getultimodiafecha(now()::date)::date ) \n" +
+            "	when (select id_rol from tbl_rol where rol like '%JEFE_MAR%') then (select distinct comision from tbl_instalacion_comision c where c.id_sucursal=0 and c.fecha_inicio between date_trunc('month', (now()-'1 month'::interval) )::date and getultimodiafecha(now()::date)::date ) \n" +
             "	else -2\n" +
             "end as comisionJefeVentas,\n" +
             "cobra_14_mensual, cobra_f_r,cobra_13_mensual,\n" + 

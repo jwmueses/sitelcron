@@ -25,6 +25,23 @@ public class Prefactura implements Job{
         
         
         
+        String modoSincronizacionMikrotiks = "scripts";
+        try{
+            ResultSet rs = objDataBase.consulta("select parametro, lower(valor) as valor from tbl_configuracion where parametro in('modoSincronizacionMikrotiks')");
+            while(rs.next()){
+                String parametro = rs.getString("parametro")!=null ? rs.getString("parametro") : "";
+
+                if( parametro.compareTo("modoSincronizacionMikrotiks") == 0) {
+                    modoSincronizacionMikrotiks = rs.getString("valor")!=null ? rs.getString("valor") : "scripts";
+                }
+            }
+            rs.close();
+        }catch(Exception e){
+            System.out.println("Error obteniendo configuracion " + e.getMessage() );
+            e.printStackTrace();
+        }
+        
+        
         
         System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de actualización de estados de instalaciones.");
         objDataBase.consulta("select proc_robot();");
@@ -281,6 +298,42 @@ public class Prefactura implements Job{
         
         
         
+        if( modoSincronizacionMikrotiks.compareTo("apis") == 0 ) { 
+        
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": iniciando levantamiento y/o baja de suspensiones temporales");
+
+            StringBuilder sql = new StringBuilder();
+            sql.append("SELECT distinct I.id_sucursal, I.id_instalacion, razon_social || ' ' || id_instalacion as razon_social, ip::varchar, P.burst_limit, ");
+            sql.append("	I.plan, P.max_limit, case P.comparticion when 1 then 2 when 3 then 3 when 8 then 8 else 8 end as prioridad, estado_servicio, ");
+            sql.append("	idMikrotikActivo, idMikrotikPlan, idMikrotikCola, ");
+            sql.append("	(select servidor || ',' || usuario || ',' || clave || ',' || puerto as conexion from tbl_servidor_ftp as S where S.estado and S.id_sucursal=I.id_sucursal and position( regexp_replace(I.ip::varchar, '\\d*[/]\\d*', '') in subredes)>0 and id_servidor_ftp<>35 limit 1) ");
+            sql.append("FROM vta_instalacion as I inner join vta_plan_servicio as P on I.id_plan_actual=P.id_plan_servicio ");
+            sql.append("where ( ");
+            sql.append("    estado_servicio not in ('p', 't', 'e', 'r', 'd', 'n', '1', '2', '3') and I.id_instalacion in ");
+            sql.append("        (select distinct id_instalacion from tbl_instalacion_suspension where eliminado=false and tipo='t' and now()::date between fecha_inicio and fecha_termino) ");
+            sql.append(") or (");
+            sql.append(" estado_servicio in ('s') and I.id_instalacion not in  ");
+            sql.append("        (select distinct id_instalacion from tbl_instalacion_suspension where eliminado=false and tipo='t' and now()::date between fecha_inicio and fecha_termino) ");
+            sql.append(")");
+
+            Instalacion objInstalacion = new Instalacion( Parametro.getIp(), Parametro.getPuerto(), Parametro.getBaseDatos(), Parametro.getUsuario(), Parametro.getClave() );
+
+            // suspensiones  temporales
+            objInstalacion.ejecutar("update tbl_instalacion set estado_servicio='s' where estado_servicio not in ('p', 't', 'e', 'r', 'd', 'n', 's', '1', '2', '3') and id_instalacion in " +
+                            " (select distinct id_instalacion from tbl_instalacion_suspension where eliminado=false and tipo='t' and now()::date between fecha_inicio and fecha_termino);");
+
+            // activacion de suspensiones  temporales
+            objInstalacion.ejecutar("update tbl_instalacion set estado_servicio='a' where estado_servicio in ('s') and id_instalacion not in " +
+                            " (select distinct id_instalacion from tbl_instalacion_suspension where eliminado=false and tipo='t' and now()::date between fecha_inicio and fecha_termino);");
+
+
+            objInstalacion.actualizarEstados(sql);
+            objInstalacion.cerrar();
+
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando levantamiento y/o baja de suspensiones temporales");
+            
+        }
+
         
         
         //      actualizacion de saldos de los libros mayores de todo el plan de cuentas

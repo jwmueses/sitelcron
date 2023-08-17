@@ -80,8 +80,13 @@ public class EjecutarProcesos  implements Job{
         
         int dia_reconexion = 6;
         int dia_reconexion_quito = 16;
+        int dia_cortes = 6;
+        int dia_cortes_prepago = 16;
+        int dia_cortes_creditos_prepago = 20;
+        int dia_cortes_creditos = 10;
+        String modoSincronizacionMikrotiks = "scripts";
         try{
-            ResultSet rs = objDataBase.consulta("select * from tbl_configuracion where parametro in ('dia_reconexion', 'dia_reconexion_quito')");
+            ResultSet rs = objDataBase.consulta("select * from tbl_configuracion where parametro in ('dia_reconexion', 'dia_reconexion_quito', 'dia_cortes', 'dia_cortes_prepago', 'dia_cortes_creditos_prepago', 'dia_cortes_creditos')");
             while(rs.next()){
                 String parametro = rs.getString("parametro")!=null ? rs.getString("parametro") : "";
                 if(parametro.compareTo("dia_reconexion")==0){
@@ -89,6 +94,21 @@ public class EjecutarProcesos  implements Job{
                 }
                 if(parametro.compareTo("dia_reconexion_quito")==0){
                     dia_reconexion_quito = rs.getString("valor")!=null ? rs.getInt("valor") : 16;
+                }
+                if( parametro.compareTo("dia_cortes") == 0) {
+                    dia_cortes = rs.getString("valor")!=null ? rs.getInt("valor") : 6;
+                }
+                if( parametro.compareTo("dia_cortes_prepago") == 0) {
+                    dia_cortes_prepago = rs.getString("valor")!=null ? rs.getInt("valor") : 16;
+                }
+                if( parametro.compareTo("dia_cortes_creditos_prepago") == 0) {
+                    dia_cortes_creditos_prepago = rs.getString("valor")!=null ? rs.getInt("valor") : 20;
+                }
+                if( parametro.compareTo("dia_cortes_creditos") == 0) {
+                    dia_cortes_creditos = rs.getString("valor")!=null ? rs.getInt("valor") : 10;
+                }
+                if( parametro.compareTo("modoSincronizacionMikrotiks") == 0) {
+                    modoSincronizacionMikrotiks = rs.getString("valor")!=null ? rs.getString("valor") : "scripts";
                 }
             }
             System.out.println("Configuracion dias reconexion: hoy= " + dia + " postpago= " + dia_reconexion + " prepago= " + dia_reconexion_quito);
@@ -276,46 +296,41 @@ public class EjecutarProcesos  implements Job{
         
         
         
-        try{
-            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de anulación de personalizaciones pendientes de aceptar");
-            objDataBase.ejecutar("update tbl_activo_personalizacion set aceptada=false, anulado=true where aceptada=false and anulado=false and fecha + '1 month'::interval < now()::date");
-        }catch(Exception e){
-            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + "Error en el proceso de anulación de personalizaciones pendientes de aceptar: " + e.getMessage());
-        }finally{
-            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de anulación de personalizaciones pendientes de aceptar");
-        }  
+         
         
         
         
         //  Genera ordenes de trabajo por retirar
         System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando generación de ordenes de trabajo por retirar diariamente");
         try{
+            
             objDataBase.consulta("select proc_generarinstalacionesporretirardiarias();");
+            
+            StringBuilder sqlSuspensiones = new StringBuilder();
+            sqlSuspensiones.append("SELECT distinct I.id_sucursal, razon_social || ' ' || id_instalacion as razon_social, ip::varchar, P.burst_limit, ");
+            sqlSuspensiones.append("    I.plan, P.max_limit, case P.comparticion when 1 then 2 when 3 then 3 when 8 then 8 else 8 end as prioridad, estado_servicio, ");
+            sqlSuspensiones.append("    idMikrotikActivo, idMikrotikPlan, idMikrotikCola, regexp_replace(I.ip::varchar, '\\d*[/]\\d*', ''), ");
+            sqlSuspensiones.append("    (select servidor || ',' || usuario || ',' || clave || ',' || puerto as conexion from tbl_servidor_ftp as S where S.estado and S.id_sucursal=I.id_sucursal and position( regexp_replace(I.ip::varchar, '\\d*[/]\\d*', '') in subredes)>0 and id_servidor_ftp<>35 limit 1) ");
+            sqlSuspensiones.append("FROM vta_instalacion as I inner join vta_plan_servicio as P on I.id_plan_actual=P.id_plan_servicio "); 
+            sqlSuspensiones.append("where estado_servicio='r' and fecha_estado_r=now()::date");
+            
+            Instalacion objInstalacion = new Instalacion( Parametro.getIp(), Parametro.getPuerto(), Parametro.getBaseDatos(), Parametro.getUsuario(), Parametro.getClave() );
+            objInstalacion.actualizarEstados(sqlSuspensiones);
+            objInstalacion.cerrar();
+            
         }finally{
             System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de generación de ordenes de trabajo por retirar para el dia: " + Fecha.getFecha("SQL"));
         }
         
         
         
-        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando generación de ordenes de compra de pedidos");
-        try{
-            objDataBase.consulta("select proc_generarordenesdecompra();");
-        }finally{
-            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de generación de ordenes de compra de pedidos");
-        }
         
         
         
         
         
-        //  liberar ips sin reutilizar
-        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando generación de ips que no se utilizan en las redes");
-        try{
-            objDataBase.consulta("select proc_liberar_ips();");
-        }finally{
-            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de generación de ips que no se utilizan en las redes");
-        }
         
+       
         
         
         
@@ -408,6 +423,133 @@ public class EjecutarProcesos  implements Job{
         
         
         
+        if( dia == 15 ) {
+        
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando generacion de ordenes de trabajo de desinstalacion a clientes morosos + de 6 meses");
+            try{
+                objDataBase.consulta("select proc_generarInstalacionesPorRetirarMorososCR();");
+            } finally{
+                System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de generacion de ordenes de trabajo de desinstalacion a clientes morosos + de 6 meses");
+            }
+        
+        }
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        if( modoSincronizacionMikrotiks.compareTo("apis") == 0 ) { 
+
+    //        para ejecutar cortes  Mikrotik 
+            StringBuilder sql = new StringBuilder();
+            StringBuilder sqlCredito = new StringBuilder();
+
+
+            if(dia == dia_cortes) {
+                sql.append("SELECT distinct I.id_sucursal, razon_social || ' ' || id_instalacion as razon_social, ip::varchar, P.burst_limit, ");
+                sql.append("    I.plan, P.max_limit, case P.comparticion when 1 then 2 when 3 then 3 when 8 then 8 else 8 end as prioridad, estado_servicio, ");
+                sql.append("    idMikrotikActivo, idMikrotikPlan, idMikrotikCola, regexp_replace(I.ip::varchar, '\\d*[/]\\d*', ''), ");
+                sql.append("    (select servidor || ',' || usuario || ',' || clave || ',' || puerto as conexion from tbl_servidor_ftp as S where S.estado and S.id_sucursal=I.id_sucursal and position( regexp_replace(I.ip::varchar, '\\d*[/]\\d*', '') in subredes)>0 and id_servidor_ftp<>35 limit 1) ");
+                sql.append("FROM vta_instalacion as I inner join vta_plan_servicio as P on I.id_plan_actual=P.id_plan_servicio "); 
+                sql.append("where estado_servicio='a' and cobrar=true and id_instalacion not in(select distinct id_instalacion from tbl_anticipo_internet where now()::date between fecha_ini and fecha_fin) and (");
+                sql.append("  (");
+                sql.append("     convenio_pago='1' and id_instalacion in(select id_instalacion from vta_prefactura where getFechaSuspension(fecha_prefactura, "+dia_cortes+") <= now()::date and fecha_emision is null) ");
+                sql.append("  ) or (");
+                sql.append("     convenio_pago='0' and id_sucursal NOT in(11, 7) and id_instalacion in(select id_instalacion from vta_prefactura where getFechaCortesPrepago(fecha_prefactura, "+dia_cortes+") <= now()::date and fecha_emision is null) ");
+                sql.append("  )");
+                sql.append(")");
+            }
+
+            if(dia == dia_cortes_creditos) {
+                sql.append("SELECT distinct I.id_sucursal, razon_social || ' ' || id_instalacion as razon_social, ip::varchar, P.burst_limit, ");
+                sql.append("    I.plan, P.max_limit, case P.comparticion when 1 then 2 when 3 then 3 when 8 then 8 else 8 end as prioridad, estado_servicio, ");
+                sql.append("    idMikrotikActivo, idMikrotikPlan, idMikrotikCola, regexp_replace(I.ip::varchar, '\\d*[/]\\d*', ''), ");
+                sql.append("    (select servidor || ',' || usuario || ',' || clave || ',' || puerto as conexion from tbl_servidor_ftp as S where S.estado and S.id_sucursal=I.id_sucursal and position( regexp_replace(I.ip::varchar, '\\d*[/]\\d*', '') in subredes)>0 and id_servidor_ftp<>35 limit 1) ");
+                sql.append("FROM vta_instalacion as I inner join vta_plan_servicio as P on I.id_plan_actual=P.id_plan_servicio "); 
+                sql.append("where estado_servicio='a' and cobrar=true and id_instalacion not in(select distinct id_instalacion from tbl_anticipo_internet where now()::date between fecha_ini and fecha_fin) and (");
+                sql.append("  (");
+                sql.append("     convenio_pago='1' and id_instalacion in(select P.id_instalacion from tbl_prefactura as P inner join tbl_factura_venta as F on P.id_factura_venta=F.id_factura_venta where getFechaSuspensionCreditos(fecha_prefactura, "+dia_cortes_creditos+") <= now()::date and forma_pago='d' and anulado=false and deuda::float>0) ");
+                sql.append("  ) or (");
+                sql.append("      convenio_pago='0' and id_sucursal not in(11, 7) and id_instalacion in(select P.id_instalacion from tbl_prefactura as P inner join tbl_factura_venta as F on P.id_factura_venta=F.id_factura_venta where getFechaCortesCreditosPrepago(fecha_prefactura, "+dia_cortes_creditos+") <= now()::date and forma_pago='d' and deuda::float>0 and F.anulado=false) ");
+                sql.append("  )");
+                sql.append(")");
+
+                sqlCredito.append("SELECT distinct I.id_sucursal, razon_social || ' ' || id_instalacion as razon_social, ip::varchar, P.burst_limit, ");
+                sqlCredito.append("    I.plan, P.max_limit, case P.comparticion when 1 then 2 when 3 then 3 when 8 then 8 else 8 end as prioridad, estado_servicio, ");
+                sqlCredito.append("    idMikrotikActivo, idMikrotikPlan, idMikrotikCola, regexp_replace(I.ip::varchar, '\\d*[/]\\d*', ''), ");
+                sqlCredito.append("    (select servidor || ',' || usuario || ',' || clave || ',' || puerto as conexion from tbl_servidor_ftp as S where S.estado and S.id_sucursal=I.id_sucursal and position( regexp_replace(I.ip::varchar, '\\d*[/]\\d*', '') in subredes)>0 and id_servidor_ftp<>35 limit 1) ");
+                sqlCredito.append("FROM vta_instalacion as I inner join vta_plan_servicio as P on I.id_plan_actual=P.id_plan_servicio "); 
+                sqlCredito.append("where estado_servicio in('a', 'p') and anulado=false and (");
+                sqlCredito.append("  (");
+                sqlCredito.append("     convenio_pago='1' and id_instalacion in (select id_instalacion from tbl_instalacion ");
+                sqlCredito.append("         where id_cliente in(select id_cliente from tbl_factura_venta where deuda::float>0 and anulado=false and getFechaSuspensionCreditos(fecha_emision, "+dia_cortes_creditos+") <= now()::date) )  ");
+                sqlCredito.append("  ) or (");
+                sqlCredito.append("     convenio_pago='0' and id_sucursal not in(11, 7) and id_instalacion in (select id_instalacion from tbl_instalacion ");
+                sqlCredito.append("         where id_cliente in(select id_cliente from tbl_factura_venta where deuda::float>0 and anulado=false and getFechaCortesCreditosPrepago(fecha_emision, "+dia_cortes_creditos+") <= now()::date) )");
+                sqlCredito.append("  )");
+                sqlCredito.append(")");
+            }
+
+            if(dia == dia_cortes_prepago) {
+                sql.append("SELECT distinct I.id_sucursal, razon_social || ' ' || id_instalacion as razon_social, ip::varchar, P.burst_limit, ");
+                sql.append("    I.plan, P.max_limit, case P.comparticion when 1 then 2 when 3 then 3 when 8 then 8 else 8 end as prioridad, estado_servicio, ");
+                sql.append("    idMikrotikActivo, idMikrotikPlan, idMikrotikCola, regexp_replace(I.ip::varchar, '\\d*[/]\\d*', ''), ");
+                sql.append("    (select servidor || ',' || usuario || ',' || clave || ',' || puerto as conexion from tbl_servidor_ftp as S where S.estado and S.id_sucursal=I.id_sucursal and position( regexp_replace(I.ip::varchar, '\\d*[/]\\d*', '') in subredes)>0 and id_servidor_ftp<>35 limit 1) ");
+                sql.append("FROM vta_instalacion as I inner join vta_plan_servicio as P on I.id_plan_actual=P.id_plan_servicio "); 
+                sql.append("where estado_servicio='a' and cobrar=true and id_instalacion not in(select distinct id_instalacion from tbl_anticipo_internet where now()::date between fecha_ini and fecha_fin) and (");
+                sql.append("    convenio_pago='0' and id_sucursal in(11, 7) and id_instalacion in(select id_instalacion from vta_prefactura where getFechaCortesPrepagoQuitoSur(fecha_prefactura, "+dia_cortes_prepago+") <= now()::date and fecha_emision is null) ");
+                sql.append("  )");
+            }
+
+            if(dia == dia_cortes_creditos_prepago) {
+                sql.append("SELECT distinct I.id_sucursal, razon_social || ' ' || id_instalacion as razon_social, ip::varchar, P.burst_limit, ");
+                sql.append("    I.plan, P.max_limit, case P.comparticion when 1 then 2 when 3 then 3 when 8 then 8 else 8 end as prioridad, estado_servicio, ");
+                sql.append("    idMikrotikActivo, idMikrotikPlan, idMikrotikCola, regexp_replace(I.ip::varchar, '\\d*[/]\\d*', ''), ");
+                sql.append("    (select servidor || ',' || usuario || ',' || clave || ',' || puerto as conexion from tbl_servidor_ftp as S where S.estado and S.id_sucursal=I.id_sucursal and position( regexp_replace(I.ip::varchar, '\\d*[/]\\d*', '') in subredes)>0 and id_servidor_ftp<>35 limit 1) ");
+                sql.append("FROM vta_instalacion as I inner join vta_plan_servicio as P on I.id_plan_actual=P.id_plan_servicio "); 
+                sql.append("where estado_servicio='a' and cobrar=true and id_instalacion not in(select distinct id_instalacion from tbl_anticipo_internet where now()::date between fecha_ini and fecha_fin) and (");
+                sql.append("    convenio_pago='0' and id_sucursal in(11, 7) and id_instalacion in(select P.id_instalacion from tbl_prefactura as P inner join tbl_factura_venta as F on P.id_factura_venta=F.id_factura_venta where getFechaCortesCreditosPrepagoQuitoSur(fecha_prefactura, "+dia_cortes_creditos_prepago+") <= now()::date and forma_pago='d' and deuda::float>0  and anulado=false) ");
+                sql.append("  )");
+
+                sqlCredito.append("SELECT distinct I.id_sucursal, razon_social || ' ' || id_instalacion as razon_social, ip::varchar, P.burst_limit, ");
+                sqlCredito.append("    I.plan, P.max_limit, case P.comparticion when 1 then 2 when 3 then 3 when 8 then 8 else 8 end as prioridad, estado_servicio, ");
+                sqlCredito.append("    idMikrotikActivo, idMikrotikPlan, idMikrotikCola, regexp_replace(I.ip::varchar, '\\d*[/]\\d*', ''), ");
+                sqlCredito.append("    (select servidor || ',' || usuario || ',' || clave || ',' || puerto as conexion from tbl_servidor_ftp as S where S.estado and S.id_sucursal=I.id_sucursal and position( regexp_replace(I.ip::varchar, '\\d*[/]\\d*', '') in subredes)>0 and id_servidor_ftp<>35 limit 1) ");
+                sqlCredito.append("FROM vta_instalacion as I inner join vta_plan_servicio as P on I.id_plan_actual=P.id_plan_servicio "); 
+                sqlCredito.append("where estado_servicio in('a', 'p') and anulado=false and (");
+                sqlCredito.append("     convenio_pago='0' and id_sucursal in(11, 7) and id_instalacion in (select id_instalacion from tbl_instalacion ");
+                sqlCredito.append("         where id_cliente in(select id_cliente from tbl_factura_venta where deuda::float>0 and anulado=false and getFechaCortesCreditosPrepagoQuitoSur(fecha_emision, "+dia_cortes_creditos_prepago+") <= now()::date) ) ");
+                sqlCredito.append("  )");
+            }
+
+
+            if( sql.length() > 0 || sqlCredito.length() > 0 ) {
+                Instalacion objInstalacion = new Instalacion( Parametro.getIp(), Parametro.getPuerto(), Parametro.getBaseDatos(), Parametro.getUsuario(), Parametro.getClave() );
+                if( sql.length() > 0 ){
+                    objInstalacion.actualizarEstados(sql);
+                }
+                if( sqlCredito.length() > 0 ){
+                    objInstalacion.actualizarEstados(sqlCredito);
+                }
+                objInstalacion.cerrar();
+            }
+        
+        }
+        
+        
+        
+        
+        
+        
+        
+        
+        
         
         
         
@@ -415,6 +557,54 @@ public class EjecutarProcesos  implements Job{
 //        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de contabilizacion de amortizaciones.");
 //        objDataBase.consulta("select proc_ejecutarAmotrtizacionesCreditosCompras();");
 //        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de contabilizacion de amortizaciones");
+        
+        
+        
+
+
+
+
+
+        try{
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de anulación de personalizaciones pendientes de aceptar");
+            objDataBase.ejecutar("update tbl_activo_personalizacion set aceptada=false, anulado=true where aceptada=false and anulado=false and fecha + '1 month'::interval < now()::date");
+        }catch(Exception e){
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + "Error en el proceso de anulación de personalizaciones pendientes de aceptar: " + e.getMessage());
+        }finally{
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de anulación de personalizaciones pendientes de aceptar");
+        } 
+        
+
+
+
+
+
+
+
+        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando generación de ordenes de compra de pedidos");
+        try{
+            objDataBase.consulta("select proc_generarordenesdecompra();");
+        }finally{
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de generación de ordenes de compra de pedidos");
+        }
+        
+        
+        
+
+
+
+
+
+         //  liberar ips sin reutilizar
+        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando generación de ips que no se utilizan en las redes");
+        try{
+            objDataBase.consulta("select proc_liberar_ips();");
+        }finally{
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de generación de ips que no se utilizan en las redes");
+        }
+        
+        
+        
         
         
         
@@ -498,22 +688,7 @@ public class EjecutarProcesos  implements Job{
         
         
         
-        
-        if( dia == 15 ) {
-        
-            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando generacion de ordenes de trabajo de desinstalacion a clientes morosos + de 6 meses");
-            try{
-                objDataBase.consulta("select proc_generarInstalacionesPorRetirarMorososCR();");
-            } finally{
-                System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de generacion de ordenes de trabajo de desinstalacion a clientes morosos + de 6 meses");
-            }
-        
-        }
-        
-        
-        
-        
-        
+
         
         
         
@@ -534,7 +709,7 @@ public class EjecutarProcesos  implements Job{
         SQLServer objSQL = new SQLServer( Parametro.getMsSqlIp(), Parametro.getMsSqlPuerto(), Parametro.getMsSqlBaseDatos(), Parametro.getMsSqlUsuario(), Parametro.getMsSqlClave() );
         try{
             
-            ResultSet rs = objDataBase.consulta("select * from tbl_biometricos where not eliminado and activo");
+            ResultSet rs = objDataBase.consulta("select * from tbl_biometricos where not eliminado and activo and marca='FS20'");
             while(rs.next()){
                 
                 String idSucursal = rs.getString("id_sucursal")!=null ? rs.getString("id_sucursal") : "";
