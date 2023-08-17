@@ -12,6 +12,7 @@ import ec.com.saitel.lib.DataBase;
 import ec.com.saitel.lib.FacturaElectronica;
 import ec.com.saitel.lib.Fecha;
 import ec.com.saitel.lib.Matriz;
+import ec.com.saitel.lib.Mikrotik;
 import ec.com.saitel.lib.PreFactura;
 //import java.io.BufferedReader;
 //import java.io.File;
@@ -29,11 +30,11 @@ import javax.jws.WebParam;
 @WebService(serviceName = "Recaudacion")
 public class Recaudacion {
 
-    private static final String maquina = "192.168.217.16";    //   192.168.217.16       127.0.0.1
+    private static final String maquina = "127.0.0.1";    //   192.168.217.16       127.0.0.1
     private static final int puerto = 5432;
     private static final String db = "db_isp";
     private static final String usuario = "postgres";
-    private static final String clave = "Gi%9875.-*5+$)("; //  postgres    A0Lpni2       Gi%9875.-*5+$)
+    private static final String clave = "Gi%9875.-*5+$)"; //  postgres    A0Lpni2       Gi%9875.-*5+$)
     private static final String _dir = "/opt/lampp/htdocs/anexos/fe/"; //       /home/saitel/Documentos/fe/      /opt/lampp/htdocs/anexos/fe/
     
     private static final String _svrMail = "pro.turbo-smtp.com";      //      facturacion.saitelapp.ec    
@@ -401,6 +402,8 @@ public class Recaudacion {
     //        String telefono_empresa = objDB.getValor("telf_matriz");
             String idPlanCuentaUtilidadActivo = "-1";
             String idPlanCuentaIvaActivos = "-1";
+//            int actualizarMikrotiksEnLinea = -1;
+            String modoSincronizacionMikrotiks = "scripts";
             /*String PAGINA_WEB = objDB.getValor("pagina_web");*/
     //        double  p_iva = Integer.parseInt( objDB.getValor("p_iva1") );
 
@@ -458,6 +461,12 @@ public class Recaudacion {
                         if(parametro.compareTo("iva_cobrado")==0){
                             idPlanCuentaIvaActivos = r.getString("valor")!=null ? r.getString("valor") : "-1";
                         }
+//                        if(parametro.compareTo("actualizarMikrotiksEnLinea")==0){
+//                            actualizarMikrotiksEnLinea = r.getString("valor")!=null ? r.getInt("valor") : -1;
+//                        }
+                        if( parametro.compareTo("modoSincronizacionMikrotiks") == 0) {
+                            modoSincronizacionMikrotiks = r.getString("valor")!=null ? r.getString("valor") : "scripts";
+                        }
                     }
                     r.close();
                 }catch(Exception e){
@@ -491,7 +500,7 @@ public class Recaudacion {
                     try{
                         String id_instalacion = rs.getString("id_instalacion")!=null ? rs.getString("id_instalacion") : "-1";
                         String id_sucursal = rs.getString("id_sucursal")!=null ? rs.getString("id_sucursal") : "-1";
-                        String id_cliente = rs.getString("id_cliente")!=null ? rs.getString("id_cliente") : "-1"; 
+//                        String id_cliente = rs.getString("id_cliente")!=null ? rs.getString("id_cliente") : "-1"; 
                         String tipo_documento = rs.getString("tipo_documento")!=null ? rs.getString("tipo_documento") : "05"; 
                         String ruc = rs.getString("ruc")!=null ? rs.getString("ruc") : ""; 
                         String razon_social = rs.getString("razon_social")!=null ? rs.getString("razon_social") : ""; 
@@ -502,7 +511,7 @@ public class Recaudacion {
                         int dias_conexion = rs.getString("dias_conexion")!=null ? rs.getInt("dias_conexion") : 30;
                         String valor_internet = rs.getString("valor_internet")!=null ? rs.getString("valor_internet") : "0";
                         String iva_internet = rs.getString("iva_internet")!=null ? rs.getString("iva_internet") : "0";
-                        double total_internet = rs.getString("total_internet")!=null ? rs.getDouble("total_internet") : 0;
+//                        double total_internet = rs.getString("total_internet")!=null ? rs.getDouble("total_internet") : 0;
                         String subtotal = rs.getString("subtotal")!=null ? rs.getString("subtotal") : "0";
                         String subtotal_2 = rs.getString("subtotal_2")!=null ? rs.getString("subtotal_2") : "0";
                         String subtotal_3 = rs.getString("subtotal_3")!=null ? rs.getString("subtotal_3") : "0";
@@ -512,6 +521,7 @@ public class Recaudacion {
                         String total_pagar = rs.getString("total")!=null ? rs.getString("total") : "0";
                         String periodo = rs.getString("periodo")!=null ? rs.getString("periodo") : "";
                         String txt_periodo = rs.getString("txt_periodo")!=null ? rs.getString("txt_periodo") : "";
+                        String ip = rs.getString("ip")!=null ? rs.getString("ip") : "";
                         //String fecha_pago = rs.getString("fecha_pago")!=null ? rs.getString("fecha_pago") : "";
                         //String hora_pago = rs.getString("hora_pago")!=null ? rs.getString("hora_pago") : "";
                         //double totalCash = rs.getString("total_cash")!=null ? rs.getDouble("total_cash") : 0;
@@ -766,6 +776,13 @@ public class Recaudacion {
 
                                                 transaccion = "EMISION DE LA FACTURA NRO. "+serie_factura+"-"+num_factura+" CLIENTE CON RUC: "+ruc+" PARA EL PERIODO "+txt_periodo;
 
+                                                if( modoSincronizacionMikrotiks.compareTo("apis") == 0 ) {
+                                                    Mikrotik objMikrotik = new Mikrotik(maquina, puerto, db, usuario, clave);
+                                                    objMikrotik.conectar(id_sucursal, ip);
+                                                    objMikrotik.actualizarInstalacionEnServidor(id_instalacion);
+                                                    objMikrotik.MikrotikCerrar();
+                                                }
+                                                
                                                 codigoError = "0";
                                                 mensaje = "ok";
 
