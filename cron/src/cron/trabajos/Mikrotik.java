@@ -92,7 +92,9 @@ public class Mikrotik {
     public void cerrar() 
     {
         try{
-            this.conexion.close();
+            if( this.conexion != null ) {
+                this.conexion.close();
+            }
         }catch(ApiConnectionException e){
             e.printStackTrace();
         }

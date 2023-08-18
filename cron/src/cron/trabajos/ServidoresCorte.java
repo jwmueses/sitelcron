@@ -420,8 +420,9 @@ public class ServidoresCorte implements Job{
 
 
 
-                            ResultSet rsServidor = objDataBase.consulta("SELECT * from tbl_servidor_ftp where estado=true order by id_sucursal, id_servidor_ftp");
-
+                            ResultSet rsServidor = objDataBase.consulta("SELECT * from tbl_servidor_ftp where estado=true and id_servidor_ftp <> 35 order by id_sucursal, id_servidor_ftp");
+//                            ResultSet rsServidor = objDataBase.consulta("SELECT * from tbl_servidor_ftp where id_servidor_ftp = 35 order by id_sucursal, id_servidor_ftp");
+                            
 
                             while(rsServidor.next()){
 
@@ -457,20 +458,6 @@ public class ServidoresCorte implements Job{
                             System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de RESET de los servidores mikrotik.");
 
 
-
-
-
-
-        //                    if(errConexion.compareTo("")!=0) {
-        //                        objNotificacion.setMensaje( errConexion );
-        //                        objNotificacion.notificar("ftp_conexion", null, null);
-        //                    }
-        //                    if(errColas.compareTo("")!=0 || errListas.compareTo("")!=0) {
-        //                        objNotificacion.setMensaje( errColas + errListas );
-        //                        objNotificacion.notificar("ftp_transferencia", null, null);
-        //                    }
-
-
                         } else {   //  control de ejecucion de cortes
                             String msg = Fecha.getFecha("SQL") + " " + Fecha.getHora() + " Proceso de cortes en ejecución, parametro 'bloqueo_servidores_ftp' = true";
                             this.objCorreo.enviar("sistemas@saitel.ec", "Proceso de cortes en ejecución" , msg, null);
@@ -489,6 +476,7 @@ public class ServidoresCorte implements Job{
                 } finally {
                     objDataBase.ejecutar("update tbl_configuracion set valor='false' where parametro='bloqueo_servidores_ftp'");
                     objDataBase.ejecutar("update tbl_configuracion set valor='apis' where parametro='modoSincronizacionMikrotiks'");
+                    objDataBase.ejecutar("update tbl_configuracion set valor='false' where parametro='resincronizarMikrotiks'");
                 }
                 
             }   //  control de fechas 2
@@ -1005,10 +993,9 @@ public class ServidoresCorte implements Job{
             try{
                 String where = id_sucursal.compareTo("-0")==0 || id_sucursal.compareTo("0")==0 ? "" : " and I.id_sucursal="+id_sucursal;
                 ResultSet rs = objDataBase.consulta("SELECT distinct razon_social || ' ' || id_instalacion as razon_social, ip::varchar, P.burst_limit, "
-                    + "P.max_limit, case P.comparticion when 1 then 2 when 3 then 3 when 8 then 8 else 8 end as prioridad, I.plan, I.id_instalacion "
-                    + "FROM vta_instalacion as I inner join vta_plan_servicio as P on I.id_plan_actual=P.id_plan_servicio, estado_servicio "
-                    + "where estado_servicio not in ('t', '1') and ip::varchar like '"+ipRed+"%' " + where 
-                    + " order by ip;");
+                    + "P.max_limit, case P.comparticion when 1 then 2 when 3 then 3 when 8 then 8 else 8 end as prioridad, I.plan, I.id_instalacion, estado_servicio "
+                    + "FROM vta_instalacion as I inner join vta_plan_servicio as P on I.id_plan_actual=P.id_plan_servicio "
+                    + "where estado_servicio not in ('t', '1') and ip::varchar like '"+ipRed+"%' " + where + " order by ip;");
 
                 int rango_ips[] = this.getNumPcs(Integer.parseInt(octetos[3]), Integer.parseInt(mascara));
 
