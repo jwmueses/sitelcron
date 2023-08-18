@@ -381,7 +381,9 @@ public class Mikrotik extends DataBase{
     {
         this.cerrar();
         try{
-            this.conexion.close();
+            if( this.conexion != null ) {
+                this.conexion.close();
+            }
         }catch(ApiConnectionException e){
             e.printStackTrace();
         }
