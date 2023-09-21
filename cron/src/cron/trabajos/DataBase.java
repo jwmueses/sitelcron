@@ -52,9 +52,9 @@ public class DataBase
             Class.forName("org.postgresql.Driver"); 
             this.con = DriverManager.getConnection("jdbc:postgresql://" + m + ":" + p + "/" + db, u, c); 
         }catch(ClassNotFoundException nfe){
-            System.out.println("Error: "+nfe.getMessage()+". El driver no puede ser cargado.");
+            System.out.println("Error: "+nfe.getMessage()+". El driver no puede ser cargado. " + m);
         }catch(Exception exp){
-            System.out.println("Error: "+exp.getMessage());
+            System.out.println("Error: "+exp.getMessage() + m);
         }       
     }
 

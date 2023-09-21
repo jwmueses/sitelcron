@@ -157,7 +157,7 @@ public class Correo {
 //        html += "             <table width='550' cellspacing='0' cellpadding='0' border='0'>";
 //        html += "                 <tbody>";
 //        html += "                     <tr style='background: rgba(0, 0, 0, 0.20);'>";
-//        html += "                        <td style='font-size:  35px; '><img src='http://138.185.137.120/html/images/logosfondo.png' alt='' tabindex='0' width='250' height='75' border='0'>#tipo#</td>";
+//        html += "                        <td style='font-size:  35px; '><img src='https://138.185.137.120/html/images/logosfondo.png' alt='' tabindex='0' width='250' height='75' border='0'>#tipo#</td>";
 //        html += "                    </tr>";
 //        html += "                </tbody>";
 //        html += "            </table>";

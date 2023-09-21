@@ -379,7 +379,7 @@ public class ServidoresCorte implements Job{
                                         sql.append("	idMikrotikActivo, idMikrotikPlan, idMikrotikCola, ");
                                         sql.append("	(select servidor || ',' || usuario || ',' || clave || ',' || puerto as conexion from tbl_servidor_ftp as S where S.estado and S.id_sucursal=I.id_sucursal and position( regexp_replace(I.ip::varchar, '\\d*[/]\\d*', '') in subredes)>0 and id_servidor_ftp<>35 limit 1) ");
                                         sql.append("FROM vta_instalacion as I inner join vta_plan_servicio as P on I.id_plan_actual=P.id_plan_servicio ");
-                                        sql.append("where I.id_instalacion in(select id_instalacion from tbl_prefactura where por_emitir_factura and hora_emision >= (now() - '61 minutes'::interval )::time) and I.estado_servicio not in('t')");
+                                        sql.append("where I.id_instalacion in(select id_instalacion from tbl_prefactura where fecha_emision=now()::date and hora_emision >= (now() - '61 minutes'::interval )::time) and I.estado_servicio not in('t')");
 
                                         Instalacion objInstalacion = new Instalacion( Parametro.getIp(), Parametro.getPuerto(), Parametro.getBaseDatos(), Parametro.getUsuario(), Parametro.getClave() );
                                         objInstalacion.actualizarEstados(sql);

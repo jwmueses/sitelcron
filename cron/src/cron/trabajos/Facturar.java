@@ -258,7 +258,7 @@ public class Facturar implements Job{
                     + "and set_convenio_cuenta=true \n"
                     + "and ((I.convenio_pago ='1' and periodo=('"+periodoActual+"'::date - '1 month'::interval)::date ) or (I.convenio_pago ='0' and periodo='"+periodoActual+"'))";
             
-            ResultSet rs = this.objDataBase.consulta("select *, total+comision_cash as total_comision from vta_prefactura_todas where por_emitir_destino in('Pichincha', 'WesternUnion') and por_emitir_factura=true"
+            ResultSet rs = this.objDataBase.consulta("select *, total+comision_cash as total_comision from vta_prefactura_todas where por_emitir_destino in('Pichincha', 'WesternUnion', 'Pagomedios') and por_emitir_factura=true"
                     + (Fecha.getDia()==1 ? clientesConvenioTarjeta : "") );
             
             //  instalaciones que tienen convenios de debito
