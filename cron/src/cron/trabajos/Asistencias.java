@@ -133,12 +133,12 @@ public class Asistencias extends DataBase {
      * @param hora
      * @return
      */
-    public boolean getMysqlSetPostgres(String id, String id_bio, String us, String fecha, String hora) {
-        return this.ejecutar("insert into tbl_empleado_asistencia_tmp values (" + id + ",'" + id_bio + "','" + us + "','" + fecha + "','" + hora + "','puntual',(select modalidad from tab_horarios h join tbl_empleado e on h.id_horario=e.id_horario where e.alias='" + us + "'))");
+    public boolean getMsSqlSetPostgres(String id, String id_bio, String us, String fecha, String hora) {
+        return this.ejecutar("insert into tbl_empleado_asistencia_tmp values (" + id + ",'" + id_bio + "','" + us + "','" + fecha + "','" + hora + "','',(select modalidad from tab_horarios h join tbl_empleado e on h.id_horario=e.id_horario where e.alias='" + us + "'))");
     }
 
-    public boolean getMysqlSetPostgres(String id, String id_bio, String us, String fecha, String hora, String id_sucursal) {
-        return this.ejecutar("insert into tbl_empleado_asistencia_tmp values (" + id + ",'" + id_bio + "','" + us + "','" + fecha + "','" + hora + "','puntual',(select modalidad from tab_horarios h join tbl_empleado e on h.id_horario=e.id_horario where e.alias='" + us + "'),'" + id_sucursal + "')");
+    public boolean getMsSqlSetPostgres(String id, String id_bio, String us, String fecha, String hora, String id_sucursal) {
+        return this.ejecutar("insert into tbl_empleado_asistencia_tmp values (" + id + ",'" + id_bio + "','" + us + "','" + fecha + "','" + hora + "','',(select modalidad from tab_horarios h join tbl_empleado e on h.id_horario=e.id_horario where e.alias='" + us + "'),'" + id_sucursal + "')");
     }
 
     /**

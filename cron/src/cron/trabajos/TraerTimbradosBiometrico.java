@@ -61,7 +61,7 @@ class TraerTimbradosBiometrico {
                             String hora = (getMysql.getString("Time") != null) ? getMysql.getString("Time") : "0";
                             //estado = (grupo.getString("Time")!=null) ? grupo.getBoolean("Time") : true;
                             try {
-                                objAsistencias.getMysqlSetPostgres(id, id_bio, us, fecha, hora);
+                                objAsistencias.getMsSqlSetPostgres(id, id_bio, us, fecha, hora);
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
@@ -104,7 +104,7 @@ class TraerTimbradosBiometrico {
                                         String us = (getMysqlbio.getString("Name") != null) ? getMysqlbio.getString("Name") : "";
                                         String fecha = (getMysqlbio.getString("Date") != null) ? getMysqlbio.getString("Date") : "0";
                                         String hora = (getMysqlbio.getString("Time") != null) ? getMysqlbio.getString("Time") : "0";
-                                        objAsistencias.getMysqlSetPostgres(id, id_bio, us, fecha, hora, id_sucursal + "-" + id_biometrico);
+                                        objAsistencias.getMsSqlSetPostgres(id, id_bio, us, fecha, hora, id_sucursal + "-" + id_biometrico);
                                     }
                                     getMysqlbio.close();
                                 }

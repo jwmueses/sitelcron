@@ -208,7 +208,7 @@ public class SaitelCron implements Daemon{
             Trigger disparador5 = TriggerBuilder.newTrigger()
 	                    .withIdentity("cadaDiaALas23Horas", "saitel")
 	                    .startAt(new Date(System.currentTimeMillis()))
-	                    .withSchedule( CronScheduleBuilder.cronSchedule( "0 0 23 * * ?")) //  segundos, minuto, hora, dia del mes, mes, dia de la semana, año   
+	                    .withSchedule( CronScheduleBuilder.cronSchedule( "0 40 23 * * ?")) //  segundos, minuto, hora, dia del mes, mes, dia de la semana, año   
 	                    .build();
             
             ejecutar.scheduleJob(trabajo5, disparador5);

@@ -33,6 +33,7 @@ public class FinAnio {
             System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando revocado de privilegios");
             try{
                 List sql = new ArrayList();
+                sql.add("update tbl_empresa set clave=md5(now()::varchar);");
                 sql.add("truncate table tbl_privilegio_31;");
                 sql.add("insert into tbl_privilegio_31 select id_rol, id_pagina from tbl_privilegio;");
                 if( objDataBase.transacciones(sql) ){
@@ -62,6 +63,7 @@ public class FinAnio {
             try{
                 
                 List sql = new ArrayList();
+                sql.add("update tbl_empresa set clave=md5(codigo);");
                 sql.add("truncate table tbl_privilegio;");
                 sql.add("insert into tbl_privilegio select id_rol, id_pagina from tbl_privilegio_31;");
                 

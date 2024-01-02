@@ -590,6 +590,62 @@ public class EjecutarProcesos  implements Job{
         
         
         
+        
+        
+        
+        
+        
+        
+        
+        
+        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando procesos diario");
+        try{
+            
+            // levanta la opcion de no cobro cuando termina la fecha del convenio del canje
+            objDataBase.ejecutar("update tbl_instalacion set estado_solicitud_no_cobrar='t', cobrar=true, fecha_fin_canje=null, es_canje=false, "
+                    + "motivo_no_cobrar = motivo_no_cobrar || '. Finalizacion de convenio ' || now()::date "
+                    + "where estado_servicio not in('p','t','1') and not cobrar and es_canje=true and fecha_fin_canje <= now()::date");
+            
+            // levanta la opcion de no cobro cuando renuncia un empleado
+            objDataBase.ejecutar("with A as(\n" +
+                    "	select distinct dni, nombre, apellido, generar_rol, estado, E.eliminado, c.id_cliente \n" +
+                    "	from tbl_empleado as E inner join tbl_cliente as C on E.dni = C.ruc   \n" +
+                    "	where dni <> '1091728857001'\n" +
+                    ")\n" +
+                    "update tbl_instalacion set estado_solicitud_no_cobrar='t', cobrar=true, fecha_fin_canje=null, es_canje=false, \n" +
+                    "motivo_no_cobrar = motivo_no_cobrar || '. Finalizacion de contrato laboral ' || now()::date \n" +
+                    "where estado_servicio not in('p','t','1') and not cobrar and not es_canje \n" +
+                    "and id_cliente in(select id_cliente from A ) \n" +
+                    "and id_cliente not in(select id_cliente from A where generar_rol and estado and not eliminado)");
+            
+            // guardamos resultados de estados de las instalaciones
+            objDataBase.ejecutar("insert into tbl_instalacion_estados_est (id_sucursal,id_instalacion,estado) " +
+                                    "select id_sucursal,id_instalacion,estado_servicio from tbl_instalacion order by id_sucursal,id_instalacion asc;");
+            
+            // cambiar cargas
+            objDataBase.ejecutar("update tbl_familia set carga_familiar=false where id_familia in (" +
+                "select tmp.id_familia from vta_familia as tmp where tmp.edad>=18 and (lower(trim(tmp.carnet_conadis))<>'no' or trim(tmp.carnet_conadis)<>'') and tmp.id_parentesco in (3,4));");
+            
+            // cambiar la fecha a privilegios de baja de facturas a credito
+            objDataBase.ejecutar("update tbl_privilegio_temporal set fecha=now()::date where id_privilegio_temporal=7989;");
+            
+            // poner la instalacion en anticipos registrados cuando no seleccionan la instalacion
+            objDataBase.ejecutar("update tbl_cliente_anticipo as C set id_instalacion = (select I.id_instalacion from tbl_instalacion as I where I.id_cliente=C.id_cliente order by id_instalacion desc limit 1) " +
+                                    " where saldo>0 and id_instalacion is null;");
+            
+            // eliminar usuarios que no activan cuenta durante 48 horas
+            objDataBase.ejecutar("delete from tbl_cliente_portal as cp " +
+                    " where cp.fecha_activacion is null and cp.hora_activacion is null and cp.confirmado ='0' " +
+                    " and (get_duracion_fechas(now()::timestamp,(cp.fecha_registro||' '||cp.hora_registro)::timestamp,'HORAS')::int8)>48;");
+            
+        }catch(Exception e){
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Error: " + e.getMessage() );
+        }finally{
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización procesos diario");
+        }
+        
+        
+        
 
 
 
