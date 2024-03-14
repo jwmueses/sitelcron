@@ -26,11 +26,19 @@ public class Biometricos extends DataBase {
     }
 
     public ResultSet getBiometricosActivos() {
-        return this.consulta("SELECT * FROM vta_biometricos where activo='true'");
+        return this.consulta("SELECT * FROM vta_biometricos where activo='true' and marca='FS20'");
     }
 
     public ResultSet getBiometricosActivos(int id_sucursal) {
-        return this.consulta("SELECT * FROM vta_biometricos where activo='true' and id_sucursal='" + id_sucursal + "'");
+        return this.consulta("SELECT * FROM vta_biometricos where activo='true' and marca='FS20' and id_sucursal='" + id_sucursal + "'");
+    }
+    
+    public ResultSet getBiometricosActivosZKTeco() {
+        return this.consulta("SELECT * FROM vta_biometricos where activo='true' and marca='ZKTeco'");
+    }
+
+    public ResultSet getBiometricosActivosZKTeco(int id_sucursal) {
+        return this.consulta("SELECT * FROM vta_biometricos where activo='true' and marca='ZKTeco' and id_sucursal='" + id_sucursal + "'");
     }
 
     public boolean estaDuplicado(String nombre, String ip, String id) {

@@ -133,12 +133,30 @@ public class Asistencias extends DataBase {
      * @param hora
      * @return
      */
-    public boolean getMsSqlSetPostgres(String id, String id_bio, String us, String fecha, String hora) {
-        return this.ejecutar("insert into tbl_empleado_asistencia_tmp values (" + id + ",'" + id_bio + "','" + us + "','" + fecha + "','" + hora + "','',(select modalidad from tab_horarios h join tbl_empleado e on h.id_horario=e.id_horario where e.alias='" + us + "'))");
+    public boolean getMsSqlSetPostgres(String id, String id_bio, String us, String fecha, String hora) 
+    {
+        try{
+            ResultSet rs = this.consulta("select id_empleado_asistencia_tmp from tbl_empleado_asistencia_tmp where usuario='" + us + "'' and fecha='" + fecha + "' and hora='" + hora + "'");
+            if(this.getFilas(rs)==0){
+                return this.ejecutar("insert into tbl_empleado_asistencia_tmp values (" + id + ",'" + id_bio + "','" + us + "','" + fecha + "','" + hora + "','',(select modalidad from tab_horarios h join tbl_empleado e on h.id_horario=e.id_horario where e.alias='" + us + "'))");
+            }
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+        return true;
     }
 
-    public boolean getMsSqlSetPostgres(String id, String id_bio, String us, String fecha, String hora, String id_sucursal) {
-        return this.ejecutar("insert into tbl_empleado_asistencia_tmp values (" + id + ",'" + id_bio + "','" + us + "','" + fecha + "','" + hora + "','',(select modalidad from tab_horarios h join tbl_empleado e on h.id_horario=e.id_horario where e.alias='" + us + "'),'" + id_sucursal + "')");
+    public boolean getMsSqlSetPostgres(String id, String id_bio, String us, String fecha, String hora, String id_sucursal) 
+    {
+        try{
+            ResultSet rs = this.consulta("select id_empleado_asistencia_tmp from tbl_empleado_asistencia_tmp where usuario='" + us + "'' and fecha='" + fecha + "' and hora='" + hora + "'");
+            if(this.getFilas(rs)==0){
+                return this.ejecutar("insert into tbl_empleado_asistencia_tmp values (" + id + ",'" + id_bio + "','" + us + "','" + fecha + "','" + hora + "','',(select modalidad from tab_horarios h join tbl_empleado e on h.id_horario=e.id_horario where e.alias='" + us + "'),'" + id_sucursal + "')");
+            }
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+        return true;
     }
 
     /**
@@ -204,22 +222,22 @@ public class Asistencias extends DataBase {
         return id_horario;
     }
 
-    public String nombreHorario(String id_horario) {
-        String horario = "";
-        ResultSet r = this.consulta("select * from tab_horarios where id_horario=" + id_horario + ";");
-        try {
-            if (r.next()) {
-                horario = (r.getString("nombre") != null) ? r.getString("nombre") : "";
-            }
-        } catch (Exception e) {
-            e.getMessage();
-        }
-        return horario;
-    }
+//    public String nombreHorario(String id_horario) {
+//        String horario = "";
+//        ResultSet r = this.consulta("select * from tab_horarios where id_horario=" + id_horario + ";");
+//        try {
+//            if (r.next()) {
+//                horario = (r.getString("nombre") != null) ? r.getString("nombre") : "";
+//            }
+//        } catch (Exception e) {
+//            e.getMessage();
+//        }
+//        return horario;
+//    }
 
     public String idHorario(String nombreHorario) {
         String idhorario = "";
-        ResultSet r = this.consulta("select * from tab_horarios where nombre='" + nombreHorario + "';");
+        ResultSet r = this.consulta("select * from tab_horarios where TRIM( upper(nombre) )='" + nombreHorario.toUpperCase() + "';");
         try {
             if (r.next()) {
                 idhorario = (r.getString("id_horario") != null) ? r.getString("id_horario") : "";
@@ -265,99 +283,102 @@ public class Asistencias extends DataBase {
         String horario = "";
         //formateador.parse(fechaSalida+" "+horarioPicks[contPick]);
         try {
-//            for (int i = 0; i < 1;) {
-                ResultSet r = this.consulta("select id_horario from tbl_empleado_asistencia_147 where usuario='" + usSalida + "' and '" + fechaSalida + "' between fecha_inicial and fecha_final;");
-                if (r.next()) {
-                    id_horario = (r.getString("id_horario") != null) ? r.getString("id_horario") : "";
-                    this.ejecutar("insert into tbl_empleado_asistencia (ac_no, nombre_biometrico, dia, id_horario) values ('" + id_bioSalida + "','" + usSalida + "','" + fechaSalida + "', '" + id_horario + "');");
-//                    i++;
-                } else {
-                    ResultSet h = this.consulta("select id_horario, fecha_final from tbl_empleado_asistencia_147 where usuario='" + usSalida + "' order by fecha_final desc limit 1");
-                    if (h.next()) {
-                        id_horario = (h.getString("id_horario") != null) ? h.getString("id_horario") : "";
-                        fecha_final = (h.getString("fecha_final") != null) ? h.getString("fecha_final") : "";
-                        horario = this.nombreHorario(id_horario);
-                    }
-                    fechaSalida = fechaSalida.replace("-", "/");
-                    fecha_final = fecha_final.replace("-", "/");
-                    if (formateador.parse(fechaSalida).before(formateador.parse(fecha_final))) {
-                        id_horario = "0";
-                        this.ejecutar("insert into tbl_empleado_asistencia (ac_no, nombre_biometrico, dia, id_horario) values ('" + id_bioSalida + "','" + usSalida + "','" + fechaSalida + "', '" + id_horario + "');");
-//                        i++;
-                    }
-                    String j = horario.substring(horario.length() - 2, horario.length());
-                    if (j.compareTo("-T") == 0) {
-                        idHorarioTmp = this.idHorario(horario.substring(0, horario.length() - 2));
-                        if (idHorarioTmp.compareTo("") != 0) {
-                            this.ejecutar("insert into tbl_empleado_asistencia_147 (usuario, fecha_inicial, fecha_final, id_horario) values ('" + usSalida + "',CAST('" + fecha_final + "' AS DATE) + CAST('8 days' AS INTERVAL), CAST('" + fecha_final + "' AS DATE) + CAST('14 days' AS INTERVAL), " + idHorarioTmp + ");");
-                        }
-                    } else {
-                        idHorarioTmp = this.idHorario(horario + "-T");
-                        if (idHorarioTmp.compareTo("") != 0) {
-                            this.ejecutar("insert into tbl_empleado_asistencia_147 (usuario, fecha_inicial, fecha_final, id_horario) values ('" + usSalida + "',CAST('" + fecha_final + "' AS DATE) + CAST('1 days' AS INTERVAL),CAST('" + fecha_final + "' AS DATE) + CAST('7 days' AS INTERVAL), " + idHorarioTmp + ");");
-                        }
-                    }
-//                }
-                r.close();
+            ResultSet h = this.consulta("select A.id_horario, fecha_final, H.nombre from tbl_empleado_asistencia_147 as A inner join tab_horarios as H on A.id_horario=H.id_horario where usuario='" + usSalida + "' order by fecha_final desc limit 1");
+            if (h.next()) {
+                id_horario = (h.getString("id_horario") != null) ? h.getString("id_horario") : "";
+                fecha_final = (h.getString("fecha_final") != null) ? h.getString("fecha_final") : "";
+                horario = (h.getString("nombre") != null) ? h.getString("nombre") : "";
+                h.close();
             }
+            String axHorario = horario.toUpperCase().trim();
+            if(horario.endsWith("-T") || horario.endsWith("- T")) {
+                if(axHorario.endsWith("-T")) {
+                    axHorario = horario.replace("-T", "");
+                } else if(axHorario.endsWith("- T")) {
+                            axHorario = horario.replace("- T", "");
+                }
+                idHorarioTmp = this.idHorario( axHorario.trim() );
+                if (idHorarioTmp.compareTo("") != 0 && !this.hayRegistroHorario(usSalida) ) {
+                    if( !this.ejecutar("insert into tbl_empleado_asistencia_147 (usuario, fecha_inicial, fecha_final, id_horario) values ('" + usSalida + "', '" + fecha_final + "'::DATE + CAST('8 days' AS INTERVAL), CAST('" + fecha_final + "' AS DATE) + CAST('14 days' AS INTERVAL), " + idHorarioTmp + ");") ) {
+                        System.out.println( "Error asistencia 14/7 " + this.getError() );
+                    }
+                }
+            } else {
+                idHorarioTmp = this.idHorario(horario + "-T");
+                if (idHorarioTmp.compareTo("") != 0 && !this.hayRegistroHorario(usSalida)) {
+                    if( !this.ejecutar("insert into tbl_empleado_asistencia_147 (usuario, fecha_inicial, fecha_final, id_horario) values ('" + usSalida + "', CAST('" + fecha_final + "' AS DATE) + CAST('1 days' AS INTERVAL), CAST('" + fecha_final + "' AS DATE) + CAST('7 days' AS INTERVAL), " + idHorarioTmp + ");") ) {
+                        System.out.println( "Error asistencia 14/7 -T " + this.getError() );
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.out.println( "error general " + e.getMessage() );
+        }
+        return id_horario;
+    }
+    
+    public boolean hayRegistroHorario(String usuario) {
+        ResultSet r = this.consulta("select fecha_inicial from tbl_empleado_asistencia_147 where (now()::date + '21 day'::interval) <= fecha_inicial and usuario='" + usuario + "';");
+        try {
+            return this.getFilas(r) > 0;
         } catch (Exception e) {
             e.getMessage();
         }
-        return id_horario;
+        return false;
     }
 
     /////nuevo
-    public String asistencia147fijo(String id_bioSalida, String usSalida, String fechaSalida) {
-        String idHorarioTmp = "";
-        String id_horario = "";
-        String fecha_final = "";
-        String horario = "";
-        //formateador.parse(fechaSalida+" "+horarioPicks[contPick]);
-        try {
-//            for (int i = 0; i < 1;) {
-                ResultSet r = this.consulta("select id_horario from tbl_empleado_asistencia_147 where usuario='" + usSalida + "' and '" + fechaSalida + "' between fecha_inicial and fecha_final;");
-                if (r.next()) {
-                    id_horario = (r.getString("id_horario") != null) ? r.getString("id_horario") : "";
-                    this.ejecutar("insert into tbl_empleado_asistencia (ac_no, nombre_biometrico, dia, id_horario) values ('" + id_bioSalida + "','" + usSalida + "','" + fechaSalida + "', '" + id_horario + "');");
-//                    i++;
-                } else {
-                    ResultSet h = this.consulta("select id_horario, fecha_final from tbl_empleado_asistencia_147 where usuario='" + usSalida + "' order by fecha_final desc limit 1");
-                    if (h.next()) {
-                        id_horario = (h.getString("id_horario") != null) ? h.getString("id_horario") : "";
-                        fecha_final = (h.getString("fecha_final") != null) ? h.getString("fecha_final") : "";
-                        horario = this.nombreHorario(id_horario);
-                    }
-                    fechaSalida = fechaSalida.replace("-", "/");
-                    fecha_final = fecha_final.replace("-", "/");
-                    if (formateador.parse(fechaSalida).before(formateador.parse(fecha_final))) {
-                        id_horario = "0";
-                        this.ejecutar("insert into tbl_empleado_asistencia (ac_no, nombre_biometrico, dia, id_horario) values ('" + id_bioSalida + "','" + usSalida + "','" + fechaSalida + "', '" + id_horario + "');");
-//                        i++;
-                    }
-                    int j = Integer.parseInt(this.numero_semana(usSalida));
-                    if (j == 0 || j == 1) {
-                        j = 2;
-                        idHorarioTmp = this.idHorario(horario);
-                        if (idHorarioTmp.compareTo("") != 0) {
-                            this.ejecutar("insert into tbl_empleado_asistencia_147 (usuario, fecha_inicial, fecha_final, id_horario) values ('" + usSalida + "',CAST('" + fecha_final + "' AS DATE) + CAST('1 days' AS INTERVAL),CAST('" + fecha_final + "' AS DATE) + CAST('7 days' AS INTERVAL), " + idHorarioTmp + ");");
-                            this.actualizarsemana(usSalida, j);
-                        }
-                    } else if (j == 2) {
-                        j = 1;
-                        idHorarioTmp = this.idHorario(horario);
-                        if (idHorarioTmp.compareTo("") != 0) {
-                            this.ejecutar("insert into tbl_empleado_asistencia_147 (usuario, fecha_inicial, fecha_final, id_horario) values ('" + usSalida + "',CAST('" + fecha_final + "' AS DATE) + CAST('8 days' AS INTERVAL), CAST('" + fecha_final + "' AS DATE) + CAST('14 days' AS INTERVAL), " + idHorarioTmp + ");");
-                            this.actualizarsemana(usSalida, j);
-                        }
-                    }
-                }
-                r.close();
-//            }
-        } catch (Exception e) {
-            e.getMessage();
-        }
-        return id_horario;
-    }
+//    public String asistencia147fijo(String id_bioSalida, String usSalida, String fechaSalida) {
+//        String idHorarioTmp = "";
+//        String id_horario = "";
+//        String fecha_final = "";
+//        String horario = "";
+//        //formateador.parse(fechaSalida+" "+horarioPicks[contPick]);
+//        try {
+////            for (int i = 0; i < 1;) {
+//                ResultSet r = this.consulta("select id_horario from tbl_empleado_asistencia_147 where usuario='" + usSalida + "' and '" + fechaSalida + "' between fecha_inicial and fecha_final;");
+//                if (r.next()) {
+//                    id_horario = (r.getString("id_horario") != null) ? r.getString("id_horario") : "";
+//                    this.ejecutar("insert into tbl_empleado_asistencia (ac_no, nombre_biometrico, dia, id_horario) values ('" + id_bioSalida + "','" + usSalida + "','" + fechaSalida + "', '" + id_horario + "');");
+////                    i++;
+//                } else {
+//                    ResultSet h = this.consulta("select id_horario, fecha_final from tbl_empleado_asistencia_147 where usuario='" + usSalida + "' order by fecha_final desc limit 1");
+//                    if (h.next()) {
+//                        id_horario = (h.getString("id_horario") != null) ? h.getString("id_horario") : "";
+//                        fecha_final = (h.getString("fecha_final") != null) ? h.getString("fecha_final") : "";
+//                        horario = this.nombreHorario(id_horario);
+//                    }
+//                    fechaSalida = fechaSalida.replace("-", "/");
+//                    fecha_final = fecha_final.replace("-", "/");
+//                    if (formateador.parse(fechaSalida).before(formateador.parse(fecha_final))) {
+//                        id_horario = "0";
+//                        this.ejecutar("insert into tbl_empleado_asistencia (ac_no, nombre_biometrico, dia, id_horario) values ('" + id_bioSalida + "','" + usSalida + "','" + fechaSalida + "', '" + id_horario + "');");
+////                        i++;
+//                    }
+//                    int j = Integer.parseInt(this.numero_semana(usSalida));
+//                    if (j == 0 || j == 1) {
+//                        j = 2;
+//                        idHorarioTmp = this.idHorario(horario);
+//                        if (idHorarioTmp.compareTo("") != 0) {
+//                            this.ejecutar("insert into tbl_empleado_asistencia_147 (usuario, fecha_inicial, fecha_final, id_horario) values ('" + usSalida + "',CAST('" + fecha_final + "' AS DATE) + CAST('1 days' AS INTERVAL),CAST('" + fecha_final + "' AS DATE) + CAST('7 days' AS INTERVAL), " + idHorarioTmp + ");");
+//                            this.actualizarsemana(usSalida, j);
+//                        }
+//                    } else if (j == 2) {
+//                        j = 1;
+//                        idHorarioTmp = this.idHorario(horario);
+//                        if (idHorarioTmp.compareTo("") != 0) {
+//                            this.ejecutar("insert into tbl_empleado_asistencia_147 (usuario, fecha_inicial, fecha_final, id_horario) values ('" + usSalida + "',CAST('" + fecha_final + "' AS DATE) + CAST('8 days' AS INTERVAL), CAST('" + fecha_final + "' AS DATE) + CAST('14 days' AS INTERVAL), " + idHorarioTmp + ");");
+//                            this.actualizarsemana(usSalida, j);
+//                        }
+//                    }
+//                }
+//                r.close();
+////            }
+//        } catch (Exception e) {
+//            e.getMessage();
+//        }
+//        return id_horario;
+//    }
 
     public String numero_semana(String usuario) {
         String idhorario = "";

@@ -23,7 +23,7 @@ public class FacturaElectronica extends Xml{
             String razonSocialComprador, String identificacionComprador, String totalSinImpuestos, String totalDescuento, 
             String subtotal_0, String subtotal_2, String iva_2, String subtotal_3, String iva_3, String importeTotal, String id_forma_pago,
             String codigos, String descripciones, String cantidades, String preciosUnitarios, String descuentos, String subtotales, String ivas, 
-            String pIvas, String codigoIvas, String direccion, String plan)
+            String pIvas, String codigoIvas, String direccion, String plan, String emailCliente)
     {
         //String claveAcceso = this.getClaveAcceso(fechaEmision, ruc, "1", estab+ptoEmi, secuencial, tipoEmision);
         Element factura = this.setInfoTributaria("factura", "1.1.0", ambiente, tipoEmision, razonSocial, nombreComercial, ruc, claveAcceso, 
@@ -124,7 +124,12 @@ public class FacturaElectronica extends Xml{
         this.nuevoElemento(infoAdicional, "campoAdicional", direccion, false);  
         this.setAtributo("nombre", "DIRECCION");
         
-            this.nuevoElemento(infoAdicional, "campoAdicional", "<p>Call Center SAITEL: 1700724835 o 0996724835</p>Para la atención de reclamos no resueltos por el prestador, ingrese su reclamo al link: http://reclamoconsumidor.arcotel.gob.ec/osTicket/, o para mayor información comuníquese con el número telefónico 1800 567 567", false);  
+        if(emailCliente.compareTo("")!=0) {
+            this.nuevoElemento(infoAdicional, "campoAdicional", emailCliente, false);
+            this.setAtributo("nombre", "EMAIL_CLIENTE");
+        }
+        
+        this.nuevoElemento(infoAdicional, "campoAdicional", "<p>Call Center SAITEL: 1700724835 o 0996724835</p>Para la atención de reclamos no resueltos por el prestador, ingrese su reclamo al link: http://reclamoconsumidor.arcotel.gob.ec/osTicket/, o para mayor información comuníquese con el número telefónico 1800 567 567", false);  
         this.setAtributo("nombre", "ARCOTEL");
         
         return this.getXml();

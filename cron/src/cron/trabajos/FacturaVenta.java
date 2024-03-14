@@ -196,7 +196,7 @@ public class FacturaVenta extends DataBase{
                     String tarjeta_credito_caduca = (rs.getString("tarjeta_credito_caduca") != null) ? rs.getString("tarjeta_credito_caduca") : Fecha.getFecha("ISO");
                     String id_plan_cuenta_anticipo = (rs.getString("id_plan_cuenta_anticipo") != null) ? rs.getString("id_plan_cuenta_anticipo") : "-1";
                     //double totalCash = rs.getString("total_cash")!=null ? rs.getDouble("total_cash") : 0;
-      
+                    String emailCliente = rs.getString("email")!=null ? rs.getString("email") : "";
                             
                     
                     String idFormaPago="97";        //  id forma de pago cash
@@ -495,7 +495,7 @@ public class FacturaVenta extends DataBase{
                                 objFE.generarXml(claveAcceso, ambiente, tipoEmision, razon_social_empresa, nombre_comercial, ruc_empresa, "01", vecSerie[0], vecSerie[1], 
                                         Cadena.setSecuencial(num_factura), dir_matriz, Fecha.getFecha("SQL"), direccion_sucursal, num_resolucion, oblga_contabilidad, 
                                         tipo_documento, razon_social, ruc, subtotal, descuento, "0", subtotal_2, iva_2, subtotal_3, iva_3, total_pagar, formaPago, 
-                                        ids_productos, descripciones, cantidades, preciosUnitarios, descuentos, subtotales, ivas, pIvas, codigoIvas, direccion, plan);
+                                        ids_productos, descripciones, cantidades, preciosUnitarios, descuentos, subtotales, ivas, pIvas, codigoIvas, direccion, plan, emailCliente);
                                 String documentoXml = DOCS_ELECTRONICOS + "generados/" + claveAcceso + ".xml";
                                 objFE.salvar(documentoXml);
                                 String error = objFE.getError();

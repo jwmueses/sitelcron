@@ -33,27 +33,32 @@ public class ActualizaAsistencias implements Job{
         
         
         
-        //Asistencias 14/7
-        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de actualización de Asistencias para Usuarios 14/7.");
-        try{
-            objDataBase.consulta("SELECT proc_asistencia147();");
-        }
-        catch(Exception e){
-            System.out.println(e.getMessage());
-        }
-        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de actualización de Asistencias para Usuarios 14/7");
         
-        //Asistencias 5/2
-        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de actualización de Asistencias para Usuarios 5/2.");
-        try{
-            objDataBase.consulta("SELECT proc_asistencia52();");
-        }
-        catch(Exception e){
-            System.out.println(e.getMessage());
-        }
-        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de actualización de Asistencias para Usuarios 5/2");
         
-        //Calculo de Rubros
+        
+        
+        
+//        //Asistencias 14/7
+//        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de actualización de Asistencias para Usuarios 14/7.");
+//        try{
+//            objDataBase.consulta("SELECT proc_asistencia147();");
+//        }
+//        catch(Exception e){
+//            System.out.println(e.getMessage());
+//        }
+//        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de actualización de Asistencias para Usuarios 14/7");
+//        
+//        //Asistencias 5/2
+//        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de actualización de Asistencias para Usuarios 5/2.");
+//        try{
+//            objDataBase.consulta("SELECT proc_asistencia52();");
+//        }
+//        catch(Exception e){
+//            System.out.println(e.getMessage());
+//        }
+//        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de actualización de Asistencias para Usuarios 5/2");
+        
+//        //Calculo de Rubros
 //        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio para la creacion de Rubros de Nomina.");
 //        try{
 //            objDataBase.consulta("insert into tbl_rubro_cont_det (id_rubro_cont, id_empleado, rubro, periodo,monto,id_sucursal) " +

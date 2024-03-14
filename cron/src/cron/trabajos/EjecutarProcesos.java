@@ -111,7 +111,7 @@ public class EjecutarProcesos  implements Job{
                     modoSincronizacionMikrotiks = rs.getString("valor")!=null ? rs.getString("valor") : "scripts";
                 }
             }
-            System.out.println("Configuracion dias reconexion: hoy= " + dia + " postpago= " + dia_reconexion + " prepago= " + dia_reconexion_quito);
+            System.out.println("Configuracion dias reconexion= " + dia_reconexion + " postpago= " + dia_reconexion + " prepago= " + dia_reconexion_quito);
         }catch(Exception e){
             System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Error en obtención de parametros de configuraciones. " + e.getMessage());
         }

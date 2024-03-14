@@ -206,9 +206,9 @@ public class SaitelCron implements Daemon{
                     .withIdentity("ActualizaAsistencias", "saitel").build();
             
             Trigger disparador5 = TriggerBuilder.newTrigger()
-	                    .withIdentity("cadaDiaALas23Horas", "saitel")
-	                    .startAt(new Date(System.currentTimeMillis()))
-	                    .withSchedule( CronScheduleBuilder.cronSchedule( "0 40 23 * * ?")) //  segundos, minuto, hora, dia del mes, mes, dia de la semana, año   
+	                    .withIdentity("cadaDiaALas630Horas", "saitel")
+	                    .startAt(new Date(System.currentTimeMillis()))      //  6:00 sale callcenter y 7:00 ingreso limpieza
+	                    .withSchedule( CronScheduleBuilder.cronSchedule( "0 30 6 * * ?")) //  segundos, minuto, hora, dia del mes, mes, dia de la semana, año   
 	                    .build();
             
             ejecutar.scheduleJob(trabajo5, disparador5);
