@@ -4,6 +4,7 @@
  */
 package ec.com.saitel.lib;
 
+import java.sql.ResultSet;
 import org.w3c.dom.Element;
 
 /**
@@ -25,6 +26,22 @@ public class FacturaElectronica extends Xml{
             String codigos, String descripciones, String cantidades, String preciosUnitarios, String descuentos, String subtotales, String ivas, 
             String pIvas, String codigoIvas, String direccion, String plan)
     {
+        String porcentajeIva = "15";
+        String codigoPorcentaje = "4";
+        Iva objIva = new Iva();
+        try{
+            ResultSet r = objIva.consulta("SELECT valor FROM tbl_configuracion where parametro='p_iva1';");
+            if(r.next()){
+                porcentajeIva = (r.getString("valor")!=null) ? r.getString("valor") : "15";
+                codigoPorcentaje = objIva.getCodigoIva(porcentajeIva);
+                r.close();
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }finally{
+            objIva.cerrar();
+        }
+        
         //String claveAcceso = this.getClaveAcceso(fechaEmision, ruc, "1", estab+ptoEmi, secuencial, tipoEmision);
         Element factura = this.setInfoTributaria("factura", "1.1.0", ambiente, tipoEmision, razonSocial, nombreComercial, ruc, claveAcceso, 
                                                     codDoc, estab, ptoEmi, secuencial, dirMatriz);
@@ -58,7 +75,7 @@ public class FacturaElectronica extends Xml{
                         this.nuevoElementoInsertar("valor", "0.00");
                     }
                     if(Float.parseFloat(subtotal_2)>0 ){
-                        this.nuevoElementoInsertar("codigoPorcentaje", "2");
+                        this.nuevoElementoInsertar("codigoPorcentaje", codigoPorcentaje);
                         this.nuevoElementoInsertar("baseImponible", this.truncar(Float.parseFloat(subtotal_2) - Float.parseFloat(totalDescuento) ) );
                         this.nuevoElementoInsertar("valor", this.truncar(iva_2) );
                     }

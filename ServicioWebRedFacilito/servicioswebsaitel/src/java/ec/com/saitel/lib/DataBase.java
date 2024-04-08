@@ -22,6 +22,12 @@ import java.sql.SQLException;
 
 public class DataBase
 {
+    private static final String maquina = "127.0.0.1";    //   192.168.217.16       127.0.0.1
+    private static final int puerto = 5432;
+    private static final String db = "db_isp";
+    private static final String usuario = "postgres";
+    private static final String clave = "Gi%9875.-*5+$)"; //  postgres    A0Lpni2       Gi%9875.-*5+$)
+    
     private Connection con = null;
     private String error = "";
 
@@ -29,7 +35,7 @@ public class DataBase
     {
         try{
             Class.forName("org.postgresql.Driver");
-            this.con = DriverManager.getConnection("jdbc:postgresql://127.0.0.1:5432/db_isp", "postgres", "postgres");
+            this.con = DriverManager.getConnection("jdbc:postgresql://" + this.maquina + ":" + this.puerto + "/" + this.db, this.usuario, this.clave);
         }catch(ClassNotFoundException e){
             System.out.println("Error: "+e.getMessage()+". El driver no puede ser cargado.");
         }catch(Exception ex){
