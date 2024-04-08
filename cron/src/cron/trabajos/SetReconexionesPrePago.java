@@ -29,6 +29,19 @@ public class SetReconexionesPrePago implements Job{
             
         
         
+        double baseReconexion = 0.87;
+        try{
+            ResultSet rs = objDataBase.consulta("select valor::int from tbl_configuracion where parametro='p_iva1';");
+            if(rs.next()){
+                float costoReconexion = 1;
+                float iva = rs.getString("valor")!=null ? rs.getFloat("valor") : 13;
+                baseReconexion = Addons.redondear( costoReconexion / (1 + (iva/100) ) );
+                rs.close();
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        
         
         
         if(dia >= 16){
@@ -36,7 +49,7 @@ public class SetReconexionesPrePago implements Job{
             System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando generación de reconexiones prepago");
             try{
                 if(!objDataBase.ejecutar("insert into tbl_prefactura_rubro(id_sucursal, id_rubro, id_instalacion, periodo, rubro, monto) \n" +
-                    "select id_sucursal, 4, id_instalacion, '"+fecha+"'::date, 'Reconexión'::varchar, 0.89 from \n" +
+                    "select id_sucursal, 4, id_instalacion, '"+fecha+"'::date, 'Reconexión'::varchar, "+baseReconexion+" from \n" +
                     "vta_prefactura where fecha_emision is null and periodo between '"+fecha+"'::date and '"+fechaFinMes+"'::date and txt_convenio_pago='prepago' and id_sucursal in('7','11') \n" +
                     "and id_instalacion not in (select id_instalacion from tbl_prefactura_rubro where periodo='"+fecha+"'::date and lower(rubro) like 'reconexi%');")){
                     System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Error en generación de reconexiones prepago. " + objDataBase.getError());
