@@ -222,8 +222,8 @@ public class FacturaVenta extends DataBase{
                             idFormaPago="98";
                             formaPagoCodInterno="a";
 
-                            double totalPagar = Float.parseFloat(total_pagar);
-                            double minTotalPagarACredito = Float.parseFloat(total_pagar) * pminValorVajaCredito / 100;
+                            double totalPagar = Double.parseDouble(total_pagar);
+                            double minTotalPagarACredito = Double.parseDouble(total_pagar) * pminValorVajaCredito / 100;
                             double abonos = 0;
                             double axUltimoAbono = 0;
                             String axIdCliAnt = "";
@@ -240,8 +240,8 @@ public class FacturaVenta extends DataBase{
                                         monto_vajar = total_pagar;
                                         break;
                                     } else {        //  si el anticipo no cubre el monto
-                                        abonos += Float.parseFloat(matAnticipo[2]);
-                                        axUltimoAbono = Float.parseFloat(matAnticipo[2]);
+                                        abonos += Double.parseDouble(matAnticipo[2]);
+                                        axUltimoAbono = Double.parseDouble(matAnticipo[2]);
                                         axIdCliAnt += matAnticipo[0] + ",";
                                         axMontoVajar += matAnticipo[2] + ",";
                                         if(abonos >= totalPagar){     //  si el o los abonos cubren el total se salta al pago
@@ -397,7 +397,7 @@ public class FacturaVenta extends DataBase{
                         if(rubrosAdicionales!=null){
                             for(int a=0; a<rubrosAdicionales.length; a++){
 //                                if(rubrosAdicionales[a][8].compareTo(id_sucursal)==0 && rubrosAdicionales[a][9].compareTo(id_instalacion)==0 && rubrosAdicionales[a][10].compareTo(periodo)==0){
-                                    double pU = Addons.redondear( Float.parseFloat(rubrosAdicionales[a][12]) / Float.parseFloat(rubrosAdicionales[a][23]) , 4 );
+                                    double pU = Addons.redondear( Double.parseDouble(rubrosAdicionales[a][12]) / Double.parseDouble(rubrosAdicionales[a][23]) , 4 );
                                     if(rubrosAdicionales[a][18].compareTo("1")==0){ // activo
                                         try {
                                             
@@ -405,7 +405,7 @@ public class FacturaVenta extends DataBase{
                                             "', '0', '"+rubrosAdicionales[a][13]+"', '"+rubrosAdicionales[a][11]+"', '"+rubrosAdicionales[a][15]+
                                             "', '"+pU+"', '"+rubrosAdicionales[a][18]+"', '"+rubrosAdicionales[a][16]+"', '"+rubrosAdicionales[a][17]+"', '1', '"+rubrosAdicionales[a][27]+"'],";
                                             
-                                            double pVenta = Float.parseFloat(rubrosAdicionales[a][12]);
+                                            double pVenta = Double.parseDouble(rubrosAdicionales[a][12]);
                                             ResultSet rsActivo = this.consulta("select D.id_plan_cuenta_grupo, D.id_plan_cuenta, sum(A.valor_compra) as valor_compra, sum(A.valor_depreciado) as valor_depreciado, "
                                                 + "sum(valor_compra) - sum(valor_depreciado) as valor_util \n"
                                                 + "from tbl_activo as A inner join tbl_tabla_depreciacion as D on A.id_tabla_depreciacion=D.id_tabla_depreciacion \n"
@@ -419,7 +419,7 @@ public class FacturaVenta extends DataBase{
 
                                                 matParamAsientoAx = Matriz.poner(matParamAsientoAx, new String[]{id_plan_cuenta_venta, valor_depreciado, "0"});
                                                 matParamAsientoAx = Matriz.poner(matParamAsientoAx, new String[]{id_plan_cuenta_grupo, "0", valor_compra});
-                                                double diferencia = pVenta - Float.parseFloat(valor_util);
+                                                double diferencia = pVenta - Double.parseDouble(valor_util);
                                                 if (diferencia > 0) {
                                                     matParamAsientoAx = Matriz.poner(matParamAsientoAx, new String[]{idPlanCuentaUtilidadActivo, "0", String.valueOf(Addons.redondear(diferencia))});
                                                 }
