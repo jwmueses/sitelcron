@@ -1,0 +1,812 @@
+@import 'variables.css';
+@import 'animations.css';
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: var(--fuente);
+    font-display: swap;
+}
+
+/* tamaños de letra */
+h1 {
+    font-size: 3rem;
+    font-weight: 600;
+    letter-spacing: 0.1rem;
+}
+
+h2 {
+    font-size: 2.5rem;
+    font-weight: 500;
+    letter-spacing: 0.05rem;
+}
+
+h3 {
+    font-size: 2rem;
+    font-weight: 500;
+    letter-spacing: 0.05rem;
+}
+
+h4 {
+    font-size: 1.50rem;
+    font-weight: 500;
+    letter-spacing: 0.05rem;
+}
+
+h5 {
+    font-size: 1.25rem;
+    font-weight: 500;
+    letter-spacing: 0.05rem;
+}
+
+h6 {
+    font-size: 1rem;
+    font-weight: 500;
+    letter-spacing: 0.05rem;
+}
+
+h7 {
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: 0.05rem;
+}
+
+p {
+    font-size: 0.8rem;
+    /* font-weight: lighter; */
+    letter-spacing: 0.05rem;
+}
+
+a {
+  cursor: pointer;
+
+}
+
+
+/*colores generales*/
+.bg-secundario {
+    background-color: var(--color-secundario);
+}
+
+.bg-primario {
+    background-color: var(--color-primario);
+}
+
+.bg-negro {
+    background-color: var(--color-negro);
+}
+
+.bg-blanco {
+    background-color: var(--color-blanco);
+}
+
+.bg-gris-claro {
+    background-color: var(--color-terciario-hover);
+}
+
+.color-blanco {
+    color: var(--color-blanco);
+}
+
+.color-negro {
+    color: var(--color-negro);
+}
+
+.color-primario {
+    color: var(--color-primario);
+}
+
+.color-secundario {
+    color: var(--color-secundario);
+}
+
+.p-0{
+    padding: 0rem;
+  }
+  
+  .p-05{
+    padding: 0.5rem;
+  }
+  
+  .p-1{
+    padding: 1rem;
+  }
+
+.gradiente-secundario{
+    background: linear-gradient(#FD800C, #FAD4AA);
+  }
+
+/* Estilos se secciones */
+.section1 {
+    padding: 3rem 2rem;
+    justify-content: center;
+}
+
+
+.centrado {
+    margin-left: auto;
+    margin-right: auto;
+    width: 50%;
+    text-align: center;
+  }
+
+
+  .radio-20{
+    border-radius: 20px;
+  }
+  
+  .radio-15{
+    border-radius: 15px;
+  }
+  
+  .radio-10{
+    border-radius: 10px;;
+  }
+
+.borde-circular2 {
+    border-radius: 2rem;
+    -webkit-border-radius: 2rem;
+    -ms-border-radius: 2rem;
+    -o-border-radius: 2rem;
+}
+
+.borde-normal {
+    border-radius: 0.2rem;
+    -webkit-border-radius: 0.2rem;
+    -ms-border-radius: 0.2rem;
+    -o-border-radius: 0.2rem;
+}
+
+/* Estilos para botones */
+.btn1 {
+    background-color: var(--color-primario);
+    border: none;
+    color: var(--color-blanco);
+    padding: 0.5rem 1rem;
+    text-decoration: none;
+    cursor: pointer;
+
+}
+.btn1:hover{
+  background-color: var(--color-primario-hover);
+
+
+}
+
+.btn2 {
+    background-color: var(--color-secundario);
+    border: none;
+    color: var(--color-blanco);
+    padding: 0.5rem 1rem;
+    text-decoration: none;
+    cursor: pointer;
+
+}
+
+.btn3 {
+    background-color: var(--color-secundario);
+    color: var(--color-blanco);
+    border: none;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+}
+
+.btn3:hover {
+  background-color: var(--color-secundario-hover);
+
+}
+
+.btn4{
+  background-color: var(--color-blanco);
+  color: var(--color-primario)!important;
+  border: none;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+
+}
+
+.btn5 {
+    background-color: var(--color-primario);
+    border: none;
+    color: var(--color-blanco);
+    padding: 1rem 2rem;
+    text-decoration: none;
+    cursor: pointer;
+
+}
+.btn5:hover{
+  background-color: var(--color-primario-hover);
+
+
+}
+
+/* Estilos de navbar */
+
+nav {
+    position: relative;
+    top: 0;
+    width: 100%;
+    z-index: 100;
+    /* transition: top 0.5s ease; */
+    background-color: var(--color-primario);
+    transition: top 0.5s ease, box-shadow 0.5s ease; /* Agregada la transición para la sombra */
+    box-shadow: none;
+}
+
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    
+
+}
+
+.logo-navbar img {
+    width: 10rem;
+    height: 3rem;
+}
+
+.nav-items {
+    display: flex;
+    list-style: none;
+}
+
+.nav-items li {
+    position: relative;
+    display: inline-block;
+
+}
+
+.nav-items li a {
+    display: block;
+    padding: 10px 15px;
+    text-decoration: none;
+    color: #fff;
+    font-size: 15px;
+    transition: transform 0.3s ease;
+    -webkit-transition: transform 0.3s ease;
+    -moz-transition: transform 0.3s ease;
+    -ms-transition: transform 0.3s ease;
+    -o-transition: transform 0.3s ease;
+}
+
+.linea-colorida {
+  border-color: var(--color-secundario); /* Cambia este valor al color que desees */
+  
+}
+
+hr.linea-colorida{
+  height: 3px;
+  background-color: var(--color-secundario);
+}
+
+
+.dropdown-menu {
+    width: 200px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: none;
+    position: absolute;
+    background: var(--color-primario);
+    padding: 1rem;
+    top: 100%;
+    left: 0;
+    z-index: 999;
+    /* Agrega un valor alto de z-index */
+}
+
+.dropdown:hover .dropdown-menu {
+    display: block;
+
+}
+
+.dropdown a:hover,
+.nav-items li a:hover {
+    /*background: var(--color-blanco);
+    */color: var(--color-blanco);
+    transform: scale(1.1);
+    -webkit-transform: scale(1.1);
+    -moz-transform: scale(1.1);
+    -ms-transform: scale(1.1);
+    -o-transform: scale(1.1);
+}
+
+
+.dropdown-menu li {
+    margin-bottom: 10px;
+}
+
+
+.hamburger {
+    display: none;
+    flex-direction: column;
+    cursor: pointer;
+}
+
+.line {
+    width: 25px;
+    height: 3px;
+    background: #fff;
+    margin: 3px;
+}
+
+/* Estilos cuando navbar se fija */
+nav.sticky {
+    position: fixed;
+    top: 0;
+    animation: fadeIn 0.5s;
+    background-color: var(--color-blanco);
+    animation: fadeIn 0.5s; /* Agregado */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+nav.sticky .dropdown-menu {
+    background-color: var(--color-blanco);
+}
+
+nav.sticky .nav-items li a {
+    color: var(--color-primario);
+    /* Color del texto del menú cuando se vuelve fijo */
+}
+
+nav.sticky .nav-items .dropdown li a {
+    color: var(--color-primario);
+    /* Color del texto del menú cuando se vuelve fijo */
+}
+
+nav.sticky .nav-items li a:hover {
+    color: var(--color-secundario);
+    /* Color del texto del menú cuando se vuelve fijo */
+}
+
+
+nav.sticky .nav-items li #btnContratar:hover, nav.sticky .nav-items .dropdown #btnContratar a{
+  color: var(--color-blanco);
+  /* Color del texto del menú cuando se vuelve fijo */
+}
+
+
+/* Estilos footer */
+
+.pie-pagina {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 40px;
+    background: linear-gradient(to right, #000, #05263f, #05263f, #000);
+    padding-top: 2rem;
+    position: relative; 
+}
+
+
+.columna {
+
+  border-right: 4px solid var(--color-negro);
+}
+
+.columna:first-child {
+  border-left: none;
+}
+
+.columna:last-child {
+  border-right: none;
+}
+
+
+
+.columna {
+    color: var(--color-blanco);
+    padding: 1.5rem 0.5rem;
+}
+
+.columna.items-pie {
+  text-align: center;
+}
+
+
+
+.columna .link-menu {
+  padding-top: 2rem;
+}
+
+.columna .link-menu li {
+    padding: 0.5rem;
+    color: var(--color-blanco);
+}
+
+.columna .link-menu li a{
+  text-decoration: none;
+  color: var(--color-blanco);
+}
+
+.columna h1 {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.columna ul {
+    list-style: none;
+}
+
+.columna li {
+    margin-bottom: 5px;
+}
+
+.enlaces-pie{
+
+  padding-top: 1rem;
+  
+}
+
+.enlaces-pie li {
+  padding-bottom: 0.5rem;
+}
+
+.enlaces-pie li a {
+  text-decoration:none ;
+  color: var(--color-blanco);
+  transition: color 0.3s ease-in-out;
+  font-size: 14px;
+}
+
+.enlaces-pie li a:hover {
+  color: var(--color-secundario);
+  
+}
+
+
+
+.redes-sociales {
+    display: flex;
+    justify-content: center;
+    list-style: none;
+}
+
+.redes-sociales li {
+    margin: 10px;
+}
+
+.redes-sociales a {
+    color: var(--color-blanco);
+    font-size: 30px;
+    transition: color 0.3s ease, transform 0.3s ease;
+}
+
+.redes-sociales a:hover {
+    color: var(--color-secundario);
+    transform: scale(1.2);
+    -webkit-transform: scale(1.2);
+    -ms-transform: scale(1.2);
+    -o-transform: scale(1.2);
+}
+
+.fila-extra {
+    grid-column: 1 / -1;
+    background-color: var(--color-negro);
+    color: var(--color-blanco);
+    padding: 0.3rem;
+    display: flex;
+    justify-content: center;
+
+}
+
+.img-footer {
+    width: 12rem;
+    height: 4rem;
+}
+
+input[type=text],  input[type=email], input[type=tel], input[type = password], select{
+  width: 100%;
+  box-sizing: border-box;
+  border: 2px solid #ccc;
+  border-radius: 4px;
+  font-size: 12px;
+  background-color: white;
+  padding: 5px 20px 5px 10px;
+}
+
+/* input[type="text"].plan,
+input[type="email"].plan,
+input[type="tel"].plan,
+input[type="password"].plan,
+select.plan {
+    font-size: 13px;
+} */
+
+#eyeIcon {
+    position: absolute;
+    right:5px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-secundario);
+}
+
+.toggle-password {
+    position: relative;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Card-like appearance */
+.card-contenedor {
+    /* flex-basis: calc(33.33% - 20px); */
+    /* padding: 20px; */
+    border: 1px solid #dddddd;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    margin: 1rem;
+    position: relative;
+    margin-bottom: 20px;
+    margin-right: 20px;
+    border-radius: 8px;
+  }
+
+  .card-contenedor-iniciar-sesion {
+    /* flex-basis: calc(33.33% - 20px); */
+    /* padding: 20px; */
+    border: 1px solid #dddddd;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    margin: 1rem;
+    position: relative;
+    margin-top: 90px;
+    margin-bottom: 90px;
+    margin-right: 20px;
+    border-radius: 8px;
+
+    @media screen and (max-width: 768px) {
+        margin-top: 10px; /* Add margin to separate it from the first card */
+    }
+
+    @media screen and (max-width: 480px) {
+        margin-top: 10px; /* Add margin to separate it from the first card */
+    }
+    
+  }
+
+  .card-contenedor-perfil {
+    flex-basis: calc(33.33% - 20px);
+    /* padding: 20px; */
+    /* border: 1px solid #dddddd; */
+    /* box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); */
+    text-align: center;
+    margin: 1rem;
+    position: relative;
+    margin-bottom: 20px;
+    margin-right: 20px;
+    border-radius: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center; /* Adjust as needed */
+  }
+
+.card-detalle{
+    padding: 20px;
+}
+
+.card-detalle h3 {
+    margin-top: 0;
+    color: var(--color-primario)
+}
+
+.card-detalle p {
+    margin: 5px 0;
+}
+
+.card-detalle-error{
+    padding: 20px;
+}
+
+.card-detalle-error h4{
+    margin-top: 0;
+    color: var(--color-primario)
+}
+
+.card {
+    border: 1px solid #dddddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin-bottom: 20px;
+    width: calc(33.33% - 20px); /* Adjust card width as needed */
+    float: left;
+    margin-right: 20px;
+    cursor: pointer;
+
+    /* Responsive styles */
+    @media screen and (max-width: 768px) {
+            width: calc(50% - 20px); /* Adjust card width for smaller screens */
+        }
+
+    @media screen and (max-width: 480px) {
+            width: 100%; /* Adjust card width for smaller screens */
+            margin-right: 0; /* Remove right margin for the last card in a row */
+        }
+    }
+
+/* Plan details styling */
+
+.plan {
+    border: 1px solid #dddddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin-bottom: 20px;
+    width: calc(30% - 10px); /* Adjust card width as needed */
+    float: left;
+    margin-right: 20px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+
+    /* Responsive styles */
+    @media screen and (max-width: 768px) {
+        width: calc(50% - 20px); /* Adjust card width for smaller screens */
+    }
+
+    @media screen and (max-width: 480px) {
+        width: 100%; /* Adjust card width for smaller screens */
+        margin-right: 0; /* Remove right margin for the last card in a row */
+    }
+}
+
+.card-informacion {
+    border: 1px solid #dddddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    /* margin-bottom: 20px; */
+    width: calc(45%); /* Adjust card width as needed */
+    float: left;
+    margin-right: 20px;
+    /* cursor: pointer; */
+    display: flex;
+    flex-direction: column;
+
+    /* Responsive styles */
+    @media screen and (max-width: 768px) {
+        width: calc(50% - 20px); /* Adjust card width for smaller screens */
+    }
+
+    @media screen and (max-width: 480px) {
+        width: 100%; /* Adjust card width for smaller screens */
+        margin-right: 0; /* Remove right margin for the last card in a row */
+    }
+}
+
+.card-informacion-titulo {
+    padding: 20px;
+}
+
+.card-informacion-detalle {
+    padding: 20px;
+}
+
+.plan-titulo {
+    padding: 20px;
+    height: 100px; /* Adjust as needed */
+    overflow: hidden;
+}
+
+.plan-details {
+    padding: 20px;
+    height: 150px; /* Adjust as needed */
+    overflow: hidden;
+}
+
+.plan-details h3 {
+    margin-top: 0;
+    color: var(--color-primario)
+}
+
+.plan-details p {
+    margin: 5px 0;
+}
+
+/* Highlight selected plan */
+.plan.selected {
+    border-color: #ffffff; /* Highlight border color */
+    box-shadow: 0 0 0 2px var(--color-primario-hover); /* Highlight box shadow */
+}
+
+/* Custom styling for selected plan */
+.plan.selected .plan-details {
+    background-color: #f0f0f0; /* Background color for selected plan details */
+}
+
+ /* Table styling */
+ .plan-table {
+    /* width: 80%; */
+    border-collapse: collapse;
+}
+
+.plan-table th, .plan-table td {
+    padding: 12px;
+    border-bottom: 1px solid #dddddd;
+}
+
+.plan-table th {
+    background-color: #f2f2f2;
+}
+
+.plan-table td {
+    text-align: left;
+}
+
+.plan-table tr:last-child td {
+    border-bottom: none;
+}
+
+.box {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    @media screen and (max-width: 768px) {
+        margin-left: 0;
+        width: 90%; 
+        flex-direction: column; /* Stack items vertically */
+    }
+
+    @media screen and (max-width: 480px) {
+        margin-left: 0;
+        width: 90%;
+        flex-direction: column;  
+    }
+}
+
+#idPlan {
+    display: none;
+}
+
+.card-error-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* semi-transparent black overlay */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.card-error-overlay .card-detalle-error {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    transform: translate(-50%, -50%);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+}
+
+#idErrorRegistro {
+    /* display: none; */
+    opacity: 1;
+    transition: opacity 5s ease; /* Smooth transition on opacity property */
+}
+
+/* Error card styles */
+.error-card {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
+    display: none; /* Initially hidden */
+    justify-content: center;
+    align-items: center;
+}
+
+.error-message {
+    background-color: white; /* Card background color */
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3); /* Shadow effect */
+}

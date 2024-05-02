@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <title>SAITEL - Internet para todo el Ecuador</title>
+    <meta name="description"
+        content="Soluciones Avanzadas Informáticas y Telecomunicaciones SAITEL, es una empresa que fue creada con el fin principal de brindar a la colectividad el servicio de Internet.">
+    <meta name="keywords" content="SAITEL, internet, fibra óptica, Ecuador, telecomunicaciones">
+
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="Mon, 01 Jan 2001 00:00:01 GMT" />
+    <meta http-equiv="Cache-Control" content="no-store" />
+    <meta http-equiv="Cache-Control" content="must-revalidate" />
+    <meta http-equiv="Cache-Control" content="no-cache" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- <link rel="canonical" href="https://saitel.ec"> -->
+
+    <link rel="icon" type="image/x-icon" href="../static/img/favico.png">
+    <link rel="stylesheet" type="text/css" href="../static/css/styles2.css?v=1.2">
+    <link rel="stylesheet" type="text/css" href="../static/css/responsive.css?v=1.2">
+    <link rel="stylesheet" type="text/css" href="../static/css/animations.css?v=1.2">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+        crossorigin="anonymous">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat" />
+
+</head>
+
+<body>
+    <nav>
+        <div class="navbar">
+            <a class="logo-navbar" href="../index.html">
+                <img src="../static/img/logo_saitel2023.png" alt="Saitel Logo">
+            </a>
+            <ul class="nav-items">
+                <li><a href="../index.html">Inicio</a></li>
+                <li><a href="../html/planes.html">Planes</a></li>
+                <li><a href="../html/tickets.html">Tickets</a></li>
+                <li><a href="../html/television.html">Television</a><hr class="linea-colorida"></li>
+                <!-- <li><a href="../html/medidor_velocidad.html">Test de Velocidad</a></li> -->
+                <li><a href="https://www.speedtest.net/" target="_blank">Test de Velocidad</a></li>
+                <li><a href="../html/cobertura.html">Cobertura</a></li>
+
+                <!-- <li><a href="#">Contratar</a></li> -->
+                <li><a href="https://saitelapp.ec:8080/saitelpagos/" target="_blank">Pagar</a></li>
+
+                <li class="dropdown">
+                    <a href="#">Clientes</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="../html/planilla.html">Consultar Planilla</a></li>
+                        <li><a href="https://saitelapp.ec/html/pags/facturaElectronica/" target="_blank">Facturación
+                                Electrónica</a></li>
+                        <li><a href="https://saitelapp.ec/html/pags/reclamos.html" target="_blank">Reclamos</a></li>
+                    </ul>
+                </li>
+
+                <li class="dropdown">
+                    <a href="#">Sobre Nosotros</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="../html/quienes_somos.html">Quiénes Somos</a></li>
+                        <li><a href="https://saitelapp.ec:8080/servicio/FrmOfertaLaboral" target="_blank">Trabaja
+                                con Nosotros</a></li>
+                    </ul>
+                </li>
+                <!-- <li><a href="#/contacto">Contacto</a></li> -->
+            </ul>
+            <div class="hamburger navbar-toggle">
+                <div class="line"></div>
+                <div class="line"></div>
+                <div class="line"></div>
+            </div>
+        </div>
+    </nav>
+
+    <section class="section1">
+        <div class="container centrado">
+            <h1 class="section-title color-secundario">INTERNET + TV STREAMING</h1>
+        </div>
+    </section>
+
+    <section class="box centrado">
+        <div class="card-contenedor">
+            <div class="card-detalle">
+                <h4 class="color-primario">
+                    Ingresa tu email para iniciar tu membresia.
+                </h4>
+                <br>
+                <div class="p-05"></div>
+                <form id="registro-tv-form" action="" method="post">
+                    <div class="p-05"></div>
+                    <input type="email" id="emailInput" required autofocus placeholder="@email"/>
+                    <div class="p-05"></div>
+                    <input type="password" id="passwordInput" required autofocus placeholder="Contraseña para su cuenta de tv"/>
+                        <span class="toggle-password" onclick="funcMostrarClave()">
+                            <i class="fa fa-eye" id="eyeIcon"></i>
+                        </span>
+                    </input>   
+                    <div id="idClaveSegura">
+                    </div>
+                    <div class="p-05"></div>
+                    <button id="idRegistrarseBtn" class="card-button btn1 borde-circular" type="button" onclick="funcRegistroTv()">
+                        <span id="idSpinnerRegistrarse" style="display: none;">
+                            <i class="fa fa-spinner fa-spin"></i>
+                        </span>
+                        Registrarse
+                      <span><i class="fa fa-arrow-right"></i></span>
+                    </button>
+                  </form>
+                <div class="p-05"></div>
+            </div>
+        </div>
+
+        <div class="card-contenedor-iniciar-sesion">
+            <div class="card-detalle">
+                <p>¿Ya tienes una cuenta?</p>
+                <div class="p-05"></div> 
+                <button class="card-button btn1 borde-circular" type="button" onclick="funcRedirigirPagina('../html/television_iniciar_sesion.html')">
+                    Inicia sesion
+                    <span><i class="fa fa-home"></i></span>
+                  </button>
+            </div>
+        </div>
+
+        <div id="errorCard" class="error-card">
+        </div>
+
+    </section>
+
+    <hr class="card-contenedor">
+
+    <div class="section1">
+        <h2 class="color-secundario centrado"> PLANES DISPONIBLES </h2>
+
+        <div class="card-detalle">
+            <table class="plan-table centrado">
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <script src="../static/js/television/util.js"></script>
+    <script src="../static/js/television/apitv.js"></script>
+</body>
+
+<footer class="pie-pagina" id="piePagina">
+    <div class="columna items-pie">
+        <img class="img-footer" src="../static/img/logo_saitel2023.png" alt="Saitel Logo">
+        <ul class="link-menu">
+            <li><a href="../html/planes.html">Planes</a></li>
+            <!-- <li><a href="../html/medidor_velocidad.html">Test de Velocidad</a></li> -->
+            <li><a href="https://www.speedtest.net/" target="_blank">Test de Velocidad</a></li>
+            <!-- <li><a href="">Soporte</a></li>
+            <li><a href="">Contratar</a></li> -->
+            <li><a href="https://saitelapp.ec:8080/saitelpagos/" target="_blank">Pagar</a></li>
+            <li><a href="../html/quienes_somos.html">Sobre Nosotros</a></li>
+            <li><a href="#">Contacto</a></li>
+        </ul>
+        <div class="p-1"></div>
+        <ul class="redes-sociales">
+
+            <li><a href="https://www.facebook.com/EcuadorSaitel/" target="_blank"><i class="fab fa-facebook"></i></a>
+            </li>
+            <!-- <li><a href="#"><i class="fab fa-twitter"></i></a></li> -->
+            <li><a href="https://www.instagram.com/ecuadorsaitel/" target="_blank"><i class="fab fa-instagram"></i></a>
+            </li>
+            <li><a href="https://www.tiktok.com/@ecuadorsaitel" target="_blank"><i class="fab fa-tiktok"></i></a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="columna">
+        <h1>Enlaces Importantes</h1>
+        <ul class="enlaces-pie">
+            <li><a href="../documentos/resumen-Octubre-Diciembre-1.pdf" target="_blank">Consulta Calidad de
+                    Servicio</a></li>
+            <li><a href="../documentos/resumen-Octubre-Diciembre-Portador.pdf" target="_blank">Consulta Calidad de
+                    Servicio Portador</a></li>
+            <li><a href="../documentos/comparticion_infraestructura.pdf" target="_blank">Compartición de
+                    Infraestructura Física</a></li>
+            <li><a href="../documentos/Guia-de-control-parental.pdf" target="_blank">Guía de Control Parental</a>
+            </li>
+            <li><a href="../documentos/CONTRATO-SAITEL-PARA-ARCOTEL.pdf" target="_blank">Contrato de Adhesión</a>
+            </li>
+            <li><a href="../html/seguridad_informatica.html">Seguridad Informática</a></li>
+            <li><a href="../documentos/verificacionContratado.pdf" target="_blank">Guía de verificación de ancho de
+                    banda contratado</a></li>
+            <li><a href="../documentos/reglamento_abonados.pdf" target="_blank">Reglamento de Abonados</a></li>
+            <li><a href="../documentos/norma_sva.pdf" target="_blank">Reglamento Norma SVA</a></li>
+            <!-- <li><a href="#">Capacidad Contratada</a></li> -->
+            <li><a href="../html/glosario.html">Glosario de Términos</a></li>
+            <li><a href="https://saitelapp.ec/html/pags/reclamos.html" target="_blank">Reclamos</a></li>
+            <li><a href="https://saitelapp.ec/html/pags/mejorar.html" target="_blank">Ayúdanos a Mejorar</a></li>
+        </ul>
+    </div>
+    <div class="columna">
+        <h1 class="footer-title color-secundario">Quiero contratar el servicio</h1>
+        <div class="p-1"></div>
+        <form id="formulario-contacto" action="../static/php/contacto.php" method="post">
+            <p>Tu Nombre</p>
+            <div class="p-05"></div>
+            <input type="text" name="nombre" required />
+
+            <div class="p-1"></div>
+            <p>Tu Provincia</p>
+            <div class="p-05"></div>
+            <select id="provincia" name="provincia" required>
+                <option value="" disabled selected>Selecciona una provincia</option>
+            </select>
+            <div class="p-1"></div>
+
+            <p>Tu Cantón</p>
+            <div class="p-05"></div>
+            <select id="canton" name="canton" required>
+                <option value="" disabled selected>Selecciona un cantón</option>
+            </select>
+            <div class="p-1"></div>
+
+            <p>Tu WhatsApp</p>
+            <div class="p-05"></div>
+            <input type="tel" name="whatsapp" required pattern="\d{10}"
+                title="Ingresa un número de WhatsApp válido (10 dígitos)" />
+            <div class="p-1"></div>
+            <p>Tu Correo</p>
+            <div class="p-05"></div>
+            <input type="email" name="correo" required />
+            <div class="p-1"></div>
+            <!-- <a href="#" class="btn2 borde-circular">ENVIAR</a> -->
+            <input type="hidden" name="csrf_token" value="<?php echo $token; ?>">
+            <button class="btn2 borde-circular" type="button" onclick="enviarFormulario()">
+                ENVIAR
+            </button>
+        </form>
+        <div id="snackbar" class="snackbar">Mensaje enviado con éxito</div>
+
+        <div></div>
+    </div>
+    <div class="fila-extra">
+        <p>&copy; Todos los derechos reservados | SAITEL 2024</p>
+    </div>
+</footer>
+
+<html>

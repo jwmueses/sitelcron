@@ -1,0 +1,36 @@
+/*Definición de colores a usar*/
+:root {
+    /*--color-primario: #321765; 3E4692
+    --color-secundario: #FD800C; D37221
+    --color-terciario: #BCBBBF;*/
+
+    --color-primario: #374C96;
+    --color-secundario: #D37D16;
+    --color-terciario: #BCBBBF;
+
+    --color-primario-hover:#4B5DA0;
+    --color-secundario-hover: #D78A2D;
+    --color-terciario-hover: #F4F4F4;
+
+    --color-primario-variacion : #006dff;
+    --color-primario-variacion2: #384596;
+
+    --color-secundario-variacion: #FEF4EB;
+
+    --color-exito-bg: #DDF9DC;
+    --color-exito-txt: #7DC17B;
+
+    --color-error-bg:#FBDADA;
+    --color-error-txt:#820606;
+
+    --color-blanco: #ffffff;
+    --color-negro: #000000;
+
+    --fuente: 'Montserrat', sans-serif;
+    --fuente-xs: 0.2rem;
+    --fuente-s: 0.5rem;
+    --fuente-m: 1rem;
+    --fuente-l: 2rem;
+    --fuente-xl: 4rem;
+    --fuente-xxl: 6rem;
+  }
