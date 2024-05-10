@@ -312,4 +312,19 @@ public class SuscripcionDAO extends BaseDatos
         return this.ejecutar("update tbl_cliente_suscripcion_gomax set jwt=null where correo_cuenta='" + correCuenta + "'" );
     }
     
+    public String getJwt(long idClienteSuscripcionGomax){
+        
+        String jwt = "";
+        try{
+            ResultSet rs = this.consulta("select jwt from tbl_cliente_suscripcion_gomax where id_cliente_suscripcion_gomax=" + idClienteSuscripcionGomax);
+            if(rs.next()) {
+                jwt = rs.getString("jwt")!=null ? rs.getString("jwt") : "";
+                rs.close();
+            }
+        } catch(Exception e) {
+            e.printStackTrace();    
+        }
+        return jwt;
+    }
+    
 }

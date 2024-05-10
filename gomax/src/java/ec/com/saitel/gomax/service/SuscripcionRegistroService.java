@@ -51,7 +51,7 @@ public class SuscripcionRegistroService
 //                Key key2 = Keys.hmacShaKeyFor(keyEncodes);
                 
                 Notificacion notificacion = new Notificacion();
-                notificacion.enviarVerificacionCorreo( suscripcion.getCorreoCuenta().toLowerCase(), cadJwt, pk );
+                notificacion.enviarVerificacionCorreo( suscripcion.getCorreoCuenta().toLowerCase(), cadJwt, pk);
                 
                 return Response.status(Response.Status.CREATED).build();
 //                List<Suscripcion> suscripcionNuevo = this.suscripcionDao.getSuscripcion( Integer.parseInt(pk) );

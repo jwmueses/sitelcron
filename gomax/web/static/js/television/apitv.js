@@ -1,3 +1,5 @@
+const ipPago = '192.168.217.16:8080';
+
 function funcCerrarSesion(){
     document.getElementById('idCerrarSesion').addEventListener('click', function() {
         expirarCookie('jwt'); 
@@ -115,7 +117,7 @@ function funcObtenerPlanesTv(){
         card.addEventListener('click', selectPlan);
     });
 
-    fetch('http://192.168.217.16:8080/gomax/gomaxtv/planestv')
+    fetch('http://'+ipPago+'/gomax/gomaxtv/planestv')
             .then(response => response.json()) // Parse the JSON response
             .then(plan => {
                 const tableBody = document.querySelector('.plan-table tbody');
@@ -148,7 +150,7 @@ function funcObtenerPlanesTv(){
 
 function funcObtenerPlanContratadoTv(){
 
-    fetch('http://192.168.217.16:8080/gomax/gomaxtv/planestv')
+    fetch('http://'+ipPago+'/gomax/gomaxtv/planestv')
             .then(response => response.json())
             .then(plan => {
                 const nombrePlan = plan.find(plan => plan.idPlanGomax === sessionStorage.getItem('idPlanGomax'));
@@ -196,20 +198,20 @@ function funcContratarPlanTv(){
     console.log(datosContratarPlanTv);
     console.log(datosCliente);
     console.log("GENERAR A");
-    const apiUrl = 'http://192.168.217.16:8080/gomax/gomaxtv/suscripciones/suscribirseplan/';
+    const apiUrl = 'http://'+ipPago+'/gomax/gomaxtv/suscripciones/suscribirseplan/';
     console.log("GENERAR B");
 
     const requestOptions = {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'saitel-tv-jwt': funcGetCookie('jwt')
+            'saitel-tv-jwt': funcGetCookie('jwtSuscripcion')
         },
         body: jsonDatosContratarPlanTv
     };
     console.log("GENERAR C");
 
-    console.log(funcGetCookie('jwt'));
+    console.log(funcGetCookie('jwtSuscripcion'));
 
     fetch(apiUrl, requestOptions)
         .then(response => {
@@ -246,7 +248,7 @@ function funcIniciarSesionTv(){
     // const formData = new FormData(registroTvForm);
     const jsonDatosIniciarSesionTv = JSON.stringify(datosIniciarSesionTv);
 
-    const apiUrl = 'http://192.168.217.16:8080/gomax/gomaxtv/seguridad/';
+    const apiUrl = 'http://'+ipPago+'/gomax/gomaxtv/seguridad/';
 
     const requestOptions = {
         method: 'POST',
@@ -306,13 +308,18 @@ function funcReenviarCorreoVerificar(){
             <div class="error-message">
                 <h6> Primero tienes que verificar tu correo.</h6>
                 <div class="p-05"></div>
-    
+        
+                <button class="btn1 borde-circular" type="button" onclick="funcRedirigirPagina('../html/television_planes.html')">
+                    <span><i class="fa fa-arrow-left"></i></span>
+                    Cancelar
+                </button> 
                 <button id="idContratarBtn" class="btn1 borde-circular" type="button">
                     <span id="idSpinnerContratar" style="display: none;">
                         <i class="fa fa-spinner fa-spin"></i>
                     </span>
                     Reenviar correo
                 <span><i class="fa fa-arrow-right"></i></span>
+                </button> 
             </div> 
         `;
         errorCard.style.display = 'flex';
@@ -332,7 +339,7 @@ function funcRegistroTv(){
         const emailInput = document.getElementById('emailInput').value;
         const passwordInput = document.getElementById('passwordInput').value;
     
-        const apiUrl = 'http://192.168.217.16:8080/gomax/gomaxtv/registro/';
+        const apiUrl = 'http://'+ipPago+'/gomax/gomaxtv/registro/';
     
         const datosRegistroTv = {
             correoCuenta: emailInput,
@@ -394,7 +401,7 @@ function funcRegistroTv(){
 
 function funcIngresarInicioTv(jsonDatosUsuario){
 
-    const apiUrl = 'http://192.168.217.16:8080/gomax/gomaxtv/seguridad/';
+    const apiUrl = 'http://'+ipPago+'/gomax/gomaxtv/seguridad/';
 
     const requestOptions = {
         method: 'POST',
@@ -444,7 +451,7 @@ function funcVerificarCorreoTv() {
 
     const jsonDatosVerificarCorreo = JSON.stringify(datosVerificarCorreo);
 
-    const apiUrl = 'http://192.168.217.16:8080/gomax/gomaxtv/registro';
+    const apiUrl = 'http://'+ipPago+'/gomax/gomaxtv/registro';
 
     const requestOptions = {
         method: 'PUT',
@@ -465,22 +472,23 @@ function funcVerificarCorreoTv() {
         })
         .then(() => {
             // document.cookie = `jwt=${data.jwt}; path=/; SameSite=None; Secure`;
+//            funcGetTokenGomax(values.em);
             const msj = document.getElementById('idMsjVerificarCorreo');
             msj.innerHTML = `
                 <h4 class="color-secundario">Correo verificado <span><i class="fa fa-check-square"></i></span></h4>
                 <div class="p-05"></div>
                 <p> Ir a la paginal principal</p>
-                <form action="television_planes.html">
+                <form action="television_iniciar_sesion.html">
                     <button class="btn1" type="submit">
                         <span>Inicio</span> 
                         <span><i class="fa fa-home"></i></span>
                     </button>
                 </form>
             `;
-            sessionStorage.setItem('correoConfirmado', true);
-            document.cookie = `jwt=${values.jwt}; path=/; SameSite=None;`; //<!-- Secure`;>
-            document.cookie = `email=${values.em}; path=/; SameSite=None;`;// Secure`;
-            document.cookie = `idClienteSuscripcionGomax=${values.idClienteSusGo}; path=/; SameSite=None;`; // Secure`;
+//            sessionStorage.setItem('correoConfirmado', true);
+//            document.cookie = `jwt=${values.jwt}; path=/; SameSite=None;`; //<!-- Secure`;>
+//            document.cookie = `email=${values.em}; path=/; SameSite=None;`;// Secure`;
+//            document.cookie = `idClienteSuscripcionGomax=${values.idClienteSusGo}; path=/; SameSite=None;`; // Secure`;
         })
         .catch(error => {
             const msj = document.getElementById("idMsjVerificarCorreo");
@@ -497,38 +505,52 @@ function funcVerificarCorreoTv() {
         });
 }
 
+//function funcGetTokenGomax(correo){
+//
+//    const apiUrl = 'http://'+ipPago+'/gomax/planestv/token/'+correo;
+//
+//    fetch(apiUrl)
+//        .then(response => {
+//            console.log(response);
+//            if (!response.ok) {
+//                throw new Error("Error al obtener token");
+//            }
+//            return response.text();
+//        })
+//        .then(data => {
+//            if (data.trim() !== '') {
+//                document.cookie = `tokenSuscripcion=${data}; path=/; SameSite=None;`;// Secure`;
+//            } else {
+//                throw new Error("Token vacio");
+//            }
+//        })
+//        .catch(error => {
+//            console.error('Error:', error);
+//        });
+//}
+
 function funcExtraerEmYToken() {
-    // Get the URL
     var url = window.location.href;
     console.log(url);
      
-    // Split the URL by '?'
     var parts = url.split('?');
     
-    // Initialize variables to store the values
     var emValue = '';
     var jwtValue = '';
     var idClienteSusGo;
     
-    // If there's more than one part (means there's a parameter)
     if (parts.length > 1) {
-        // Get the query string part
         var queryString = parts[1];
         
-        // Split the query string by '&'
         var params = queryString.split('&');
         
-        // Loop through each parameter
         for (var i = 0; i < params.length; i++) {
-            // Split parameter by '=' to get key-value pair
             var keyValue = params[i].split('=');
             
-            // Check if key is 'em' and store its value
             if (keyValue[0] === 'em') {
                 emValue = keyValue[1];
             }
             
-            // Check if key is 'jwt' and store its value
             if (keyValue[0] === 'jwt') {
                 jwtValue = keyValue[1];
             }
@@ -578,7 +600,7 @@ function funcExtraerEmYToken() {
 
     const jsonDatosLinkPago = JSON.stringify(datosLinkPago);
     console.log(jsonDatosLinkPago);
-    const apiUrl = 'http://192.168.217.16:8080/gomax/gomaxtv/pagomedio/generarpagomedio/';
+    const apiUrl = 'http://'+ipPago+'/gomax/gomaxtv/pagomedio/generarpagomedio/';
 
     const requestOptions = {
         method: 'POST',
@@ -612,7 +634,7 @@ function funcExtraerEmYToken() {
             funcOcultarSpinner('idSpinnerContratar');
         })
         .catch(error => {
-            console.error('Error:', error);
+            console.error(error);
         });
  }
 
@@ -691,21 +713,22 @@ function funcEscucharIngresoDatosPerfil() {
 
 function funcFacturarTv() {
     const isFunctionExecuted = sessionStorage.getItem('funcFacturarTvExecuted');
+    const urlParams = new URLSearchParams(window.location.search);
+    sessionStorage.setItem('jwt', urlParams.get('jwt'));
 
     if (isFunctionExecuted === null) {
         
-        const urlParams = new URLSearchParams(window.location.search);
         const idSus = urlParams.get('idSus');
 
-        const apiUrl = 'http://192.168.217.16:8080/gomax/gomaxtv/suscripciones/facturarplan';
+        const apiUrl = 'http://'+ipPago+'/gomax/gomaxtv/suscripciones/facturarplan';
         const rawText = idSus;
 
         const requestOptions = {
-            method: 'POST', 
+            method: 'PUT', 
             body: rawText,
             headers: {
               'Content-Type': 'text/plain',
-              'saitel-tv-jwt': funcGetCookie('jwt')
+              'saitel-tv-jwt': sessionStorage.getItem('jwt')
             }
         };
 
@@ -714,7 +737,7 @@ function funcFacturarTv() {
             if (response.ok) {
                 return response.text(); 
             }
-            throw new Error('Network response was not ok.');
+            throw new Error('Error al facturar.');
         })
         .then(data => {
             console.log(data);
@@ -726,7 +749,7 @@ function funcFacturarTv() {
         })
         .catch(error => {
             sessionStorage.setItem('funcFacturarTvExecuted', 'false');
-            console.error('Error:', error);
+            console.error(error);
         });
     } else {
         
@@ -735,7 +758,7 @@ function funcFacturarTv() {
             const urlParams = new URLSearchParams(window.location.search);
             const idSus = urlParams.get('idSus');
 
-            const apiUrl = 'http://192.168.217.16:8080/gomax/gomaxtv/suscripciones/facturarplan';
+            const apiUrl = 'http://'+ipPago+'/gomax/gomaxtv/suscripciones/facturarplan';
             const rawText = idSus;
 
             const requestOptions = {

@@ -6,11 +6,13 @@ package ec.com.saitel.gomax.service;
 
 import ec.com.saitel.gomax.dao.ConfiguracionDAO;
 import ec.com.saitel.gomax.dao.DocumentoPagomedioDAO;
+import ec.com.saitel.gomax.dao.SuscripcionDAO;
 import ec.com.saitel.gomax.model.DatosPagomedio;
 import ec.com.saitel.gomax.utils.Pagomedio;
 import java.io.IOException;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
@@ -55,11 +57,13 @@ public class PagomedioService {
         String value = formParams.getFirst("customValue");
         Pagomedio pagomedio = new Pagomedio();
         ConfiguracionDAO configuracionDAO = new ConfiguracionDAO();
+        SuscripcionDAO suscripcionDAO = new SuscripcionDAO();
         boolean actualizado = pagomedio.actualizarDatosPago( configuracionDAO.getTokenPagomedio(), value);
+        String jwt = suscripcionDAO.getJwt(Long.parseLong(value));
         if(actualizado){
            configuracionDAO.cerrar();
 //           return Response.status(Response.Status.OK).build();
-           response.sendRedirect("http://138.185.137.117:8080/gomax/html/television_pago_exitoso.html?idSus="+value);
+           response.sendRedirect("http://138.185.137.117:8080/gomax/html/television_pago_exitoso.html?idSus="+value+"&jwt="+jwt);
         }
         configuracionDAO.cerrar();
         response.sendRedirect("http://138.185.137.117:8080/gomax/html/television_pago_exitoso.html");

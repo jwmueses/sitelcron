@@ -95,7 +95,7 @@ function funcRedirigirPaginaPago(pagina) {
 
   var url = '?id=' + encodeURIComponent(idPlan) +'&plan=' + encodeURIComponent(idPlanNombre);
 
-  window.location.href = pagina+ url;
+  window.location.href = pagina+url;
 }
 
 function funcRedirigirPagina(pagina) {

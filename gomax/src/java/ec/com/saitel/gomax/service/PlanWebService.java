@@ -13,10 +13,12 @@
 package ec.com.saitel.gomax.service;
 
 import ec.com.saitel.gomax.dao.PlanWebDAO;
+import ec.com.saitel.gomax.dao.SuscripcionDAO;
 import ec.com.saitel.gomax.model.PlanWeb;
 import java.util.List;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -29,6 +31,7 @@ import javax.ws.rs.core.Response;
 public class PlanWebService 
 {
     PlanWebDAO planDao = new PlanWebDAO();
+    SuscripcionDAO suscripcionDAO = new SuscripcionDAO();
             
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -37,5 +40,12 @@ public class PlanWebService
         List<PlanWeb> planes = this.planDao.getPlanes();
         return Response.ok(planes).build();
     }
+    
+//    @GET
+//    @Path("/token/{correo}")
+//    public Response getToken(@PathParam("correo") String correo)
+//    {
+//        return Response.ok(this.suscripcionDAO.getJwt(correo)).build();
+//    }
     
 }

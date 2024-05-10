@@ -22,7 +22,7 @@ public class Notificacion
         mensaje.append("<h2>SAITEL</h2>");
         mensaje.append("<h3>Verifica tu direcci&oacute;n de correo electr&oacute;nico</h3><p>&nbsp;</p>");
         mensaje.append("<p><a style=\"border:1px #8AC5FF solid;color:#333;background-color:#c7deff;padding:12px;text-decoration:none;font-size:16px;font-weight:bold;\" ");
-        mensaje.append("href=\"http://138.185.137.117:8080/gomax/html/television_correo_verificacion.html?em=");
+        mensaje.append("href=\"http://192.168.217.16:8080/gomax/html/television_correo_verificacion.html?em=");
         mensaje.append(destinatario);
         mensaje.append("&jwt=");
         mensaje.append(jwt);
