@@ -66,4 +66,22 @@ public class ConfiguracionDAO extends BaseDatos
         }
         return parametro;
     }
+    
+    public String getTokenPagomedio(){
+        String parametro = "";
+        try{
+            ResultSet rs = this.consulta("select parametro, valor from tbl_configuracion where parametro = 'token_pagomedio'");
+            while(rs.next()){
+                String param = rs.getString("parametro")!=null ? rs.getString("parametro") : "";
+                if( param.compareTo("token_pagomedio") == 0 ) {
+                    parametro = rs.getString("valor")!=null ? rs.getString("valor") : "-1";
+                }  
+            }
+            rs.close();
+        }catch(Exception e) {
+            e.printStackTrace();
+        }
+        return parametro;
+    }
+    
 }

@@ -19,8 +19,6 @@ import ec.com.saitel.gomax.dao.PuntoEmisionDAO;
 import ec.com.saitel.gomax.dao.SuscripcionDAO;
 import ec.com.saitel.gomax.model.PlanGomax;
 import ec.com.saitel.gomax.model.Suscripcion;
-import ec.com.saitel.gomax.utils.Gomax;
-import java.util.Iterator;
 import java.util.List;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -108,7 +106,7 @@ public class SuscripcionService
         this.suscripcionDao.cerrar();
         return Response.status(Response.Status.NOT_MODIFIED).build();
     }
-    
+  
     
     @PUT
     @Path("/facturarplan")

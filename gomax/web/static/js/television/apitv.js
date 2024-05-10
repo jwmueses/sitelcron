@@ -13,7 +13,7 @@ function funcGetCookie(name) {
       // Check if this cookie is the one we're looking for
       if (cookie.startsWith(name + '=')) {
         return cookie.substring(name.length + 1); // Return the value of the cookie
-      }funcFacturarTv
+      }
     }
     return null; // Return null if the cookie is not found
 }
@@ -63,8 +63,10 @@ window.onload = function() {
         funcClaveSeguraEvent();
         funcObtenerPlanesTv();
     }
-    if(currentPage == 'television_pago_exitoso.html'){
+    if(currentPage === 'television_pago_exitoso.html'){
         funcFacturarTv();
+        funcCerrarSesion();
+        funcCargarHamburger();
     }
 };
 
@@ -93,15 +95,15 @@ function selectPlan(event) {
     // Retrieve the hidden ID element
     const idPlanEscogido = event.currentTarget.querySelector('.plan-details h7[hidden]');
     idPlanEscogido.id = 'idPlanEscogido';
-    localStorage.setItem('idPlanEscogido', idPlanEscogido.textContent)
+    localStorage.setItem('idPlanEscogido', idPlanEscogido.textContent);
 
     const idPlanEscogidoNombre = event.currentTarget.querySelector('.plan-titulo h3');
-    idPlanEscogidoNombre.id = 'idPlanEscogidoNombre'
-    localStorage.setItem('idPlanEscogidoNombre', idPlanEscogidoNombre.textContent)
+    idPlanEscogidoNombre.id = 'idPlanEscogidoNombre';
+    localStorage.setItem('idPlanEscogidoNombre', idPlanEscogidoNombre.textContent);
 
     const idCostoPlan = event.currentTarget.querySelector('.plan-details h6[hidden]');
     idCostoPlan.id = 'idCostoPlan';
-    sessionStorage.setItem('idCostoPlan', idCostoPlan.textContent)
+    sessionStorage.setItem('idCostoPlan', idCostoPlan.textContent);
     
 }
 
@@ -149,7 +151,7 @@ function funcObtenerPlanContratadoTv(){
     fetch('http://192.168.217.16:8080/gomax/gomaxtv/planestv')
             .then(response => response.json())
             .then(plan => {
-                const nombrePlan = plan.find(plan => plan.idPlanGomax == sessionStorage.getItem('idPlanGomax'));
+                const nombrePlan = plan.find(plan => plan.idPlanGomax === sessionStorage.getItem('idPlanGomax'));
                 if (nombrePlan) {
                     sessionStorage.setItem('nombrePlan', nombrePlan.nombrePlan);
                 } else {
@@ -165,7 +167,7 @@ function funcContratarPlanTv(){
     funcMostrarSpinner('idSpinnerContratar');
 
     const idCostoPlan = sessionStorage.getItem('idCostoPlan').replace('$', '');
-    const idClienteSuscripcionGomax = sessionStorage.getItem('idClienteSuscripcionGomax');
+    const idClienteSuscripcionGomax = funcGetCookie('idClienteSuscripcionGomax');
     const idPlan = document.getElementById('idPlanEscogido').textContent;
     const idRazonSocialInput = document.getElementById('idRazonSocialInput').value;
     const idRucInput = document.getElementById('idRucInput').value;
@@ -185,14 +187,17 @@ function funcContratarPlanTv(){
 
     const datosCliente = {
         costoPlan: parseFloat(idCostoPlan),
-        idClienteSuscripcionGomax: idClienteSuscripcionGomax
-    }
+        idClienteSuscripcionGomax: parseInt(idClienteSuscripcionGomax)
+    };
 
     const jsonDatosContratarPlanTv = JSON.stringify(datosContratarPlanTv);
     // const datosClientePlanTv = JSON.stringify(datosCliente);
 
+    console.log(datosContratarPlanTv);
     console.log(datosCliente);
+    console.log("GENERAR A");
     const apiUrl = 'http://192.168.217.16:8080/gomax/gomaxtv/suscripciones/suscribirseplan/';
+    console.log("GENERAR B");
 
     const requestOptions = {
         method: 'POST',
@@ -200,9 +205,11 @@ function funcContratarPlanTv(){
             'Content-Type': 'application/json',
             'saitel-tv-jwt': funcGetCookie('jwt')
         },
-        body: jsonDatosContratarPlanTv,
+        body: jsonDatosContratarPlanTv
     };
-    // console.log(funcGetCookie('jwt'));
+    console.log("GENERAR C");
+
+    console.log(funcGetCookie('jwt'));
 
     fetch(apiUrl, requestOptions)
         .then(response => {
@@ -214,6 +221,7 @@ function funcContratarPlanTv(){
             return response;
         })
         .then(()=>{
+            console.log("GENERAR PAGO");
             funcGenerarLinkPago(datosContratarPlanTv, datosCliente);
         })
         .catch(error => {
@@ -232,7 +240,7 @@ function funcIniciarSesionTv(){
 
     const datosIniciarSesionTv = {
         correoCuenta: emailInput,
-        claveCuenta: passwordInput,
+        claveCuenta: passwordInput
     };
 
     // const formData = new FormData(registroTvForm);
@@ -245,7 +253,7 @@ function funcIniciarSesionTv(){
         headers: {
             'Content-Type':'application/json'
         },
-        body: jsonDatosIniciarSesionTv,
+        body: jsonDatosIniciarSesionTv
     };
 
     fetch(apiUrl, requestOptions)
@@ -258,8 +266,8 @@ function funcIniciarSesionTv(){
         })
         .then(data => {
             console.log(data);
-            document.cookie = `jwt=${data.jwt}; path=/; SameSite=None; Secure`;
-            document.cookie = `email=${data.correoCuenta}; path=/; SameSite=None; Secure`;
+            document.cookie = `jwt=${data.jwt}; path=/; SameSite=None;`;// Secure`;
+            document.cookie = `email=${data.correoCuenta}; path=/; SameSite=None;`;// Secure`;
             sessionStorage.setItem('fechaSuscripcion', data.fechaSuscripcion);
             sessionStorage.setItem('fechaTermino', data.fechaTermino);
             sessionStorage.setItem('debitoAutomatico', data.debitoAutomatico);
@@ -269,7 +277,7 @@ function funcIniciarSesionTv(){
             sessionStorage.setItem('idPlanGomax', data.idPlanGomax);
             sessionStorage.setItem('idClienteSuscripcionGomax', data.idClienteSuscripcionGomax);
             
-            if(data.idPlanGomax != 0){
+            if(data.idPlanGomax !== 0){
                 window.location.href = '../html/television_mi_perfil.html';
             }
             else{
@@ -307,7 +315,7 @@ function funcReenviarCorreoVerificar(){
                 <span><i class="fa fa-arrow-right"></i></span>
             </div> 
         `;
-        errorCard.style.display = 'flex'
+        errorCard.style.display = 'flex';
     }
 }
 
@@ -328,7 +336,7 @@ function funcRegistroTv(){
     
         const datosRegistroTv = {
             correoCuenta: emailInput,
-            claveCuenta: passwordInput,
+            claveCuenta: passwordInput
         };
     
         // const formData = new FormData(registroTvForm);
@@ -351,7 +359,7 @@ function funcRegistroTv(){
             headers: {
                 'Content-Type':'application/json'
             },
-            body: jsonDatosRegistroTv,
+            body: jsonDatosRegistroTv
         };
     
         fetch(apiUrl, requestOptions)
@@ -391,22 +399,23 @@ function funcIngresarInicioTv(jsonDatosUsuario){
     const requestOptions = {
         method: 'POST',
         headers: {
-            'Content-Type':'application/json',
+            'Content-Type':'application/json'
         },
-        body: jsonDatosUsuario,
+        body: jsonDatosUsuario
     };
 
     fetch(apiUrl, requestOptions)
         .then(response => {
             console.log(response);
             if (!response.ok) {
-                throw new Error("Error registrando el usuario");
+                throw new Error("Error inicio de usuario");
             }
             return response.json();
         })
         .then(data => {
-            document.cookie = `jwt=${data.jwt}; path=/; SameSite=None; Secure`;
-            document.cookie = `email=${data.correoCuenta}; path=/; SameSite=None; Secure`;
+            document.cookie = `jwt=${data.jwt}; path=/; SameSite=None;`;// Secure`;
+            document.cookie = `email=${data.correoCuenta}; path=/; SameSite=None;`;// Secure`;
+            document.cookie = `idClienteSuscripcionGomax=${data.idClienteSuscripcionGomax}; path=/; SameSite=None;`;// Secure`;
             window.location.href = '../html/television_planes.html';
             sessionStorage.setItem('fechaSuscripcion', data.fechaSuscripcion);
             sessionStorage.setItem('fechaTermino', data.fechaTermino);
@@ -428,12 +437,9 @@ function funcVerificarCorreoTv() {
 
     const values = funcExtraerEmYToken();
 
-    console.log('Email:', values.em);
-    console.log('JWT:', values.jwt);
-
     const datosVerificarCorreo= {
         correoCuenta: values.em,
-        jwt: values.jwt,
+        jwt: values.jwt
     };
 
     const jsonDatosVerificarCorreo = JSON.stringify(datosVerificarCorreo);
@@ -446,7 +452,7 @@ function funcVerificarCorreoTv() {
             'Content-Type': 'application/json',
             'saitel-tv-jwt': funcGetCookie('jwt')
         },
-        body: jsonDatosVerificarCorreo,
+        body: jsonDatosVerificarCorreo
     };
 
     fetch(apiUrl, requestOptions)
@@ -472,9 +478,9 @@ function funcVerificarCorreoTv() {
                 </form>
             `;
             sessionStorage.setItem('correoConfirmado', true);
-            // window.location.href = '../html/television_planes.html';
-            // console.log(data.jwt);
-            // console.log(data.correoCuenta);
+            document.cookie = `jwt=${values.jwt}; path=/; SameSite=None;`; //<!-- Secure`;>
+            document.cookie = `email=${values.em}; path=/; SameSite=None;`;// Secure`;
+            document.cookie = `idClienteSuscripcionGomax=${values.idClienteSusGo}; path=/; SameSite=None;`; // Secure`;
         })
         .catch(error => {
             const msj = document.getElementById("idMsjVerificarCorreo");
@@ -494,7 +500,7 @@ function funcVerificarCorreoTv() {
 function funcExtraerEmYToken() {
     // Get the URL
     var url = window.location.href;
-    console.log(url)
+    console.log(url);
      
     // Split the URL by '?'
     var parts = url.split('?');
@@ -502,6 +508,7 @@ function funcExtraerEmYToken() {
     // Initialize variables to store the values
     var emValue = '';
     var jwtValue = '';
+    var idClienteSusGo;
     
     // If there's more than one part (means there's a parameter)
     if (parts.length > 1) {
@@ -525,17 +532,25 @@ function funcExtraerEmYToken() {
             if (keyValue[0] === 'jwt') {
                 jwtValue = keyValue[1];
             }
+            
+            if (keyValue[0] === 'idClienteSusGo') {
+                idClienteSusGo = keyValue[1];
+            }
         }
          // Return the values
          return {
            em: emValue,
-           jwt: jwtValue
+           jwt: jwtValue,
+           idClienteSusGo: idClienteSusGo
          };
     }
  }
 
  function funcGenerarLinkPago(datosContratarPlanTv, datosCliente){
     // console.log((datosCliente.costoPlan * 1.15).toFixed(2));
+    console.log(datosContratarPlanTv);
+    console.log(datosCliente);
+
     const datosLinkPago= {
         integration: true,
         third: {
@@ -548,13 +563,13 @@ function funcExtraerEmYToken() {
             type: "Individual"
         },
         generate_invoice: 0,
-        description: "PAGO DEL SERVICIO DE TV SAITEL. "+ "SUBS: "+ datosContratarPlanTv.fechaSuscripcion,
+        description: "PAGO DEL SERVICIO DE TV SAITEL. TV"+ datosCliente.idClienteSuscripcionGomax,
         amount: 1.06, // datosCliente.costoPlan, //1.06,
         amount_with_tax: 0.5, // (datosCliente.costoPlan * 1.15).toFixed(2), //0.5,
         amount_without_tax: 0.5, // 0.5,
         tax_value:0.06, //1.15, //0.06,
         settings: [],
-        notify_url: "http://138.185.137.117:8081/pagoenlinea/pagoenlinea/ingresar/pagomedio",
+        notify_url: 'http://138.185.137.117:8080/gomax/gomaxtv/pagomedio/actualizarpagomedio/',
         custom_value: datosCliente.idClienteSuscripcionGomax,
         has_cash: 0,
         has_cards: 1
@@ -562,33 +577,32 @@ function funcExtraerEmYToken() {
 
 
     const jsonDatosLinkPago = JSON.stringify(datosLinkPago);
-    // console.log(jsonDatosLinkPago);
-    const apiUrl = 'https://api.abitmedia.cloud/pagomedios/v2/payment-requests';
+    console.log(jsonDatosLinkPago);
+    const apiUrl = 'http://192.168.217.16:8080/gomax/gomaxtv/pagomedio/generarpagomedio/';
 
     const requestOptions = {
         method: 'POST',
         headers: {
-            'accept':'application/json',
-            'Content-Type':'application/json',
-            'Authorization': 'Bearer -dzqvcbnutoolsuy4rxznfwxpwgnjew8nabevuzoxpk7driae01mbohserohgulq9emxu'
+            'Content-Type': 'application/json',
+            'saitel-tv-jwt': funcGetCookie('jwt')
         },
         body: jsonDatosLinkPago
     };
 
     fetch(apiUrl, requestOptions)
         .then(response => {
-            console.log(response)
+            console.log(response);
             if (!response.ok) {
                 throw new Error("Ha ocurrido un error generando en link de pago");
             }
-            return response.json();
+            return response.text();
         })
         .then(data => {
             // console.log(data)
             // Check if the response indicates success
-            if (data.success && data.data && data.data.url) {
+            if (data.trim() !== '') {
                 // Redirect to the URL provided in the response
-                funcRedirigirPagina(data.data.url);
+                funcRedirigirPagina(data);
             } else {
                 throw new Error("Ha ocurrido un error generando en link de pago");
             }
@@ -675,36 +689,82 @@ function funcEscucharIngresoDatosPerfil() {
 }
 
 
-function funcFacturarTv(){
+function funcFacturarTv() {
+    const isFunctionExecuted = sessionStorage.getItem('funcFacturarTvExecuted');
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const idSus = urlParams.get('idSus');
+    if (isFunctionExecuted === null) {
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const idSus = urlParams.get('idSus');
 
-    const apiUrl = 'http://192.168.217.16:8080/gomax/gomaxtv/suscripciones/facturarplan';
-    const rawText = idSus;
+        const apiUrl = 'http://192.168.217.16:8080/gomax/gomaxtv/suscripciones/facturarplan';
+        const rawText = idSus;
 
-    const requestOptions = {
-        method: 'POST', 
-        body: rawText,
-        headers: {
-          'Content-Type': 'text/plain'
+        const requestOptions = {
+            method: 'POST', 
+            body: rawText,
+            headers: {
+              'Content-Type': 'text/plain',
+              'saitel-tv-jwt': funcGetCookie('jwt')
+            }
+        };
+
+        fetch(apiUrl, requestOptions)
+        .then(response => {
+            if (response.ok) {
+                return response.text(); 
+            }
+            throw new Error('Network response was not ok.');
+        })
+        .then(data => {
+            console.log(data);
+            // Set flag indicating the function has been executed
+            sessionStorage.setItem('funcFacturarTvExecuted', 'true');
+            // Show the success message and hide the spinner
+            // document.getElementById('idPagoexitoso').removeAttribute('hidden');
+            // document.getElementById('idPagoExitosoSpinner').style.display = 'none';
+        })
+        .catch(error => {
+            sessionStorage.setItem('funcFacturarTvExecuted', 'false');
+            console.error('Error:', error);
+        });
+    } else {
+        
+        if (!isFunctionExecuted) {
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const idSus = urlParams.get('idSus');
+
+            const apiUrl = 'http://192.168.217.16:8080/gomax/gomaxtv/suscripciones/facturarplan';
+            const rawText = idSus;
+
+            const requestOptions = {
+                method: 'POST', 
+                body: rawText,
+                headers: {
+                  'Content-Type': 'text/plain',
+                  'saitel-tv-jwt': funcGetCookie('jwt')
+                }
+            };
+
+            fetch(apiUrl, requestOptions)
+            .then(response => {
+                if (response.ok) {
+                    return response.text(); 
+                }
+                throw new Error('Network response was not ok.');
+            })
+            .then(data => {
+                console.log(data);
+                // Set flag indicating the function has been executed
+                sessionStorage.setItem('funcFacturarTvExecuted', 'true');
+                // Show the success message and hide the spinner
+                // document.getElementById('idPagoexitoso').removeAttribute('hidden');
+                // document.getElementById('idPagoExitosoSpinner').style.display = 'none';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
         }
-    };
-
-    fetch(apiUrl, requestOptions)
-    .then(response => {
-        if (response.ok) {
-            return response.text(); 
-        }
-        throw new Error('Network response was not ok.');
-    })
-    .then(data => {
-        console.log(data);
-        // Show the success message and hide the spinner
-        document.getElementById('idPagoexitoso').removeAttribute('hidden');
-        document.getElementById('idPagoExitosoSpinner').style.display = 'none';
-    })
-    .catch(error => {
-        console.error('Error:', error);
-    });
+    }
 }
