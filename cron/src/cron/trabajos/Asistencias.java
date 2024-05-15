@@ -195,32 +195,32 @@ public class Asistencias extends DataBase {
      * @param fecha Fecha del registro.
      * @return id del Horario.
      */
-    public String idHorario(String usuario, String fecha) {
-        String id_horario = "";
-        String id_bio = "";
-        String modalidad = "";
-        ResultSet r = this.consulta("select e.id_horario, h.modalidad,e.id_empleado as id_bio from tbl_empleado e, tab_horarios h where e.id_horario=h.id_horario and e.alias='" + usuario + "';");
-        try {
-            if (r.next()) {
-                modalidad = (r.getString("modalidad") != null) ? r.getString("modalidad") : "";
-                id_bio = (r.getString("id_bio") != null) ? r.getString("id_bio") : "";
-                if (modalidad.compareTo("1") == 0) {
-                    id_horario = (r.getString("id_horario") != null) ? r.getString("id_horario") : "";
-                }
-                if (modalidad.compareTo("2") == 0) {
-                    ResultSet horarioConsulta = this.horarioConsulta(usuario, fecha);
-                    if (horarioConsulta.next()) {
-                        id_horario = (horarioConsulta.getString("id_horario") != null ? horarioConsulta.getString("id_horario") : "0");
-                    } else {
-                        id_horario = this.asistencia147(id_bio, usuario, fecha);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.getMessage();
-        }
-        return id_horario;
-    }
+//    public String idHorario(String usuario, String fecha) {
+//        String id_horario = "";
+//        String id_bio = "";
+//        String modalidad = "";
+//        ResultSet r = this.consulta("select e.id_horario, h.modalidad,e.id_empleado as id_bio from tbl_empleado e, tab_horarios h where e.id_horario=h.id_horario and e.alias='" + usuario + "';");
+//        try {
+//            if (r.next()) {
+//                modalidad = (r.getString("modalidad") != null) ? r.getString("modalidad") : "";
+//                id_bio = (r.getString("id_bio") != null) ? r.getString("id_bio") : "";
+//                if (modalidad.compareTo("1") == 0) {
+//                    id_horario = (r.getString("id_horario") != null) ? r.getString("id_horario") : "";
+//                }
+//                if (modalidad.compareTo("2") == 0) {
+//                    ResultSet horarioConsulta = this.horarioConsulta(usuario, fecha);
+//                    if (horarioConsulta.next()) {
+//                        id_horario = (horarioConsulta.getString("id_horario") != null ? horarioConsulta.getString("id_horario") : "0");
+//                    } else {
+//                        id_horario = this.asistencia147(id_bio, usuario, fecha);
+//                    }
+//                }
+//            }
+//        } catch (Exception e) {
+//            e.getMessage();
+//        }
+//        return id_horario;
+//    }
 
 //    public String nombreHorario(String id_horario) {
 //        String horario = "";
@@ -270,18 +270,19 @@ public class Asistencias extends DataBase {
     /**
      * Consulta del id del horario para los empleados con asistencia 14/7.
      *
-     * @param id_bioSalida Clave primaria (id_empleado) de la tabla
+     * @param idHorario codigo del horario
      * empleado(tbl_empleado).
      * @param usSalida Usuario de autenticacion.
      * @param fechaSalida fecha para el registro de la asistencia.
+     * @param nombreHorario nombre del horario
      * @return id del Horario que se va a utilizar para registrar la asistencia.
      */
-    public String asistencia147(String id_bioSalida, String usSalida, String fechaSalida) {
-        String idHorarioTmp = "";
-        String id_horario = "";
-        String fecha_final = "";
-        String horario = "";
-        //formateador.parse(fechaSalida+" "+horarioPicks[contPick]);
+    public String asistencia147(String idHorario, String usSalida, String fechaSalida, String nombreHorario) {
+        String idHorarioTmp;
+        String id_horario = idHorario;
+        String fecha_final = fechaSalida;
+        String horario = nombreHorario;
+//        formateador.parse(fechaSalida+" "+horarioPicks[contPick]);
         try {
             ResultSet h = this.consulta("select A.id_horario, fecha_final, H.nombre from tbl_empleado_asistencia_147 as A inner join tab_horarios as H on A.id_horario=H.id_horario where usuario='" + usSalida + "' order by fecha_final desc limit 1");
             if (h.next()) {
@@ -289,7 +290,7 @@ public class Asistencias extends DataBase {
                 fecha_final = (h.getString("fecha_final") != null) ? h.getString("fecha_final") : "";
                 horario = (h.getString("nombre") != null) ? h.getString("nombre") : "";
                 h.close();
-            }
+            } 
             String axHorario = horario.toUpperCase().trim();
             if(horario.endsWith("-T") || horario.endsWith("- T")) {
                 if(axHorario.endsWith("-T")) {
@@ -434,8 +435,11 @@ public class Asistencias extends DataBase {
      * @param ff Fecha Final para la actualizacion.
      * @return ResultSet.
      */
-    public ResultSet usuarioPickAll(int modalidad, String orden, String fi, String ff) {
-        return this.consulta("select distinct ac_no,usuario, fecha from tbl_empleado_asistencia_tmp where modalidad=" + modalidad + " and fecha between '" + fi + "' and '" + ff + "' order by fecha " + orden + "");
+    public ResultSet usuarioPickAll(int modalidad, String orden, String fi, String ff) 
+    {
+        return this.consulta("select E.id_horario, alias, fecha_ingreo_trabajo, H.nombre from tbl_empleado as E inner join tab_horarios as H on E.id_horario = H.id_horario " +
+            "where H.modalidad=2 and estado and not E.eliminado and alias not in(select distinct usuario from tbl_empleado_asistencia_147 where fecha_inicial > now()) order by alias");
+//        return this.consulta("select distinct ac_no,usuario, fecha from tbl_empleado_asistencia_tmp where modalidad=" + modalidad + " and fecha between '" + fi + "' and '" + ff + "' order by fecha " + orden + "");
     }
 
     /**

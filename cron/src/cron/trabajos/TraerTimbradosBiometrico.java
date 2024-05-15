@@ -198,11 +198,12 @@ class TraerTimbradosBiometrico {
                 ResultSet getUsuarioPick = objAsistencias.usuarioPickAll(2, "asc", fi, ff);
                 try {
                     while (getUsuarioPick.next()) {
-                        String usSalida = (getUsuarioPick.getString("usuario") != null) ? getUsuarioPick.getString("usuario") : "0";
-                        String fechaSalida = (getUsuarioPick.getString("fecha") != null) ? getUsuarioPick.getString("fecha") : "0";
-                        String id_bioSalida = (getUsuarioPick.getString("ac_no") != null) ? getUsuarioPick.getString("ac_no") : "0";
-                        fechaSalida = fechaSalida.replace("-", "/");
-                        objAsistencias.asistencia147(id_bioSalida, usSalida, fechaSalida);
+                        String usSalida = (getUsuarioPick.getString("alias") != null) ? getUsuarioPick.getString("alias") : "0";
+                        String fechaInicioLabores = (getUsuarioPick.getString("fecha_ingreo_trabajo") != null) ? getUsuarioPick.getString("fecha_ingreo_trabajo") : "";
+                        String id_horario = (getUsuarioPick.getString("id_horario") != null) ? getUsuarioPick.getString("id_horario") : "0";
+                        String nombreHorario = (getUsuarioPick.getString("nombre") != null) ? getUsuarioPick.getString("nombre") : "";
+//                        fechaSalida = fechaSalida.replace("-", "/");
+                        objAsistencias.asistencia147(id_horario, usSalida, fechaInicioLabores, nombreHorario);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
