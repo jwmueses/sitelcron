@@ -19,6 +19,7 @@ public class FacturaElectronica extends Xml{
     }
     
     public String generarXml(String claveAcceso, String ambiente, String tipoEmision, String razonSocial, String nombreComercial, String ruc, 
+            String emalSaitel, String numContSaitel, String sitioWeb,
             String codDoc, String estab, String ptoEmi, String secuencial, String dirMatriz, String fechaEmision, String dirEstablecimiento, 
             String contribuyenteEspecial, String obligadoContabilidad, String tipoIdentificacionComprador, 
             String razonSocialComprador, String identificacionComprador, String totalSinImpuestos, String totalDescuento, 
@@ -128,8 +129,14 @@ public class FacturaElectronica extends Xml{
         this.nuevoElemento(factura, "infoAdicional", false);
         Element infoAdicional = this.getElementoActivo();
         
-        this.nuevoElemento(infoAdicional, "campoAdicional", "info@saitel.ec", false);
+        this.nuevoElemento(infoAdicional, "campoAdicional", numContSaitel, false);
+        this.setAtributo("nombre", "NUM_CONTACTO");
+        
+        this.nuevoElemento(infoAdicional, "campoAdicional", emalSaitel, false);
         this.setAtributo("nombre", "EMAIL");
+        
+        this.nuevoElemento(infoAdicional, "campoAdicional", sitioWeb, false);
+        this.setAtributo("nombre", "PAG_WEB");
         
         this.nuevoElemento(infoAdicional, "campoAdicional", fechaEmision, false);
         this.setAtributo("nombre", "F_REACTIVACION");
@@ -146,7 +153,7 @@ public class FacturaElectronica extends Xml{
             this.setAtributo("nombre", "EMAIL_CLIENTE");
         }
         
-        this.nuevoElemento(infoAdicional, "campoAdicional", "<p>Call Center SAITEL: 1700724835 o 0996724835</p>Para la atención de reclamos no resueltos por el prestador, ingrese su reclamo al link: http://reclamoconsumidor.arcotel.gob.ec/osTicket/, o para mayor información comuníquese con el número telefónico 1800 567 567", false);  
+        this.nuevoElemento(infoAdicional, "campoAdicional", "<p>Call Center: 1700724835 o 0996724835</p>Para la atención de reclamos no resueltos por el prestador, ingrese su reclamo al link: http://reclamoconsumidor.arcotel.gob.ec/osTicket/, o para mayor información comuníquese con el número telefónico 1800 567 567", false);  
         this.setAtributo("nombre", "ARCOTEL");
         
         return this.getXml();

@@ -67,8 +67,11 @@ public class FacturaVenta extends DataBase{
         String tipoEmision = "1"; // 1=normal    2=Indisponibilidad del sistema
         String clave_certificado = "";
         String ruc_empresa = "1091728857001";
-        String razon_social_empresa = "SOLUCIONES AVANZADAS INFORMATICAS Y TELECOMUNICACIONES SAITEL";
-        String nombre_comercial = "SAITEL";
+        String razon_social_empresa = "SOLUCIONES AVANZADAS INFORMATICAS, TELECOMUNICACIONES Y ELECTRICAS SAITEL";
+        String nombre_comercial = "";
+        String emalSaitel = "";
+        String numContSaitel = "";
+        String sitioWeb = "";
         String num_resolucion = "";
         String oblga_contabilidad = "SI";
         String dir_matriz = "JOSE JOAQUIN DE OLMEDO 4-63 Y JUAN GRIJALVA";
@@ -84,9 +87,6 @@ public class FacturaVenta extends DataBase{
                 if(parametro.compareTo("ambiente")==0){
                     ambiente = r.getString("valor")!=null ? r.getString("valor") : "2";
                 }
-                if(parametro.compareTo("tipoEmision")==0){
-                    tipoEmision = r.getString("valor")!=null ? r.getString("valor") : "1";
-                }
                 if(parametro.compareTo("clave_certificado")==0){
                     clave_certificado = r.getString("valor")!=null ? r.getString("valor") : "";
                 }
@@ -97,7 +97,16 @@ public class FacturaVenta extends DataBase{
                     razon_social_empresa = r.getString("valor")!=null ? r.getString("valor") : "SOLUCIONES AVANZADAS INFORMATICAS Y TELECOMUNICACIONES SAITEL";
                 }
                 if(parametro.compareTo("nombre_comercial")==0){
-                    nombre_comercial = r.getString("valor")!=null ? r.getString("valor") : "SAITEL";
+                    nombre_comercial = r.getString("valor")!=null ? r.getString("valor") : "";
+                }
+                if(parametro.compareTo("email_info")==0){
+                    emalSaitel = r.getString("valor")!=null ? r.getString("valor") : "";
+                }
+                if(parametro.compareTo("numeros_soporte")==0){
+                    numContSaitel = r.getString("valor")!=null ? r.getString("valor") : "";
+                }
+                if(parametro.compareTo("pagina_web")==0){
+                    sitioWeb = r.getString("valor")!=null ? r.getString("valor") : "";
                 }
                 if(parametro.compareTo("num_resolucion")==0){
                     num_resolucion = r.getString("valor")!=null ? r.getString("valor") : "";
@@ -198,6 +207,21 @@ public class FacturaVenta extends DataBase{
                     //double totalCash = rs.getString("total_cash")!=null ? rs.getDouble("total_cash") : 0;
                     String emailCliente = rs.getString("email")!=null ? rs.getString("email") : "";
                             
+                    
+                    
+                    try {
+                        ResultSet r = this.consulta("SELECT nombre_comercial, mail_info, num_contacto, sitio_web FROM tbl_sucursal where id_sucursal=" + id_sucursal);
+                        if (r.next()) {
+                            nombre_comercial = (r.getString("nombre_comercial") != null) ? r.getString("nombre_comercial") : "";
+                            emalSaitel = (r.getString("mail_info") != null) ? r.getString("mail_info") : "";
+                            numContSaitel = (r.getString("num_contacto") != null) ? r.getString("num_contacto") : "";
+                            sitioWeb = (r.getString("sitio_web") != null) ? r.getString("sitio_web") : "";
+                            r.close();
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    
                     
                     String idFormaPago="97";        //  id forma de pago cash
                     String formaPago="20";          //  con utilizacion del sistema financiero
@@ -492,7 +516,8 @@ public class FacturaVenta extends DataBase{
 
                                 claveAcceso = objFE.getClaveAcceso(Fecha.getFecha("SQL"), "01", ruc_empresa, ambiente, vecSerie[0]+vecSerie[1], Cadena.setSecuencial(num_factura), tipoEmision);
                                 
-                                objFE.generarXml(claveAcceso, ambiente, tipoEmision, razon_social_empresa, nombre_comercial, ruc_empresa, "01", vecSerie[0], vecSerie[1], 
+                                objFE.generarXml(claveAcceso, ambiente, tipoEmision, razon_social_empresa, nombre_comercial, ruc_empresa, emalSaitel, numContSaitel, sitioWeb, 
+                                        "01", vecSerie[0], vecSerie[1], 
                                         Cadena.setSecuencial(num_factura), dir_matriz, Fecha.getFecha("SQL"), direccion_sucursal, num_resolucion, oblga_contabilidad, 
                                         tipo_documento, razon_social, ruc, subtotal, descuento, "0", subtotal_2, iva_2, subtotal_3, iva_3, total_pagar, formaPago, 
                                         ids_productos, descripciones, cantidades, preciosUnitarios, descuentos, subtotales, ivas, pIvas, codigoIvas, direccion, plan, emailCliente);
