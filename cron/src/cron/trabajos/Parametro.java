@@ -16,7 +16,7 @@ public class Parametro {
     private static final String _usuario = "postgres";
     private static final String _clave = "Gi%9875.-*5+$)";    //  Gi%9875.-*5+$)      pruebas = A0Lpni2++
     
-    private static final String doc_ip = "92.168.217.31";      //  127.0.0.1     pruebas = 192.168.217.16    produccion = 192.168.217.21
+    private static final String doc_ip = "192.168.217.31";      //  127.0.0.1     pruebas = 192.168.217.16    produccion = 192.168.217.31
     private static final int doc_puerto = 5432;
     private static final String doc_db = "db_isp_documentos";
     private static final String doc_usuario = "postgres";

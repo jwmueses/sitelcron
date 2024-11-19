@@ -117,8 +117,8 @@ public class Fecha
     public static String get5DiasLaborables(String fecha_ini)
     {
         String fecha_fin = Fecha.getFecha("SQL");
+        DataBase objDB = new DataBase();
         try{
-            DataBase objDB = new DataBase();
             ResultSet rs = objDB.consulta("select get5DiasLaborables('"+fecha_ini+"')");
             if(rs.next()){
                 fecha_fin = rs.getString(1)!=null ? rs.getString(1) : fecha_fin;
@@ -126,6 +126,8 @@ public class Fecha
             }
         }catch(Exception e){
             e.printStackTrace();
+        }finally{
+            objDB.cerrar();
         }
         return fecha_fin;
     }

@@ -27,9 +27,14 @@ public class DataBase
 
     public DataBase ()
     {
+        String m = Parametro.getIp();
+        int p = Parametro.getPuerto();
+        String db = Parametro.getBaseDatos();
+        String u = Parametro.getUsuario();
+        String c = Parametro.getClave();
         try{
             Class.forName("org.postgresql.Driver");
-            this.con = DriverManager.getConnection("jdbc:postgresql://127.0.0.1:5432/db_isp", "us_isp", "g.sI._gR56#5s4d0St1");
+            this.con = DriverManager.getConnection("jdbc:postgresql://" + m + ":" + p + "/" + db, u, c);
         }catch(ClassNotFoundException e){
             System.out.println("Error: "+e.getMessage()+". El driver no puede ser cargado.");
         }catch(Exception ex){

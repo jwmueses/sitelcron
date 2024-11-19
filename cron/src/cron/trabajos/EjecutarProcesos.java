@@ -49,6 +49,293 @@ public class EjecutarProcesos  implements Job{
         
         
         
+        
+        
+        
+        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando procesos diario");
+        try{
+            
+            // levanta la opcion de no cobro cuando termina la fecha del convenio del canje
+            objDataBase.ejecutar("update tbl_instalacion set estado_solicitud_no_cobrar='t', cobrar=true, fecha_fin_canje=null, es_canje=false, "
+                    + "motivo_no_cobrar = motivo_no_cobrar || '. Finalizacion de convenio ' || now()::date "
+                    + "where estado_servicio not in('p','t','1') and not cobrar and es_canje=true and fecha_fin_canje <= now()::date");
+            
+            // levanta la opcion de no cobro cuando renuncia un empleado
+            objDataBase.ejecutar("with A as(\n" +
+                    "	select distinct dni, nombre, apellido, generar_rol, estado, E.eliminado, c.id_cliente \n" +
+                    "	from tbl_empleado as E inner join tbl_cliente as C on E.dni = C.ruc   \n" +
+                    "	where dni <> '1091728857001'\n" +
+                    ")\n" +
+                    "update tbl_instalacion set estado_solicitud_no_cobrar='t', cobrar=true, fecha_fin_canje=null, es_canje=false, \n" +
+                    "motivo_no_cobrar = motivo_no_cobrar || '. Finalizacion de contrato laboral ' || now()::date \n" +
+                    "where estado_servicio not in('p','t','1') and not cobrar and not es_canje \n" +
+                    "and id_cliente in(select id_cliente from A ) \n" +
+                    "and id_cliente not in(select id_cliente from A where generar_rol and estado and not eliminado)");
+            
+            // guardamos resultados de estados de las instalaciones
+            objDataBase.ejecutar("insert into tbl_instalacion_estados_est (id_sucursal,id_instalacion,estado) " +
+                                    "select id_sucursal,id_instalacion,estado_servicio from tbl_instalacion order by id_sucursal,id_instalacion asc;");
+            
+            // cambiar cargas
+            objDataBase.ejecutar("update tbl_familia set carga_familiar=false where id_familia in (" +
+                "select tmp.id_familia from vta_familia as tmp where tmp.edad>=18 and (lower(trim(tmp.carnet_conadis))<>'no' or trim(tmp.carnet_conadis)<>'') and tmp.id_parentesco in (3,4));");
+            
+            // cambiar la fecha a privilegios de baja de facturas a credito
+            objDataBase.ejecutar("update tbl_privilegio_temporal set fecha=now()::date where id_privilegio_temporal=7989;");
+            
+            // poner la instalacion en anticipos registrados cuando no seleccionan la instalacion
+            objDataBase.ejecutar("update tbl_cliente_anticipo as C set id_instalacion = (select I.id_instalacion from tbl_instalacion as I where I.id_cliente=C.id_cliente order by id_instalacion desc limit 1) " +
+                                    " where saldo>0 and id_instalacion is null;");
+            
+            // eliminar usuarios que no activan cuenta durante 48 horas
+            objDataBase.ejecutar("delete from tbl_cliente_portal as cp " +
+                    " where cp.fecha_activacion is null and cp.hora_activacion is null and cp.confirmado ='0' " +
+                    " and (get_duracion_fechas(now()::timestamp,(cp.fecha_registro||' '||cp.hora_registro)::timestamp,'HORAS')::int8)>48;");
+            
+        }catch(Exception e){
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Error: " + e.getMessage() );
+        }finally{
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización procesos diario");
+        }
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        try{
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de anulación de personalizaciones pendientes de aceptar");
+            objDataBase.ejecutar("update tbl_activo_personalizacion set aceptada=false, anulado=true where aceptada=false and anulado=false and fecha + '1 month'::interval < now()::date");
+        }catch(Exception e){
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + "Error en el proceso de anulación de personalizaciones pendientes de aceptar: " + e.getMessage());
+        }finally{
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de anulación de personalizaciones pendientes de aceptar");
+        } 
+        
+
+
+
+
+
+
+
+        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando generación de ordenes de compra de pedidos");
+        try{
+            objDataBase.consulta("select proc_generarordenesdecompra();");
+        }finally{
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de generación de ordenes de compra de pedidos");
+        }
+        
+        
+        
+
+        
+
+
+
+
+
+         //  liberar ips sin reutilizar
+        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando generación de ips que no se utilizan en las redes");
+        try{
+            objDataBase.consulta("select proc_liberar_ips();");
+        }finally{
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de generación de ips que no se utilizan en las redes");
+        }
+        
+        
+        
+        
+        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando actualzacion de obligatoriedad de certificado digital");
+        try{
+            objDataBase.consulta("update tbl_empleado set obligado_firmar =true where obligado_firmar =false and estado =true and eliminado =false and generar_rol =true  and get_duracion_fechas( now() ::timestamp,fecha_ingreso::timestamp , 'MM')::int>1;");
+        } finally{
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de actualzacion de obligatoriedad de certificado digital");
+        }
+        
+        
+        
+        
+        
+        
+        
+        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando carga de respaldo de timbrados de sucursales");
+        SQLServer objSQL = new SQLServer( Parametro.getMsSqlIp(), Parametro.getMsSqlPuerto(), Parametro.getMsSqlBaseDatos(), Parametro.getMsSqlUsuario(), Parametro.getMsSqlClave() );
+        try{
+            
+            ResultSet rs = objDataBase.consulta("select * from tbl_biometricos where not eliminado and activo and marca='FS20'");
+            while(rs.next()){
+                
+                String idSucursal = rs.getString("id_sucursal")!=null ? rs.getString("id_sucursal") : "";
+                String servidorSuc = rs.getString("ip_biometrico")!=null ? rs.getString("ip_biometrico") : "";
+                int puertoSuc = rs.getString("puerto_biometrico")!=null ? rs.getInt("puerto_biometrico") : 1433;
+                String baseSuc = rs.getString("db_biometrico")!=null ? rs.getString("db_biometrico") : "";
+                String usuarioSuc = rs.getString("usuario_biometrico")!=null ? rs.getString("usuario_biometrico") : "";
+                String claveSuc = rs.getString("clave_biometrico")!=null ? rs.getString("clave_biometrico") : "";
+                
+                SQLServer dbBiometricoSuc = new SQLServer(servidorSuc, puertoSuc, baseSuc, usuarioSuc, claveSuc);
+                try{
+                    ResultSet rs2 = dbBiometricoSuc.consulta("select * from RALog where convert(datetime, [date], 103) >= convert( datetime, dateadd(day, -1, getDate()) ,103)");
+//                    ResultSet rs2 = dbBiometricoSuc.consulta("select * from RALog");
+                    while(rs2.next()){
+                                                
+                        if( !objSQL.ejecutar("insert into ralog_sucursales(id_sucursal, RN, GID, FID, UID, Name, Date, Time, FacID, InOutOption, Other, Latitude, Longitude) values("
+                                + "'"+idSucursal+"', "
+                                + "'"+ (rs2.getString("RN")!=null ? rs2.getString("RN") : "") + "', "  
+                                + "'"+ (rs2.getString("GID")!=null ? rs2.getString("GID") : "") + "', " 
+                                + "'"+ (rs2.getString("FID")!=null ? rs2.getString("FID") : "") + "', " 
+                                + "'"+ (rs2.getString("UID")!=null ? rs2.getString("UID") : "") + "', " 
+                                + "'"+ (rs2.getString("Name")!=null ? rs2.getString("Name") : "") + "', " 
+                                + "'"+ (rs2.getString("Date")!=null ? rs2.getString("Date") : "") + "', " 
+                                + "'"+ (rs2.getString("Time")!=null ? rs2.getString("Time") : "") + "', "         
+                                + "'"+ (rs2.getString("FacID")!=null ? rs2.getString("FacID") : "") + "', " 
+                                + "'"+ (rs2.getString("InOutOption")!=null ? rs2.getString("InOutOption") : "" )+ "', " 
+                                + "'"+ (rs2.getString("Other")!=null ? rs2.getString("Other") : "") + "', " 
+                                + "'"+ (rs2.getString("Latitude")!=null ? rs2.getString("Latitude") : "") + "', " 
+                                + "'"+ (rs2.getString("Longitude")!=null ? rs2.getString("Longitude") : "") + "' " 
+                                + ")") ) {
+                            
+                            System.out.println("error insert: " + objSQL.getError() );
+                            
+                        }
+                    }
+                }catch(Exception ex2){
+                    System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": error al conectarse al biomnetrico " + servidorSuc + ex2.getMessage());
+                }finally{
+                    dbBiometricoSuc.cerrar();
+                }
+            }
+        }catch(Exception ex){
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": error al conectarse al biomnetrico " + Parametro.getMsSqlIp() + ex.getMessage());   
+        } finally{
+            objSQL.cerrar();
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de carga de respaldo de timbrados de sucursales");
+        }    
+            
+        
+        
+        
+        
+        
+        
+        
+        
+        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando cambio de clientes a tercera edad");
+        try{
+            objDataBase.consulta("update tbl_cliente set fecha_cambio_3_edad=now() " +
+                    "where id_cliente in(select id_cliente from tbl_cliente where date_trunc('day'::text, age(now(), fecha_nacimiento::timestamp with time zone)) = '65 years' )");
+        } finally{
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de cambio de clientes a tercera edad");
+        }
+        
+        
+        
+        
+        
+        
+        
+        
+        
+       
+        
+        
+        
+        
+        
+        //  ejecuta cierre de promociones
+        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando cierre de promociones");
+        try{
+            
+            objDataBase.ejecutar("update tbl_promocion set cerrada=true where fecha_termino < now()::date and cerrada=false;");
+            
+            try{
+                ResultSet rs1 = objDataBase.consulta("select id_promocion, count(id_instalacion), sum(costo_instalacion) "
+                        + "from tbl_instalacion_promocion as P inner join tbl_instalacion as I on I.id_instalacion=P.id_instalacion "
+                        + "where id_promocion in (select id_promocion from tbl_promocion where inst_objetivo_a_cumplir > 0 and cerrada=false) "
+                        + "group by id_promocion order by id_promocion;");
+                String matRs1[][] = Matriz.ResultSetAMatriz(rs1);
+                ResultSet rs = objDataBase.consulta("select * from tbl_promocion where inst_objetivo_a_cumplir > 0 and cerrada=false;");
+                while(rs.next()){
+                    String id_promocion = rs.getString("id_promocion")!=null ? rs.getString("id_promocion") : "-1";
+                    boolean inst_objetivo_es_porcentaje = rs.getString("inst_objetivo_es_porcentaje")!=null ? rs.getBoolean("inst_objetivo_es_porcentaje") : true;
+                    int inst_objetivo_a_cumplir = rs.getString("inst_objetivo_a_cumplir")!=null ? rs.getInt("inst_objetivo_a_cumplir") : 0;
+                    String inst_objetivo_basado_en = rs.getString("inst_objetivo_basado_en")!=null ? rs.getString("inst_objetivo_basado_en") : "n";
+                    float inst_base_referencia_total = rs.getString("inst_base_referencia_total")!=null ? rs.getFloat("inst_base_referencia_total") : 0;
+                    
+                    int i = Matriz.enMatriz(matRs1, id_promocion, 0);
+                    if(i>=0){
+                        
+                        //  si se basa en porcentaje y en numero de instalaciones
+                        if(inst_objetivo_es_porcentaje && inst_objetivo_basado_en.compareTo("n")==0){   
+                            double prorrateoReferencialTotal = inst_base_referencia_total * inst_objetivo_a_cumplir / 100;
+                            objDataBase.ejecutar("update tbl_promocion set inst_objetivo_total="+matRs1[i][1]+
+                                " "+(prorrateoReferencialTotal < Double.parseDouble(matRs1[i][1]) ? "true" : "false")+" where id_promocion="+id_promocion);
+                        }
+                        
+                        // si se basa en un valor fijo y en numero de instalaciones
+                        if(!inst_objetivo_es_porcentaje && inst_objetivo_basado_en.compareTo("n")==0){   //  si se basa en porcentaje y en numero de instalaciones
+                            objDataBase.ejecutar("update tbl_promocion set inst_objetivo_total="+matRs1[i][1]+
+                                " "+(inst_objetivo_a_cumplir < Double.parseDouble(matRs1[i][1]) ? "true" : "false")+" where id_promocion="+id_promocion);
+                        }
+                        
+                        //  si se basa en porcentaje y en monto total de costo de instalaciones
+                        if(inst_objetivo_es_porcentaje && inst_objetivo_basado_en.compareTo("m")==0){   
+                            double prorrateoReferencialTotal = inst_base_referencia_total * inst_objetivo_a_cumplir / 100;
+                            objDataBase.ejecutar("update tbl_promocion set inst_objetivo_total="+matRs1[i][2]+
+                                " "+(prorrateoReferencialTotal < Double.parseDouble(matRs1[i][2]) ? "true" : "false")+" where id_promocion="+id_promocion);
+                        }
+                        
+                        // si se basa en un valor fijo y en monto total de costo de instalaciones
+                        if(!inst_objetivo_es_porcentaje && inst_objetivo_basado_en.compareTo("m")==0){   //  si se basa en porcentaje y en numero de instalaciones
+                            objDataBase.ejecutar("update tbl_promocion set inst_objetivo_total="+matRs1[i][2]+
+                                " "+(inst_objetivo_a_cumplir < Double.parseDouble(matRs1[i][2]) ? "true" : "false")+" where id_promocion="+id_promocion);
+                        }
+                        
+                    }
+                }
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+            
+        }finally{
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización cierre de promociones");
+        }
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando generacion de anticipos de documentos cash");
+        try{
+            objDataBase.consulta("select proc_generar_anticipos_cash();");
+        } finally{
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de generacion de anticipos de documentos cash");
+        }
+        
+        
+        
+        
+        
+        
+        
+        
+        
         if(dia == 15 && mes == 12){
             System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": generacion de planificacion de vacaciones para el año " + (anio+1) );
             
@@ -312,6 +599,7 @@ public class EjecutarProcesos  implements Job{
         
         
         //  Genera ordenes de trabajo por retirar
+        
         System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando generación de ordenes de trabajo por retirar diariamente");
         try{
             
@@ -332,102 +620,6 @@ public class EjecutarProcesos  implements Job{
         }finally{
             System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de generación de ordenes de trabajo por retirar para el dia: " + Fecha.getFecha("SQL"));
         }
-        
-        
-        
-        
-        
-        
-        
-        
-        
-       
-        
-        
-        
-        
-        
-        //  ejecuta cierre de promociones
-        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando cierre de promociones");
-        try{
-            
-            objDataBase.ejecutar("update tbl_promocion set cerrada=true where fecha_termino < now()::date and cerrada=false;");
-            
-            try{
-                ResultSet rs1 = objDataBase.consulta("select id_promocion, count(id_instalacion), sum(costo_instalacion) "
-                        + "from tbl_instalacion_promocion as P inner join tbl_instalacion as I on I.id_instalacion=P.id_instalacion "
-                        + "where id_promocion in (select id_promocion from tbl_promocion where inst_objetivo_a_cumplir > 0 and cerrada=false) "
-                        + "group by id_promocion order by id_promocion;");
-                String matRs1[][] = Matriz.ResultSetAMatriz(rs1);
-                ResultSet rs = objDataBase.consulta("select * from tbl_promocion where inst_objetivo_a_cumplir > 0 and cerrada=false;");
-                while(rs.next()){
-                    String id_promocion = rs.getString("id_promocion")!=null ? rs.getString("id_promocion") : "-1";
-                    boolean inst_objetivo_es_porcentaje = rs.getString("inst_objetivo_es_porcentaje")!=null ? rs.getBoolean("inst_objetivo_es_porcentaje") : true;
-                    int inst_objetivo_a_cumplir = rs.getString("inst_objetivo_a_cumplir")!=null ? rs.getInt("inst_objetivo_a_cumplir") : 0;
-                    String inst_objetivo_basado_en = rs.getString("inst_objetivo_basado_en")!=null ? rs.getString("inst_objetivo_basado_en") : "n";
-                    float inst_base_referencia_total = rs.getString("inst_base_referencia_total")!=null ? rs.getFloat("inst_base_referencia_total") : 0;
-                    
-                    int i = Matriz.enMatriz(matRs1, id_promocion, 0);
-                    if(i>=0){
-                        
-                        //  si se basa en porcentaje y en numero de instalaciones
-                        if(inst_objetivo_es_porcentaje && inst_objetivo_basado_en.compareTo("n")==0){   
-                            double prorrateoReferencialTotal = inst_base_referencia_total * inst_objetivo_a_cumplir / 100;
-                            objDataBase.ejecutar("update tbl_promocion set inst_objetivo_total="+matRs1[i][1]+
-                                " "+(prorrateoReferencialTotal < Double.parseDouble(matRs1[i][1]) ? "true" : "false")+" where id_promocion="+id_promocion);
-                        }
-                        
-                        // si se basa en un valor fijo y en numero de instalaciones
-                        if(!inst_objetivo_es_porcentaje && inst_objetivo_basado_en.compareTo("n")==0){   //  si se basa en porcentaje y en numero de instalaciones
-                            objDataBase.ejecutar("update tbl_promocion set inst_objetivo_total="+matRs1[i][1]+
-                                " "+(inst_objetivo_a_cumplir < Double.parseDouble(matRs1[i][1]) ? "true" : "false")+" where id_promocion="+id_promocion);
-                        }
-                        
-                        //  si se basa en porcentaje y en monto total de costo de instalaciones
-                        if(inst_objetivo_es_porcentaje && inst_objetivo_basado_en.compareTo("m")==0){   
-                            double prorrateoReferencialTotal = inst_base_referencia_total * inst_objetivo_a_cumplir / 100;
-                            objDataBase.ejecutar("update tbl_promocion set inst_objetivo_total="+matRs1[i][2]+
-                                " "+(prorrateoReferencialTotal < Double.parseDouble(matRs1[i][2]) ? "true" : "false")+" where id_promocion="+id_promocion);
-                        }
-                        
-                        // si se basa en un valor fijo y en monto total de costo de instalaciones
-                        if(!inst_objetivo_es_porcentaje && inst_objetivo_basado_en.compareTo("m")==0){   //  si se basa en porcentaje y en numero de instalaciones
-                            objDataBase.ejecutar("update tbl_promocion set inst_objetivo_total="+matRs1[i][2]+
-                                " "+(inst_objetivo_a_cumplir < Double.parseDouble(matRs1[i][2]) ? "true" : "false")+" where id_promocion="+id_promocion);
-                        }
-                        
-                    }
-                }
-            }catch(Exception e){
-                e.printStackTrace();
-            }
-            
-        }finally{
-            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización cierre de promociones");
-        }
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando generacion de anticipos de documentos cash");
-        try{
-            objDataBase.consulta("select proc_generar_anticipos_cash();");
-        } finally{
-            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de generacion de anticipos de documentos cash");
-        }
-        
-        
         
         
         
@@ -575,103 +767,6 @@ public class EjecutarProcesos  implements Job{
 
 
 
-
-        try{
-            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de anulación de personalizaciones pendientes de aceptar");
-            objDataBase.ejecutar("update tbl_activo_personalizacion set aceptada=false, anulado=true where aceptada=false and anulado=false and fecha + '1 month'::interval < now()::date");
-        }catch(Exception e){
-            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + "Error en el proceso de anulación de personalizaciones pendientes de aceptar: " + e.getMessage());
-        }finally{
-            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de anulación de personalizaciones pendientes de aceptar");
-        } 
-        
-
-
-
-
-
-
-
-        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando generación de ordenes de compra de pedidos");
-        try{
-            objDataBase.consulta("select proc_generarordenesdecompra();");
-        }finally{
-            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de generación de ordenes de compra de pedidos");
-        }
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando procesos diario");
-        try{
-            
-            // levanta la opcion de no cobro cuando termina la fecha del convenio del canje
-            objDataBase.ejecutar("update tbl_instalacion set estado_solicitud_no_cobrar='t', cobrar=true, fecha_fin_canje=null, es_canje=false, "
-                    + "motivo_no_cobrar = motivo_no_cobrar || '. Finalizacion de convenio ' || now()::date "
-                    + "where estado_servicio not in('p','t','1') and not cobrar and es_canje=true and fecha_fin_canje <= now()::date");
-            
-            // levanta la opcion de no cobro cuando renuncia un empleado
-            objDataBase.ejecutar("with A as(\n" +
-                    "	select distinct dni, nombre, apellido, generar_rol, estado, E.eliminado, c.id_cliente \n" +
-                    "	from tbl_empleado as E inner join tbl_cliente as C on E.dni = C.ruc   \n" +
-                    "	where dni <> '1091728857001'\n" +
-                    ")\n" +
-                    "update tbl_instalacion set estado_solicitud_no_cobrar='t', cobrar=true, fecha_fin_canje=null, es_canje=false, \n" +
-                    "motivo_no_cobrar = motivo_no_cobrar || '. Finalizacion de contrato laboral ' || now()::date \n" +
-                    "where estado_servicio not in('p','t','1') and not cobrar and not es_canje \n" +
-                    "and id_cliente in(select id_cliente from A ) \n" +
-                    "and id_cliente not in(select id_cliente from A where generar_rol and estado and not eliminado)");
-            
-            // guardamos resultados de estados de las instalaciones
-            objDataBase.ejecutar("insert into tbl_instalacion_estados_est (id_sucursal,id_instalacion,estado) " +
-                                    "select id_sucursal,id_instalacion,estado_servicio from tbl_instalacion order by id_sucursal,id_instalacion asc;");
-            
-            // cambiar cargas
-            objDataBase.ejecutar("update tbl_familia set carga_familiar=false where id_familia in (" +
-                "select tmp.id_familia from vta_familia as tmp where tmp.edad>=18 and (lower(trim(tmp.carnet_conadis))<>'no' or trim(tmp.carnet_conadis)<>'') and tmp.id_parentesco in (3,4));");
-            
-            // cambiar la fecha a privilegios de baja de facturas a credito
-            objDataBase.ejecutar("update tbl_privilegio_temporal set fecha=now()::date where id_privilegio_temporal=7989;");
-            
-            // poner la instalacion en anticipos registrados cuando no seleccionan la instalacion
-            objDataBase.ejecutar("update tbl_cliente_anticipo as C set id_instalacion = (select I.id_instalacion from tbl_instalacion as I where I.id_cliente=C.id_cliente order by id_instalacion desc limit 1) " +
-                                    " where saldo>0 and id_instalacion is null;");
-            
-            // eliminar usuarios que no activan cuenta durante 48 horas
-            objDataBase.ejecutar("delete from tbl_cliente_portal as cp " +
-                    " where cp.fecha_activacion is null and cp.hora_activacion is null and cp.confirmado ='0' " +
-                    " and (get_duracion_fechas(now()::timestamp,(cp.fecha_registro||' '||cp.hora_registro)::timestamp,'HORAS')::int8)>48;");
-            
-        }catch(Exception e){
-            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Error: " + e.getMessage() );
-        }finally{
-            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización procesos diario");
-        }
-        
-        
-        
-
-
-
-
-
-         //  liberar ips sin reutilizar
-        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando generación de ips que no se utilizan en las redes");
-        try{
-            objDataBase.consulta("select proc_liberar_ips();");
-        }finally{
-            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de generación de ips que no se utilizan en las redes");
-        }
-        
-        
-        
         
         
         
@@ -681,172 +776,77 @@ public class EjecutarProcesos  implements Job{
         
         //  ENVIO DE NOTIFICACIONES DE VACACIONES VIA CORREO 
         
-        CorreoSaitel objCorreo = new CorreoSaitel( Parametro.getRed_social_ip(), Parametro.getRed_social_esquema(), Parametro.getRed_social_puerto(), Parametro.getRed_social_db(), Parametro.getRed_social_usuario(), Parametro.getRed_social_clave() );
-        
-        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando envio de notificaciones de vacaciones");
-        try{
-            ResultSet rs1 = objDataBase.consulta("select * from tbl_notificaciones_html where nombre_notificacion='mail_notificacion_planificacion_vacaciones';");
-            String matRs1[][] = Matriz.ResultSetAMatriz(rs1);
-            
-            
-            ResultSet rs = objDataBase.consulta("with A as(\n" +
-                "	select id_empleado ,fecha_programada1 as fecha, dias_fecha1 as dias \n" +
-                "	from tbl_empleado_vacaciones_anio \n" +
-                "	where fecha_programada1 is not null \n" +
-                "	union \n" +
-                "	select id_empleado ,fecha_programada2 as fecha, dias_fecha2 as dias \n" +
-                "	from tbl_empleado_vacaciones_anio \n" +
-                "	where fecha_programada2 is not null \n" +
-                "	union \n" +
-                "	select id_empleado ,fecha_programada3 as fecha, dias_fecha3 as dias \n" +
-                "	from tbl_empleado_vacaciones_anio \n" +
-                "	where fecha_programada3 is not null \n" +
-                "	union \n" +
-                "	select id_empleado ,fecha_programada4 as fecha, dias_fecha4 as dias \n" +
-                "	from tbl_empleado_vacaciones_anio \n" +
-                "	where fecha_programada4 is not null \n" +
-                "	union \n" +
-                "	select id_empleado ,fecha_programada5 as fecha, dias_fecha5 as dias \n" +
-                "	from tbl_empleado_vacaciones_anio \n" +
-                "	where fecha_programada5 is not null \n" +
-                ") \n" +
-                "select A.*, E.id_sucursal, E.nombre, E.apellido, E.email from A inner join tbl_empleado as E on E.id_empleado = A.id_empleado \n" +
-                "where estado and not eliminado and generar_rol and (fecha - '14 day'::interval)::date = now()::date;");
-            while(rs.next()){
-//                int idSucursal = rs.getString("id_sucursal")!=null ? rs.getInt("id_sucursal") : 1;
-                String nombre = rs.getString("nombre")!=null ? rs.getString("nombre") : "";
-                String apellido = rs.getString("apellido")!=null ? rs.getString("apellido") : "";
-                String fechaVacaciones = rs.getString("fecha")!=null ? rs.getString("fecha") : "";
-                String dias = rs.getString("dias")!=null ? rs.getString("dias") : "";
-                String email = rs.getString("email")!=null ? rs.getString("email") : "";
-                
-//                String mailcc = matRs1[0][ 5+idSucursal ];
-                String msg = matRs1[0][ 2 ]
-                                .replace("_EMPLEADO_", nombre + " " + apellido)
-                                .replace("_FECHA_", fechaVacaciones)
-                                .replace("_DIAS_", dias);
-                
-                objCorreo.enviar(email, "NOTIFICACION, AVISO DE SALIDA A VACACIONES", msg, null);
-                
-//                System.out.println(email + ", " + mailcc + " => " + msg + "\n\r");
-                
-//                Correo.enviar(Parametro.getSvrMail(), 
-//                            Parametro.getSvrMailPuerto(), 
-//                            Parametro.getRemitente(), 
-//                            Parametro.getRemitenteClave(), 
-//                            email, 
-//                            mailcc, 
-//                            "", 
-//                            "NOTIFICACION, AVISO DE SALIDA A VACACIONES", 
-//                            new StringBuilder(msg), 
-//                            true,
-//                            null
-//                );
-            }
-        } catch(Exception e){
-            e.printStackTrace();
-        } finally{
-            objCorreo.cerrar();
-            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización envio de notificaciones de vacaciones");
-        }
-        
-        
-        
-        
-        
+//        CorreoSaitel objCorreo = new CorreoSaitel( Parametro.getRed_social_ip(), Parametro.getRed_social_esquema(), Parametro.getRed_social_puerto(), Parametro.getRed_social_db(), Parametro.getRed_social_usuario(), Parametro.getRed_social_clave() );
+//        
+//        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando envio de notificaciones de vacaciones");
+//        try{
+//            ResultSet rs1 = objDataBase.consulta("select * from tbl_notificaciones_html where nombre_notificacion='mail_notificacion_planificacion_vacaciones';");
+//            String matRs1[][] = Matriz.ResultSetAMatriz(rs1);
+//            
+//            
+//            ResultSet rs = objDataBase.consulta("with A as(\n" +
+//                "	select id_empleado ,fecha_programada1 as fecha, dias_fecha1 as dias \n" +
+//                "	from tbl_empleado_vacaciones_anio \n" +
+//                "	where fecha_programada1 is not null \n" +
+//                "	union \n" +
+//                "	select id_empleado ,fecha_programada2 as fecha, dias_fecha2 as dias \n" +
+//                "	from tbl_empleado_vacaciones_anio \n" +
+//                "	where fecha_programada2 is not null \n" +
+//                "	union \n" +
+//                "	select id_empleado ,fecha_programada3 as fecha, dias_fecha3 as dias \n" +
+//                "	from tbl_empleado_vacaciones_anio \n" +
+//                "	where fecha_programada3 is not null \n" +
+//                "	union \n" +
+//                "	select id_empleado ,fecha_programada4 as fecha, dias_fecha4 as dias \n" +
+//                "	from tbl_empleado_vacaciones_anio \n" +
+//                "	where fecha_programada4 is not null \n" +
+//                "	union \n" +
+//                "	select id_empleado ,fecha_programada5 as fecha, dias_fecha5 as dias \n" +
+//                "	from tbl_empleado_vacaciones_anio \n" +
+//                "	where fecha_programada5 is not null \n" +
+//                ") \n" +
+//                "select A.*, E.id_sucursal, E.nombre, E.apellido, E.email from A inner join tbl_empleado as E on E.id_empleado = A.id_empleado \n" +
+//                "where estado and not eliminado and generar_rol and (fecha - '14 day'::interval)::date = now()::date;");
+//            while(rs.next()){
+////                int idSucursal = rs.getString("id_sucursal")!=null ? rs.getInt("id_sucursal") : 1;
+//                String nombre = rs.getString("nombre")!=null ? rs.getString("nombre") : "";
+//                String apellido = rs.getString("apellido")!=null ? rs.getString("apellido") : "";
+//                String fechaVacaciones = rs.getString("fecha")!=null ? rs.getString("fecha") : "";
+//                String dias = rs.getString("dias")!=null ? rs.getString("dias") : "";
+//                String email = rs.getString("email")!=null ? rs.getString("email") : "";
+//                
+////                String mailcc = matRs1[0][ 5+idSucursal ];
+//                String msg = matRs1[0][ 2 ]
+//                                .replace("_EMPLEADO_", nombre + " " + apellido)
+//                                .replace("_FECHA_", fechaVacaciones)
+//                                .replace("_DIAS_", dias);
+//                
+//                objCorreo.enviar(email, "NOTIFICACION, AVISO DE SALIDA A VACACIONES", msg, null);
+//                
+////                System.out.println(email + ", " + mailcc + " => " + msg + "\n\r");
+//                
+////                Correo.enviar(Parametro.getSvrMail(), 
+////                            Parametro.getSvrMailPuerto(), 
+////                            Parametro.getRemitente(), 
+////                            Parametro.getRemitenteClave(), 
+////                            email, 
+////                            mailcc, 
+////                            "", 
+////                            "NOTIFICACION, AVISO DE SALIDA A VACACIONES", 
+////                            new StringBuilder(msg), 
+////                            true,
+////                            null
+////                );
+//            }
+//        } catch(Exception e){
+//            e.printStackTrace();
+//        } finally{
+//            objCorreo.cerrar();
+//            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización envio de notificaciones de vacaciones");
+//        }
+//        
         
 
-        
-        
-        
-        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando actualzacion de obligatoriedad de certificado digital");
-        try{
-            objDataBase.consulta("update tbl_empleado set obligado_firmar =true where obligado_firmar =false and estado =true and eliminado =false and generar_rol =true  and get_duracion_fechas( now() ::timestamp,fecha_ingreso::timestamp , 'MM')::int>1;");
-        } finally{
-            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de actualzacion de obligatoriedad de certificado digital");
-        }
-        
-        
-        
-        
-        
-        
-        
-        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando carga de respaldo de timbrados de sucursales");
-        SQLServer objSQL = new SQLServer( Parametro.getMsSqlIp(), Parametro.getMsSqlPuerto(), Parametro.getMsSqlBaseDatos(), Parametro.getMsSqlUsuario(), Parametro.getMsSqlClave() );
-        try{
-            
-            ResultSet rs = objDataBase.consulta("select * from tbl_biometricos where not eliminado and activo and marca='FS20'");
-            while(rs.next()){
-                
-                String idSucursal = rs.getString("id_sucursal")!=null ? rs.getString("id_sucursal") : "";
-                String servidorSuc = rs.getString("ip_biometrico")!=null ? rs.getString("ip_biometrico") : "";
-                int puertoSuc = rs.getString("puerto_biometrico")!=null ? rs.getInt("puerto_biometrico") : 1433;
-                String baseSuc = rs.getString("db_biometrico")!=null ? rs.getString("db_biometrico") : "";
-                String usuarioSuc = rs.getString("usuario_biometrico")!=null ? rs.getString("usuario_biometrico") : "";
-                String claveSuc = rs.getString("clave_biometrico")!=null ? rs.getString("clave_biometrico") : "";
-                
-                SQLServer dbBiometricoSuc = new SQLServer(servidorSuc, puertoSuc, baseSuc, usuarioSuc, claveSuc);
-                try{
-                    ResultSet rs2 = dbBiometricoSuc.consulta("select * from RALog where convert(datetime, [date], 103) >= convert( datetime, dateadd(day, -1, getDate()) ,103)");
-//                    ResultSet rs2 = dbBiometricoSuc.consulta("select * from RALog");
-                    while(rs2.next()){
-                                                
-                        if( !objSQL.ejecutar("insert into ralog_sucursales(id_sucursal, RN, GID, FID, UID, Name, Date, Time, FacID, InOutOption, Other, Latitude, Longitude) values("
-                                + "'"+idSucursal+"', "
-                                + "'"+ (rs2.getString("RN")!=null ? rs2.getString("RN") : "") + "', "  
-                                + "'"+ (rs2.getString("GID")!=null ? rs2.getString("GID") : "") + "', " 
-                                + "'"+ (rs2.getString("FID")!=null ? rs2.getString("FID") : "") + "', " 
-                                + "'"+ (rs2.getString("UID")!=null ? rs2.getString("UID") : "") + "', " 
-                                + "'"+ (rs2.getString("Name")!=null ? rs2.getString("Name") : "") + "', " 
-                                + "'"+ (rs2.getString("Date")!=null ? rs2.getString("Date") : "") + "', " 
-                                + "'"+ (rs2.getString("Time")!=null ? rs2.getString("Time") : "") + "', "         
-                                + "'"+ (rs2.getString("FacID")!=null ? rs2.getString("FacID") : "") + "', " 
-                                + "'"+ (rs2.getString("InOutOption")!=null ? rs2.getString("InOutOption") : "" )+ "', " 
-                                + "'"+ (rs2.getString("Other")!=null ? rs2.getString("Other") : "") + "', " 
-                                + "'"+ (rs2.getString("Latitude")!=null ? rs2.getString("Latitude") : "") + "', " 
-                                + "'"+ (rs2.getString("Longitude")!=null ? rs2.getString("Longitude") : "") + "' " 
-                                + ")") ) {
-                            
-                            System.out.println("error insert: " + objSQL.getError() );
-                            
-                        }
-                    }
-                }catch(Exception ex2){
-                    System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": error al conectarse al biomnetrico " + servidorSuc + ex2.getMessage());
-                }finally{
-                    dbBiometricoSuc.cerrar();
-                }
-            }
-        }catch(Exception ex){
-            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": error al conectarse al biomnetrico " + Parametro.getMsSqlIp() + ex.getMessage());   
-        } finally{
-            objSQL.cerrar();
-            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de carga de respaldo de timbrados de sucursales");
-        }    
-            
-        
-        
-        
-        
-        
-        
-        
-        
-        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando cambio de clientes a tercera edad");
-        try{
-            objDataBase.consulta("update tbl_cliente set fecha_cambio_3_edad=now() " +
-                    "where id_cliente in(select id_cliente from tbl_cliente where date_trunc('day'::text, age(now(), fecha_nacimiento::timestamp with time zone)) = '65 years' )");
-        } finally{
-            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de cambio de clientes a tercera edad");
-        }
-        
-        
-        
-        
-        
-        
-        
         
         objDataBase.cerrar();
     }

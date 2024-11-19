@@ -28,10 +28,6 @@ import java.io.*;
  * @author Jorge
  */
 public class Archivo extends DataBase{
-    public Archivo()
-    {
-        
-    }
     
     public Archivo(String m, int p, String db, String u, String c){
         super(m, p, db, u, c);

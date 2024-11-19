@@ -246,20 +246,49 @@ public class Facturar implements Job{
 //            String rubrosAdicionales[][] = Matriz.ResultSetAMatriz(rsRubrosAdicionales);
 
             String periodoActual = Fecha.getAnio() + "-" + Fecha.getMes() + "-01";
-
-            String clientesConvenioTarjeta = " union " // convenio de tarjeta de credito prepago mes actual y postpago mes anterior
-                    + "select F.*, total as total_comision from vta_prefactura_todas as F inner join tbl_instalacion as I  on F.id_instalacion=I.id_instalacion \n"
-                    + "where num_cuenta<>'' and fecha_emision is null and tarjeta_credito_caduca - '7 day'::interval > now()::date and num_cuenta is not null and I.estado_servicio in ('a', 'c', 'r') and I.fecha_instalacion is not null and forma_pago='TAR' \n"
-                    + "and set_convenio_tarjeta=true \n"
-                    + "and ((I.convenio_pago ='1' and periodo=('"+periodoActual+"'::date - '1 month'::interval)::date ) or (I.convenio_pago ='0' and periodo='"+periodoActual+"')) \n"
-                    + "union \n"    // convenio de cuenta de banco  prepago mes actual y postpago mes anterior
-                    + "select F.*, total as total_comision from vta_prefactura_todas as F inner join tbl_instalacion as I  on F.id_instalacion=I.id_instalacion \n"
-                    + "where num_cuenta<>'' and fecha_emision is null and num_cuenta is not null and I.estado_servicio in ('a', 'c', 'r') and I.fecha_instalacion is not null and forma_pago='CTA' \n"
-                    + "and set_convenio_cuenta=true \n"
-                    + "and ((I.convenio_pago ='1' and periodo=('"+periodoActual+"'::date - '1 month'::interval)::date ) or (I.convenio_pago ='0' and periodo='"+periodoActual+"'))";
             
-            ResultSet rs = this.objDataBase.consulta("select *, total+comision_cash as total_comision from vta_prefactura_todas where por_emitir_destino in('Pichincha', 'WesternUnion', 'Pagomedios') and por_emitir_factura=true"
-                    + (Fecha.getDia()==1 ? clientesConvenioTarjeta : "") );
+            // recalculo de valores de prefacturas antes de facturar
+            try {
+                String clientesRecalcular = "select id_prefactura from vta_prefactura_todas where por_emitir_destino in('Pichincha', 'WesternUnion', 'Pagomedios') and por_emitir_factura=true" + 
+                        ( Fecha.getDia() == 1 
+                        ? " union " // convenio de tarjeta de credito prepago mes actual y postpago mes anterior
+                            + "select id_prefactura from vta_prefactura_todas as F inner join tbl_instalacion as I  on F.id_instalacion=I.id_instalacion \n"
+                            + "where num_cuenta<>'' and fecha_emision is null and tarjeta_credito_caduca - '7 day'::interval > now()::date and num_cuenta is not null and I.estado_servicio in ('a', 'c', 'r') and I.fecha_instalacion is not null and forma_pago='TAR' \n"
+                            + "and set_convenio_tarjeta=true \n"
+                            + "and ((I.convenio_pago ='1' and periodo=('"+periodoActual+"'::date - '1 month'::interval)::date ) or (I.convenio_pago ='0' and periodo='"+periodoActual+"')) \n"
+                            + "union \n"    // convenio de cuenta de banco  prepago mes actual y postpago mes anterior
+                            + "select id_prefactura from vta_prefactura_todas as F inner join tbl_instalacion as I  on F.id_instalacion=I.id_instalacion \n"
+                            + "where num_cuenta<>'' and fecha_emision is null and num_cuenta is not null and I.estado_servicio in ('a', 'c', 'r') and I.fecha_instalacion is not null and forma_pago='CTA' \n"
+                            + "and set_convenio_cuenta=true \n"
+                            + "and ((I.convenio_pago ='1' and periodo=('"+periodoActual+"'::date - '1 month'::interval)::date ) or (I.convenio_pago ='0' and periodo='"+periodoActual+"'))" 
+                        : "");
+                
+                ResultSet rsRecalcular = this.objDataBase.consulta(clientesRecalcular);
+                while(rsRecalcular.next()){
+                    String idPrefactura = rsRecalcular.getString("id_prefactura")!=null ? rsRecalcular.getString("id_prefactura") : "-1";
+                    this.objDataBase.consulta("select proc_calcularPreFactura("+idPrefactura+", false);");
+                }
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+            
+
+            String aFacturar = "select *, total+comision_cash as total_comision from vta_prefactura_todas where por_emitir_destino in('Pichincha', 'WesternUnion', 'Pagomedios') and por_emitir_factura=true" + 
+                    ( Fecha.getDia() == 1 
+                        ? " union " // convenio de tarjeta de credito prepago mes actual y postpago mes anterior
+                            + "select F.*, total as total_comision from vta_prefactura_todas as F inner join tbl_instalacion as I  on F.id_instalacion=I.id_instalacion \n"
+                            + "where num_cuenta<>'' and fecha_emision is null and tarjeta_credito_caduca - '7 day'::interval > now()::date and num_cuenta is not null and I.estado_servicio in ('a', 'c', 'r') and I.fecha_instalacion is not null and forma_pago='TAR' \n"
+                            + "and set_convenio_tarjeta=true \n"
+                            + "and ((I.convenio_pago ='1' and periodo=('"+periodoActual+"'::date - '1 month'::interval)::date ) or (I.convenio_pago ='0' and periodo='"+periodoActual+"')) \n"
+                            + "union \n"    // convenio de cuenta de banco  prepago mes actual y postpago mes anterior
+                            + "select F.*, total as total_comision from vta_prefactura_todas as F inner join tbl_instalacion as I  on F.id_instalacion=I.id_instalacion \n"
+                            + "where num_cuenta<>'' and fecha_emision is null and num_cuenta is not null and I.estado_servicio in ('a', 'c', 'r') and I.fecha_instalacion is not null and forma_pago='CTA' \n"
+                            + "and set_convenio_cuenta=true \n"
+                            + "and ((I.convenio_pago ='1' and periodo=('"+periodoActual+"'::date - '1 month'::interval)::date ) or (I.convenio_pago ='0' and periodo='"+periodoActual+"'))" 
+                        : "");
+            
+            ResultSet rs = this.objDataBase.consulta( aFacturar );
+            
             
             //  instalaciones que tienen convenios de debito
             ResultSet rsConveniosTarjetas = null;

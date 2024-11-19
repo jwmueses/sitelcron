@@ -685,8 +685,8 @@ public class ServidoresCorte implements Job{
                             System.out.println( Fecha.getFecha("SQL") + " " + Fecha.getHora() + err_colas + ". " + err_listas );
                             objCorreo.enviar("jefetecnicoibarra@saitel.ec", "Error en archivos de listas o colas", err_colas + ". " + err_listas, null);
                             //Correo.enviar(Parametro.getSvrMail(), Parametro.getSvrMailPuerto(), Parametro.getRemitente(), Parametro.getRemitenteClave(), "gerencia@saitel.ec", "sistemas@saitel.ec", "", "ERROR EN LA TRANSFERENCIA DE ARCHIVOS FTP", new StringBuilder(msg), true);
-                        }else{
-                            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Actualización de archivos de cortes en el servidor " + servidor);
+//                        }else{
+//                            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Actualización de archivos de cortes en el servidor " + servidor);
                         }
                     }else{
                         System.out.println( Fecha.getFecha("SQL") + " " + Fecha.getHora() + ftp.getError() );
