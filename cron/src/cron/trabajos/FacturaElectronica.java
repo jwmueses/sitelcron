@@ -141,8 +141,8 @@ public class FacturaElectronica extends Xml{
         this.nuevoElemento(infoAdicional, "campoAdicional", fechaEmision, false);
         this.setAtributo("nombre", "F_REACTIVACION");
         
-        this.nuevoElemento(infoAdicional, "campoAdicional", plan, false);
-        this.setAtributo("nombre", "PLAN");
+//        this.nuevoElemento(infoAdicional, "campoAdicional", plan, false);
+//        this.setAtributo("nombre", "PLAN");
         
         direccion = direccion.compareTo("")!=0? direccion : "S/D";
         this.nuevoElemento(infoAdicional, "campoAdicional", direccion, false);  

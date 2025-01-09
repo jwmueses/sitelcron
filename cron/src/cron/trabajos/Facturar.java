@@ -266,8 +266,8 @@ public class Facturar implements Job{
                 ResultSet rsRecalcular = this.objDataBase.consulta(clientesRecalcular);
                 while(rsRecalcular.next()){
                     String idPrefactura = rsRecalcular.getString("id_prefactura")!=null ? rsRecalcular.getString("id_prefactura") : "-1";
-                    this.objDataBase.consulta("select proc_calcularPreFactura("+idPrefactura+", false);");
-                }
+                        this.objDataBase.consulta("select proc_calcularPreFactura("+idPrefactura+", false);");
+                    }
             }catch(Exception e){
                 e.printStackTrace();
             }

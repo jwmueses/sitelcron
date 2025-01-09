@@ -87,7 +87,7 @@ public class ServidoresCorte implements Job{
         
                 
         try{
-        //  hora actual   >=  05:29       && hora actual <= 18:55 
+        //  hora actual   >=  05:29       && hora actual <= 23:59 
             if(timeActual >= iniEjecucion && timeActual <= finEjecucion ){
                 
                 try{

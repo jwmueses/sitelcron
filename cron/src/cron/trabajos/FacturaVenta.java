@@ -191,6 +191,7 @@ public class FacturaVenta extends DataBase{
                     String id_plan_cuenta_anticipo = (rs.getString("id_plan_cuenta_anticipo") != null) ? rs.getString("id_plan_cuenta_anticipo") : "-1";
                     //double totalCash = rs.getString("total_cash")!=null ? rs.getDouble("total_cash") : 0;
                     String emailCliente = rs.getString("email")!=null ? rs.getString("email") : "";
+                    String por_emitir_destino = rs.getString("por_emitir_destino")!=null ? rs.getString("por_emitir_destino") : "";
                             
                     
                     
@@ -217,11 +218,18 @@ public class FacturaVenta extends DataBase{
                     // CONVENIO DE DEBITO
                     
                     if( Matriz.enMatriz(matDebitos, id_instalacion, 0) >=0 && registro_archivo_cash.compareTo("")==0){
-                        idFormaPago="99";        //  id forma de pago cash
+                        idFormaPago="99";        //  id forma de pago credito
                         formaPago="20";          //  con utilizacion del sistema financiero
                         formaPagoCodInterno="d";
                     }
                     
+                    // PAGOMEDIOS
+//System.out.println("por_emitir_destino " + por_emitir_destino + ", registro_archivo_cash " + registro_archivo_cash);
+                    if( por_emitir_destino.compareTo("Pagomedios")==0 && registro_archivo_cash.compareTo("")!=0){
+                        idFormaPago="24";        //  id forma de pago pagomedios
+                        formaPago="20";          //  con utilizacion del sistema financiero
+                        formaPagoCodInterno="s3";
+                    }
                    
                     //  POR ANTICIPOS
                     String idCliAnt = "";
@@ -275,7 +283,7 @@ public class FacturaVenta extends DataBase{
                     }    
                         
                     
-                     
+//System.out.println("por_emitir_destino " + por_emitir_destino + ", registro_archivo_cash " + registro_archivo_cash + ", idFormaPago " + idFormaPago);
                     
                     int p = Matriz.enMatriz(matPuntosVirtuales, id_sucursal, 0);
                     if(p!=-1){

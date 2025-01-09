@@ -81,7 +81,7 @@ public class DataBase
             String sql=this.decodificarURI(cad);
             r = st.executeQuery(sql); 
         }catch(Exception e){  
-//            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Error DataBase.consulta("+cad+") -> " + e.getMessage());
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Error DataBase.consulta("+cad+") -> " + e.getMessage());
             this.error = e.getMessage();
         }     
         return r;
