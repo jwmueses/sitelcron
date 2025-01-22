@@ -841,13 +841,14 @@ public class FacturaVenta extends DataBase{
             
             ResultSet rs = this.consulta("select * from vta_factura_venta where id_factura_venta = " + idFacturaVenta);
             if(rs.next()){
-                String claveAcceso = rs.getString("clave_acceso")!=null ? rs.getString("clave_acceso") : "0";
+//                String claveAcceso = rs.getString("clave_acceso")!=null ? rs.getString("clave_acceso") : "0";
                 String id_sucursal = rs.getString("txt_sucursal")!=null ? rs.getString("id_sucursal") : "0";
                 String serie_factura = rs.getString("serie_factura")!=null ? rs.getString("serie_factura") : "000-000";
                 String num_factura = rs.getString("num_factura")!=null ? rs.getString("num_factura") : "0";
                 String tipo_documento_cliente = rs.getString("tipo_documento")!=null ? rs.getString("tipo_documento") : "05";
                 String razon_social = rs.getString("razon_social")!=null ? rs.getString("razon_social") : "";
                 String direccion = rs.getString("direccion")!=null ? rs.getString("direccion") : "";
+                String fecha_emision = rs.getString("fecha_emision")!=null ? rs.getString("fecha_emision") : "";
                 String email = rs.getString("email")!=null ? rs.getString("email") : "";
                 String ruc = rs.getString("ruc")!=null ? rs.getString("ruc") : "";
                 String id_forma_pago = rs.getString("id_forma_pago")!=null ? rs.getString("id_forma_pago") : "1";
@@ -936,11 +937,11 @@ public class FacturaVenta extends DataBase{
 
                 FacturaElectronica objFE = new FacturaElectronica();    //   se tiene que blanquear un nuevo archivo XML
 
-                claveAcceso = objFE.getClaveAcceso(Fecha.getFecha("SQL"), "01", ruc_empresa, ambiente, vecSerie[0]+vecSerie[1], Cadena.setSecuencial(num_factura), tipoEmision);
+                String claveAcceso = objFE.getClaveAcceso(Cadena.setFecha(fecha_emision), "01", ruc_empresa, ambiente, vecSerie[0]+vecSerie[1], Cadena.setSecuencial(num_factura), tipoEmision);
 
                 String facturaXml = objFE.generarXml(claveAcceso, ambiente, tipoEmision, razon_social_empresa, nombre_comercial, ruc_empresa, emalSaitel, numContSaitel, sitioWeb, 
                         "01", vecSerie[0], vecSerie[1], 
-                        Cadena.setSecuencial(num_factura), dir_matriz, Fecha.getFecha("SQL"), direccion_sucursal, num_resolucion, oblga_contabilidad, 
+                        Cadena.setSecuencial(num_factura), dir_matriz, Cadena.setFecha(fecha_emision), direccion_sucursal, num_resolucion, oblga_contabilidad, 
                         tipo_documento_cliente, razon_social, ruc, subtotal, descuento, "0", subtotal_2, iva_2, subtotal_3, iva_3, total, codigoFormaPago, 
                         ids_productos, descripciones, cantidades_prod, preciosUnitarios, descuentos, subtotales, ivas, pIvas, codigoIvas, direccion, plan, email);
                 String documentoXml = DOCS_ELECTRONICOS + "generados/" + claveAcceso + ".xml";
