@@ -65,7 +65,7 @@ public class DocumentosElectronicosSri{
             String pkFacturasRecibidos = "";
             try{
                 //  no se enviaran las facturas de 020 > redfacilito,  023 > servipago,   025 > pagomedios(tarjeta de credito desde pag Web)
-                ResultSet rs = objDataBase.consulta("select id_factura_venta, serie_factura || '-' || num_factura as numero, clave_acceso from tbl_factura_venta where estado_documento='f' and serie_factura not in('001-020', '001-023') and fecha_emision >='2024-01-01'");
+                ResultSet rs = objDataBase.consulta("select id_factura_venta, serie_factura || '-' || num_factura as numero, clave_acceso from tbl_factura_venta where estado_documento='f' and fecha_emision >='2024-01-01'");
                 while(rs.next()){
                     try{
                         String clave_acceso = rs.getString("clave_acceso")!=null ? rs.getString("clave_acceso") : "";
