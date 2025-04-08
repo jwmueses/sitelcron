@@ -48,7 +48,7 @@ public class SaitelCron implements Daemon{
             JobDetail trabajo1 = JobBuilder.newJob(ServidoresCorte.class)
                     .withIdentity("servidoresCorte", "saitel").build();
             //Date startTime = DateBuilder.nextGivenSecondDate(null, 10);
-            Date inicio = DateBuilder.dateOf(1, 30, 00);
+            Date inicio = DateBuilder.dateOf(1, 55, 00);
             SimpleTrigger disparador1 = TriggerBuilder.newTrigger()
                         .withIdentity("todoElTiempoCada1Horas", "saitel")
                         .startAt(inicio)

@@ -223,14 +223,38 @@ public class FacturaVenta extends DataBase{
                         formaPagoCodInterno="d";
                     }
                     
-                    // PAGOMEDIOS
-//System.out.println("por_emitir_destino " + por_emitir_destino + ", registro_archivo_cash " + registro_archivo_cash);
-                    if( por_emitir_destino.compareTo("Pagomedios")==0 && registro_archivo_cash.compareTo("")!=0){
-                        idFormaPago="24";        //  id forma de pago pagomedios
-                        formaPago="20";          //  con utilizacion del sistema financiero
-                        formaPagoCodInterno="s3";
+                    
+                    if(por_emitir_destino.trim().compareTo("")!=0){
+                    
+                        // WEB SERVICES => SERVIPAGOS    -   PRODUBANCO
+                        if( por_emitir_destino.toLowerCase().compareTo("servipagos")==0 && registro_archivo_cash.compareTo("")!=0){
+                            idFormaPago="23";        //  id forma de pago pagomedios
+                            formaPago="20";          //  con utilizacion del sistema financiero
+                            formaPagoCodInterno="s2";
+                            id_plan_cuenta_banco="284";
+                        } 
+
+                        // WEB SERVICES => PAGOMEDIOS
+    //System.out.println("por_emitir_destino " + por_emitir_destino + ", registro_archivo_cash " + registro_archivo_cash);
+                        if( por_emitir_destino.compareTo("pagomedios")==0 && registro_archivo_cash.compareTo("")!=0){
+                            idFormaPago="24";        //  id forma de pago pagomedios
+                            formaPago="20";          //  con utilizacion del sistema financiero
+                            formaPagoCodInterno="s3";
+                            id_plan_cuenta_banco="569";
+                        }
+                        
+                        try{
+                            ResultSet rsBanco = this.consulta("SELECT id_plan_cuenta_caja FROM tbl_empresa as E inner join tbl_punto_emision as PE on E.id_punto_emision =PE.id_punto_emision where upper(empresa) like '%" + por_emitir_destino.trim().toUpperCase() + "%'");
+                            if(rsBanco.next()){
+                                id_plan_cuenta_banco = rsBanco.getString("id_plan_cuenta_caja")!=null ? rsBanco.getString("id_plan_cuenta_caja") : id_plan_cuenta_banco;
+                                rsBanco.close();
+                            }
+                        }catch(Exception e){
+                            e.printStackTrace();
+                        }
+                        
                     }
-                   
+                                                       
                     //  POR ANTICIPOS
                     String idCliAnt = "";
                     String monto_vajar = "";
