@@ -67,7 +67,7 @@ public class Prefactura implements Job{
         try{
             
             //  prepagos y postpagos todos
-            objDataBase.ejecutar("proc_actualizaPrefacturaMasDiasAntesCortes()");
+            objDataBase.consulta("select proc_actualizaPrefacturaMasDiasAntesCortes();");
             
             
 //            //  postpago
