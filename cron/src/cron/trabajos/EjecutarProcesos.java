@@ -154,7 +154,7 @@ public class EjecutarProcesos  implements Job{
         
         System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando actualzacion de obligatoriedad de certificado digital");
         try{
-            objDataBase.consulta("update tbl_empleado set obligado_firmar =true where obligado_firmar =false and estado =true and eliminado =false and generar_rol =true  and get_duracion_fechas( now() ::timestamp,fecha_ingreso::timestamp , 'MM')::int>1;");
+            objDataBase.ejecutar("update tbl_empleado set obligado_firmar =true where obligado_firmar =false and estado =true and eliminado =false and generar_rol =true  and get_duracion_fechas( now() ::timestamp,fecha_ingreso::timestamp , 'MM')::int>1;");
         } finally{
             System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de actualzacion de obligatoriedad de certificado digital");
         }
@@ -255,7 +255,7 @@ public class EjecutarProcesos  implements Job{
             objDataBase.ejecutar("update tbl_promocion set cerrada=true where fecha_termino < now()::date and cerrada=false;");
             
             try{
-                ResultSet rs1 = objDataBase.consulta("select id_promocion, count(id_instalacion), sum(costo_instalacion) "
+                ResultSet rs1 = objDataBase.consulta("select id_promocion, count(P.id_instalacion), sum(costo_instalacion) "
                         + "from tbl_instalacion_promocion as P inner join tbl_instalacion as I on I.id_instalacion=P.id_instalacion "
                         + "where id_promocion in (select id_promocion from tbl_promocion where inst_objetivo_a_cumplir > 0 and cerrada=false) "
                         + "group by id_promocion order by id_promocion;");

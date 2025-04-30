@@ -65,44 +65,49 @@ public class Prefactura implements Job{
         //      Actualizar dias de conexion de Prefacturas de periodos anteriores
         System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando actualización de dias de conexion de prefacturas de periodos anteriores");
         try{
-            //  postpago
-            objDataBase.ejecutar("with tmp as( \n" +
-                "	select id_prefactura,id_instalacion,periodo, dias_conexion from tbl_prefactura \n" +
-                "	 where fecha_emision is null and periodo >= (now()::date - '2 month'::interval)::date \n" +
-                "	and id_instalacion in(select distinct id_instalacion from tbl_prefactura \n" +
-                "		where fecha_emision is null and periodo = (now()::date - '2 month'::interval)::date \n" +
-                "		and id_instalacion in(select id_instalacion from tbl_instalacion where convenio_pago ='1' and estado_servicio = 'c') \n" +
-                "		) \n" +
-                "		order by id_instalacion,periodo \n" +
-                ") \n" +
-                "update tbl_prefactura as P set dias_conexion =5, recalcular =true, detalle_suspencion =' antes del corte' \n" +
-                "where dias_conexion=30 and p.id_prefactura in(select id_prefactura from tmp where tmp.periodo = (now()::date - '1 month'::interval)::date);");
             
-            //  prepago Quitos
-            objDataBase.ejecutar("with tmp as( \n" +
-                "	select id_prefactura,id_instalacion,periodo, dias_conexion from tbl_prefactura \n" +
-                "	 where fecha_emision is null and periodo >=(now()::date - '1 month'::interval)::date and  dias_conexion=30 \n" +
-                "	and id_instalacion in(select distinct id_instalacion from tbl_prefactura \n" +
-                "		where fecha_emision is null and periodo =(now()::date - '1 month'::interval)::date \n" +
-                "		and id_instalacion in(select id_instalacion from tbl_instalacion where convenio_pago ='0' and estado_servicio ='c' and id_sucursal in(7,11)) \n" +
-                "		) \n" +
-                "		order by id_instalacion,periodo \n" +
-                ") \n" +
-                "update tbl_prefactura as P set dias_conexion=15, recalcular =true, detalle_suspencion =' antes del corte' \n" +
-                "where dias_conexion=30 and p.id_prefactura in(select id_prefactura from tmp where tmp.periodo=(now()::date - '1 month'::interval)::date)");
+            //  prepagos y postpagos todos
+            objDataBase.ejecutar("proc_actualizaPrefacturaMasDiasAntesCortes()");
             
-            //  prepago menos Quitos
-            objDataBase.ejecutar("with tmp as( \n" +
-                "	select id_prefactura,id_instalacion,periodo, dias_conexion from tbl_prefactura \n" +
-                "	 where fecha_emision is null and periodo >=(now()::date - '1 month'::interval)::date and  dias_conexion=30 \n" +
-                "	and id_instalacion in(select distinct id_instalacion from tbl_prefactura \n" +
-                "		where fecha_emision is null and periodo =(now()::date - '1 month'::interval)::date \n" +
-                "		and id_instalacion in(select id_instalacion from tbl_instalacion where convenio_pago ='0' and estado_servicio ='c' and id_sucursal not in(7,11)) \n" +
-                "		) \n" +
-                "		order by id_instalacion,periodo \n" +
-                ") \n" +
-                "update tbl_prefactura as P set dias_conexion=5, recalcular =true, detalle_suspencion =' antes del corte' \n" +
-                "where dias_conexion=30 and p.id_prefactura in(select id_prefactura from tmp where tmp.periodo=(now()::date - '1 month'::interval)::date)");
+            
+//            //  postpago
+//            objDataBase.ejecutar("with tmp as( \n" +
+//                "	select id_prefactura,id_instalacion,periodo, dias_conexion from tbl_prefactura \n" +
+//                "	 where fecha_emision is null and periodo >= (now()::date - '2 month'::interval)::date \n" +
+//                "	and id_instalacion in(select distinct id_instalacion from tbl_prefactura \n" +
+//                "		where fecha_emision is null and periodo = (now()::date - '2 month'::interval)::date \n" +
+//                "		and id_instalacion in(select id_instalacion from tbl_instalacion where convenio_pago ='1' and estado_servicio = 'c') \n" +
+//                "		) \n" +
+//                "		order by id_instalacion,periodo \n" +
+//                ") \n" +
+//                "update tbl_prefactura as P set dias_conexion =5, recalcular =true, detalle_suspencion =' antes del corte' \n" +
+//                "where dias_conexion=30 and p.id_prefactura in(select id_prefactura from tmp where tmp.periodo = (now()::date - '1 month'::interval)::date);");
+//            
+//            //  prepago Quitos
+//            objDataBase.ejecutar("with tmp as( \n" +
+//                "	select id_prefactura,id_instalacion,periodo, dias_conexion from tbl_prefactura \n" +
+//                "	 where fecha_emision is null and periodo >=(now()::date - '1 month'::interval)::date and  dias_conexion=30 \n" +
+//                "	and id_instalacion in(select distinct id_instalacion from tbl_prefactura \n" +
+//                "		where fecha_emision is null and periodo =(now()::date - '1 month'::interval)::date \n" +
+//                "		and id_instalacion in(select id_instalacion from tbl_instalacion where convenio_pago ='0' and estado_servicio ='c' and id_sucursal in(7,11)) \n" +
+//                "		) \n" +
+//                "		order by id_instalacion,periodo \n" +
+//                ") \n" +
+//                "update tbl_prefactura as P set dias_conexion=15, recalcular =true, detalle_suspencion =' antes del corte' \n" +
+//                "where dias_conexion=30 and p.id_prefactura in(select id_prefactura from tmp where tmp.periodo=(now()::date - '1 month'::interval)::date)");
+//            
+//            //  prepago menos Quitos
+//            objDataBase.ejecutar("with tmp as( \n" +
+//                "	select id_prefactura,id_instalacion,periodo, dias_conexion from tbl_prefactura \n" +
+//                "	 where fecha_emision is null and periodo >=(now()::date - '1 month'::interval)::date and  dias_conexion=30 \n" +
+//                "	and id_instalacion in(select distinct id_instalacion from tbl_prefactura \n" +
+//                "		where fecha_emision is null and periodo =(now()::date - '1 month'::interval)::date \n" +
+//                "		and id_instalacion in(select id_instalacion from tbl_instalacion where convenio_pago ='0' and estado_servicio ='c' and id_sucursal not in(7,11)) \n" +
+//                "		) \n" +
+//                "		order by id_instalacion,periodo \n" +
+//                ") \n" +
+//                "update tbl_prefactura as P set dias_conexion=5, recalcular =true, detalle_suspencion =' antes del corte' \n" +
+//                "where dias_conexion=30 and p.id_prefactura in(select id_prefactura from tmp where tmp.periodo=(now()::date - '1 month'::interval)::date)");
         }finally{
             System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalizando actualización de dias de conexion de prefacturas de periodos anteriores");
         }
