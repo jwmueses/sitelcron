@@ -277,7 +277,7 @@ public class Recaudacion {
      * Web service operation
      */
     @WebMethod(operationName = "facturar")
-    public String facturar(@WebParam(name = "clave") String clave, @WebParam(name = "idRegistroConsulta") String idRegistroConsulta, @WebParam(name = "numDocumento") String numDocumento, @WebParam(name="totalCobrado") String totalCobrado ) 
+    public String facturar(@WebParam(name = "clave") String claveEmpresa, @WebParam(name = "idRegistroConsulta") String idRegistroConsulta, @WebParam(name = "numDocumento") String numDocumento, @WebParam(name="totalCobrado") String totalCobrado ) 
     {
         StringBuilder xml = new StringBuilder();
         xml.append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>");
@@ -285,11 +285,11 @@ public class Recaudacion {
         codigoError = "01";
         mensaje = "No se ha proporcionado una clave de acceso";
         
-        if(clave.compareTo("")!=0){
+        if(claveEmpresa.compareTo("")!=0){
             
             codigoError = "02";
             mensaje = "Clave de acceso erronea";
-            String puntoEmision[] = this.getPuntoEmision(clave);
+            String puntoEmision[] = this.getPuntoEmision(claveEmpresa);
             if(puntoEmision[0].compareTo("-1")!=0){     //      idPuntoEmision
                 
                 codigoError = "04";
@@ -309,9 +309,31 @@ public class Recaudacion {
                     codigoError = "10";
                     mensaje = "Número de ID "+idPrefactura+" de prefactura mal formado";
                     if(idPrefactura.indexOf("P")==0){
-                        this.prefacturaEmitir(idRegistroConsulta.replace("P", ""), numDocumento, totalCobrado, puntoEmision[0]);
-                    /*}else if(id_prefactura.indexOf("F")==0){
-                              return this.facturaCobrar(idRegistroConsulta.replace("F", ""), numDocumento, idPuntoEmision);*/
+                        
+                        DataBase objDB = new DataBase(maquina, puerto, db, usuario, clave);
+                        try{
+                            codigoError = "16";
+                            mensaje = "Error al validar monto a pagar";
+                            ResultSet rsPrF = objDB.consulta("select total from vta_prefactura where id_prefactura = " + idRegistroConsulta.replace("P", "") );
+                            if(rsPrF != null){
+                                if(rsPrF.next()){
+                                    double total = rsPrF.getString("total")!=null ? rsPrF.getDouble("total") : 0;
+                                    codigoError = "17";
+                                    mensaje = "Monto ingresado "+totalCobrado+" diferente del monto a pagar en la factura " + (Math.round(total * Math.pow(10, 2)) / Math.pow(10, 2)) ;
+                                    if( total == Double.parseDouble(totalCobrado)  ) {
+                                        this.prefacturaEmitir(idRegistroConsulta.replace("P", ""), numDocumento, totalCobrado, puntoEmision[0], puntoEmision[5]);
+                                        /*}else if(id_prefactura.indexOf("F")==0){
+                                                  return this.facturaCobrar(idRegistroConsulta.replace("F", ""), numDocumento, idPuntoEmision);*/
+                                    }
+                                }
+                                rsPrF.close();
+                            }
+                        }catch(Exception e){
+                            e.printStackTrace();
+                        } finally {
+                            objDB.cerrar();
+                        }
+                        
                     }
                     
                 }
@@ -334,11 +356,11 @@ public class Recaudacion {
     
     
     
-    private String prefacturaEmitir(String idPrefactura, String num_documento, String totalCobrado, String idPuntoEmision)
+    private String prefacturaEmitir(String idPrefactura, String num_documento, String totalCobrado, String idPuntoEmision, String empresa)
     {
         //DataBase objDB = new DataBase(maquina, puerto, db, usuario, clave);
         
-        codigoError = "05";
+        codigoError = "15";
         mensaje = "Error 500";
         String transaccion = "";
         
@@ -352,6 +374,7 @@ public class Recaudacion {
                     String bloqueo_libros = rs.getString("valor")!=null ? rs.getString("valor") : "";
                     if(bloqueo_libros.compareTo("false")==0){
                         objPrefactura.ejecutar("update tbl_configuracion set valor='true' where parametro = 'bloqueo_libros'");
+                        codigoError = "05";
                         break;
                     }
                     rs.close();        
@@ -361,7 +384,7 @@ public class Recaudacion {
                 e.printStackTrace();
             }
             if(k >= 5){
-                codigoError = "15";
+//                codigoError = "15";
                 mensaje = "El sistema se encuentra demasiado ocupado, por favor, inténtelo más tarde.";
                 transaccion = "";
                 break;
@@ -372,7 +395,7 @@ public class Recaudacion {
         
         
         if ( codigoError.compareTo("15")==0 ) {
-            boolean porEmitir = objPrefactura.ejecutar("update tbl_prefactura set fecha_emision=now()::date, por_emitir_factura=true, registro_archivo_cash='"+num_documento+"', fecha_pago=now()::date, hora_pago=now()::time, total_cash="+totalCobrado+", por_emitir_destino='Pagomedios' where id_prefactura=" + idPrefactura);
+            boolean porEmitir = objPrefactura.ejecutar("update tbl_prefactura set fecha_emision=now()::date, por_emitir_factura=true, registro_archivo_cash='"+num_documento+"', fecha_pago=now()::date, hora_pago=now()::time, total_cash="+totalCobrado+", por_emitir_destino='"+empresa+"' where id_prefactura=" + idPrefactura);
             if(porEmitir){
                 codigoError = "16";
                 mensaje = "Por emitir factura";
@@ -1094,16 +1117,17 @@ public class Recaudacion {
     
     private String[] getPuntoEmision(String clave1)
     {
-        String puntoEmision[] = new String[]{"-1","f","-1","0",""};
+        String puntoEmision[] = new String[]{"-1","f","-1","0","",""};
         DataBase objDB = new DataBase(maquina, puerto, db, usuario, clave);
         try{
-            ResultSet rsCliente = objDB.consulta("SELECT E.id_punto_emision, prepago, id_plan_cuenta_caja, fondo_prepago, correo from tbl_empresa as E inner join tbl_punto_emision as P on P.id_punto_emision=E.id_punto_emision where clave='"+clave1+"'");
+            ResultSet rsCliente = objDB.consulta("SELECT E.id_punto_emision, prepago, id_plan_cuenta_caja, fondo_prepago, correo, empresa from tbl_empresa as E inner join tbl_punto_emision as P on P.id_punto_emision=E.id_punto_emision where clave='"+clave1+"'");
             if(rsCliente.next()){
                 puntoEmision[0] = rsCliente.getString("id_punto_emision")!=null ? rsCliente.getString("id_punto_emision") : "-1";
                 puntoEmision[1] = rsCliente.getString("prepago")!=null ? rsCliente.getString("prepago") : "f";
                 puntoEmision[2] = rsCliente.getString("id_plan_cuenta_caja")!=null ? rsCliente.getString("id_plan_cuenta_caja") : "-1";
                 puntoEmision[3] = rsCliente.getString("fondo_prepago")!=null ? rsCliente.getString("fondo_prepago") : "0";
                 puntoEmision[4] = rsCliente.getString("correo")!=null ? rsCliente.getString("correo") : "";
+                puntoEmision[5] = rsCliente.getString("empresa")!=null ? rsCliente.getString("empresa") : "";
                 rsCliente.close();
             }
         }catch(Exception e){

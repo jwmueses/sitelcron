@@ -4,6 +4,8 @@
  */
 package ec.com.saitel.lib;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.util.ArrayList;
@@ -99,6 +101,14 @@ public class Matriz {
         return null;
     }
     
+    public static String sumarDecimales(String numero1, String numero2) 
+    {
+        BigDecimal num1 = new BigDecimal(numero1);
+        BigDecimal num2 = new BigDecimal(numero2);
+        BigDecimal res = num1.add(num2).setScale(2, RoundingMode.HALF_UP);
+        return res.toString();
+    }
+    
     public static String[][] suprimirDuplicados(String mat[][], int j)
     {
         String distintos[][]=null;
@@ -109,8 +119,10 @@ public class Matriz {
                 if (pos == -1) {
                     distintos = Matriz.poner(distintos, new String[] {mat[i][0], mat[i][1], mat[i][2]});
                 }else{
-                    distintos[pos][1] = String.valueOf( Matriz.redondear(Double.parseDouble(distintos[pos][1]) + Double.parseDouble(mat[i][1]) ) );
-                    distintos[pos][2] = String.valueOf( Matriz.redondear( Double.parseDouble(distintos[pos][2]) + Double.parseDouble(mat[i][2]) ) );
+                    distintos[pos][1] = Matriz.sumarDecimales( distintos[pos][1], mat[i][1] );
+                    distintos[pos][2] = Matriz.sumarDecimales( distintos[pos][2], mat[i][2] );
+//                    distintos[pos][1] = String.valueOf( Matriz.redondear(Double.parseDouble(distintos[pos][1]) + Double.parseDouble(mat[i][1]) ) );
+//                    distintos[pos][2] = String.valueOf( Matriz.redondear( Double.parseDouble(distintos[pos][2]) + Double.parseDouble(mat[i][2]) ) );
                 }
             }
         }catch(Exception e){
