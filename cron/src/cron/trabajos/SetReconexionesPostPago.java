@@ -61,8 +61,8 @@ public class SetReconexionesPostPago implements Job{
                 }
 
                 if(!objDataBase.ejecutar("update tbl_prefactura_rubro as PR "
-                        + "set id_rubro=(select id_rubro from tbl_rubro where replace(rubro, 'Reconexión ', '')::int=PR.id_sucursal and id_rubro between 2 and 13) "
-                        + "where id_rubro between 2 and 13;")){
+                        + "set id_rubro=(select id_rubro from tbl_rubro where replace(rubro, 'Reconexión ', '')::int=PR.id_sucursal and rubro like 'Reconexión%') "
+                        + "where rubro = 'Reconexión';")){
                     System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Error en reasignación del rubro reconexiones a la sucursal correspondiente prepago. " + objDataBase.getError());
                 }
             }finally{
@@ -100,8 +100,8 @@ public class SetReconexionesPostPago implements Job{
                 }
 
                 if(!objDataBase.ejecutar("update tbl_prefactura_rubro as PR "
-                        + "set id_rubro=(select id_rubro from tbl_rubro where replace(rubro, 'Reconexión ', '')::int=PR.id_sucursal and id_rubro between 2 and 13) "
-                        + "where id_rubro between 2 and 13;")){
+                        + "set id_rubro=(select id_rubro from tbl_rubro where replace(rubro, 'Reconexión ', '')::int=PR.id_sucursal and rubro like 'Reconexión%') "
+                        + "where rubro = 'Reconexión';")){
                     System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Error en reasignación del rubro reconexiones a la sucursal correspondiente postgpago. " + objDataBase.getError());
                 }
             }finally{

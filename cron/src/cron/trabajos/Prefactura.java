@@ -63,12 +63,8 @@ public class Prefactura implements Job{
         
         
         //      Actualizar dias de conexion de Prefacturas de periodos anteriores
-        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando actualización de dias de conexion de prefacturas de periodos anteriores");
-        try{
-            
-            //  prepagos y postpagos todos
-            objDataBase.consulta("select proc_actualizaPrefacturaMasDiasAntesCortes();");
-            
+//        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando actualización de dias de conexion de prefacturas de periodos anteriores");
+//        try{
             
 //            //  postpago
 //            objDataBase.ejecutar("with tmp as( \n" +
@@ -108,9 +104,9 @@ public class Prefactura implements Job{
 //                ") \n" +
 //                "update tbl_prefactura as P set dias_conexion=5, recalcular =true, detalle_suspencion =' antes del corte' \n" +
 //                "where dias_conexion=30 and p.id_prefactura in(select id_prefactura from tmp where tmp.periodo=(now()::date - '1 month'::interval)::date)");
-        }finally{
-            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalizando actualización de dias de conexion de prefacturas de periodos anteriores");
-        }
+//        }finally{
+//            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalizando actualización de dias de conexion de prefacturas de periodos anteriores");
+//        }
         
         
         
@@ -119,6 +115,8 @@ public class Prefactura implements Job{
         System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando generación de prefacturas");
         try{
             objDataBase.consulta("select proc_generarPreFacturas();");
+//            prepagos todos
+            objDataBase.consulta("select proc_actualizaPrefacturaMasDiasAntesCortesPrepago();");
         }finally{
             System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalizando generación de prefacturas");
         }

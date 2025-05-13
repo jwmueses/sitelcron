@@ -228,7 +228,7 @@ public class EjecutarProcesos  implements Job{
         
         System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando cambio de clientes a tercera edad");
         try{
-            objDataBase.consulta("update tbl_cliente set fecha_cambio_3_edad=now() " +
+            objDataBase.ejecutar("update tbl_cliente set fecha_cambio_3_edad=now() " +
                     "where id_cliente in(select id_cliente from tbl_cliente where date_trunc('day'::text, age(now(), fecha_nacimiento::timestamp with time zone)) = '65 years' )");
         } finally{
             System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de cambio de clientes a tercera edad");
@@ -480,7 +480,7 @@ public class EjecutarProcesos  implements Job{
         
         
                 
-//      GENERAR RECONEXIONES POSPAGO  NACIONAL      
+//      GENERAR RECONEXIONES  NACIONAL      
         
 
 
@@ -497,8 +497,8 @@ public class EjecutarProcesos  implements Job{
                 }
 
                 if(!objDataBase.ejecutar("update tbl_prefactura_rubro as PR "
-                        + "set id_rubro=(select id_rubro from tbl_rubro where replace(rubro, 'Reconexión ', '')::int=PR.id_sucursal and id_rubro between 2 and 13) "
-                        + "where id_rubro between 2 and 13;")){
+                        + "set id_rubro=(select id_rubro from tbl_rubro where replace(rubro, 'Reconexión ', '')::int=PR.id_sucursal and rubro like 'Reconexión%') "
+                        + "where rubro = 'Reconexión';")){
                     System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Error en reasignación del rubro reconexiones a la sucursal correspondiente prepago. " + objDataBase.getError());
                 }
             }finally{
@@ -528,8 +528,8 @@ public class EjecutarProcesos  implements Job{
                 }
 
                 if(!objDataBase.ejecutar("update tbl_prefactura_rubro as PR "
-                        + "set id_rubro=(select id_rubro from tbl_rubro where replace(rubro, 'Reconexión ', '')::int=PR.id_sucursal and id_rubro between 2 and 13) "
-                        + "where id_rubro between 2 and 13;")){
+                        + "set id_rubro=(select id_rubro from tbl_rubro where replace(rubro, 'Reconexión ', '')::int=PR.id_sucursal and rubro like 'Reconexión%') "
+                        + "where rubro = 'Reconexión';")){
                     System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Error en reasignación del rubro reconexiones a la sucursal correspondiente postgpago. " + objDataBase.getError());
                 }
             }finally{
@@ -557,6 +557,14 @@ public class EjecutarProcesos  implements Job{
                 System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalizando recalculo de prefacturas postpago");
             }
 
+            
+            //      Actualizar dias de conexion de Prefacturas de periodos anteriores
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando actualización de dias de conexion de prefacturas postpago de periodos anteriores");
+            try{
+                objDataBase.consulta("select proc_actualizaPrefacturaMasDiasAntesCortesPostpago()");
+            }finally{
+                System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalizando actualización de dias de conexion de prefacturas postpago de periodos anteriores");
+            }
             
         }
         
