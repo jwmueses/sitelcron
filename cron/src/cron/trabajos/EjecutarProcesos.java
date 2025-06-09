@@ -558,13 +558,13 @@ public class EjecutarProcesos  implements Job{
             }
 
             
-            //      Actualizar dias de conexion de Prefacturas de periodos anteriores
-            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando actualización de dias de conexion de prefacturas postpago de periodos anteriores");
-            try{
-                objDataBase.consulta("select proc_actualizaPrefacturaMasDiasAntesCortesPostpago()");
-            }finally{
-                System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalizando actualización de dias de conexion de prefacturas postpago de periodos anteriores");
-            }
+//            //      Actualizar dias de conexion de Prefacturas de periodos anteriores
+//            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando actualización de dias de conexion de prefacturas postpago de periodos anteriores");
+//            try{
+//                objDataBase.consulta("select proc_actualizaPrefacturaMasDiasAntesCortesPostpago()");
+//            }finally{
+//                System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalizando actualización de dias de conexion de prefacturas postpago de periodos anteriores");
+//            }
             
         }
         
