@@ -58,7 +58,7 @@ public class EjecutarProcesos  implements Job{
             // levanta la opcion de no cobro cuando termina la fecha del convenio del canje
             objDataBase.ejecutar("update tbl_instalacion set estado_solicitud_no_cobrar='t', cobrar=true, fecha_fin_canje=null, es_canje=false, "
                     + "motivo_no_cobrar = motivo_no_cobrar || '. Finalizacion de convenio ' || now()::date "
-                    + "where estado_servicio not in('p','t','1') and not cobrar and es_canje=true and fecha_fin_canje <= now()::date");
+                    + "where estado_servicio not in('p','t','1') and not cobrar and fecha_fin_canje <= now()::date");
             
             // levanta la opcion de no cobro cuando renuncia un empleado
             objDataBase.ejecutar("with A as(\n" +
