@@ -13,6 +13,8 @@
 package cron.trabajos;
 import java.sql.ResultSet;
 import java.time.LocalDate;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 
 public class Fecha
@@ -282,6 +284,15 @@ public class Fecha
         }
         return fechaSQL;
     }
+    
+    public static String SQLaISO(String fecha) {
+        String fechaISO = fecha;
+        if (fecha.indexOf("/") > 0) {
+            String vecFecha[] = fecha.split("/");
+            fechaISO = vecFecha[2] + "-" + vecFecha[1] + "-" + vecFecha[0];
+        }
+        return fechaISO;
+    }
 
     /**
   * Trunca una fecha y hora, y devuelve solo la parte de la fecha.
@@ -449,6 +460,33 @@ public class Fecha
             System.out.println(ex);
         }
         return cad;
+    }
+    
+    public static String FechaConverter(String cadenaFecha)
+    {
+        String fechaISO = cadenaFecha;
+        if ( cadenaFecha.length() > 10 ) {
+            // Formato de salida deseado
+            DateTimeFormatter formatoSalida = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            try {
+                if ( cadenaFecha.indexOf("/") > 0 ) {
+                    // Convertir la segunda cadena
+                    // Definir un formateador para la entrada
+                    DateTimeFormatter formatoEntrada2 = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss.SSS");
+                    ZonedDateTime zonedDateTime2 = ZonedDateTime.parse(cadenaFecha, formatoEntrada2);
+                    fechaISO = zonedDateTime2.format(formatoSalida);
+                } else {
+                    // Convertir la primera cadena
+                    // ZonedDateTime es ideal para cadenas con zona horaria (-05:00)
+                    ZonedDateTime zonedDateTime = ZonedDateTime.parse(cadenaFecha);
+                    fechaISO = zonedDateTime.format(formatoSalida);
+                }
+            } catch (Exception e) {
+                fechaISO = cadenaFecha.substring(0, 10);
+                e.printStackTrace();
+            }
+        }
+        return Fecha.SQLaISO( fechaISO );
     }
     
 }

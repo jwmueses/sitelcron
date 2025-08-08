@@ -85,6 +85,25 @@ public class ServidoresCorte implements Job{
         }
         
         
+        
+        
+        
+        
+        
+        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": generacion de claves de acceso de facturas");
+        try{
+            objDataBase.ejecutar("update tbl_factura_venta set estado_documento = 'r' , novedades = 'clave de acceso generada en db' ,\n" +
+                "clave_acceso = TO_CHAR(fecha_emision, 'DDMMYYYY') || '0110917288570012' || replace(serie_factura, '-', '') || '' || to_char(num_factura, 'FM000000000') || '123456781' \n" +
+                "|| get_digito_verificador(  TO_CHAR(fecha_emision, 'DDMMYYYY') || '0110917288570012' || replace(serie_factura, '-', '') || '' || to_char(num_factura, 'FM000000000') || '123456781'  )  \n" +
+                "where fecha_emision >='2025-08-07' and clave_acceso is null;");
+        }catch(Exception e){
+            System.out.println("Error obteniendo promociones " + e.getMessage() );
+        }
+        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio generacion de claves de acceso de facturas");
+        
+        
+        
+        
                 
         try{
         //  hora actual   >=  05:29       && hora actual <= 23:59 

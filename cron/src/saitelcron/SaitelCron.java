@@ -68,6 +68,32 @@ public class SaitelCron implements Daemon{
             
             
             
+            
+            
+            //  CONSULTAR AUTRORIZACIONES DE DOCUMENTOS ELECTRONICOS
+            JobDetail trabajoSriAut = JobBuilder.newJob(SRI.class)
+                    .withIdentity("servidoresCorte", "saitel").build();
+            //Date startTime = DateBuilder.nextGivenSecondDate(null, 10);
+            Date inicioSriAut = DateBuilder.dateOf(1, 01, 00);
+            SimpleTrigger disparadorSriAut = TriggerBuilder.newTrigger()
+                        .withIdentity("todoElTiempoCada1Horas", "saitel")
+                        .startAt(inicioSriAut)
+                        .withSchedule( SimpleScheduleBuilder
+                                .simpleSchedule()
+                                .withIntervalInHours(1)  //  .withIntervalInHours(1)     pruebas . withIntervalInMinutes(5)
+                                .repeatForever()
+                        )
+                        .build();
+            
+            ejecutar.scheduleJob(trabajoSriAut, disparadorSriAut);
+            ejecutar.start();
+            
+            
+            
+            
+            
+            
+            
             //  EMISION DE FACTURAS PENDIENTES DEL CASH PICHINCHA
             JobDetail trabajo11 = JobBuilder.newJob(Facturar.class)
                     .withIdentity("facturar", "saitel").build();

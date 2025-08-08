@@ -249,7 +249,7 @@ public class Facturar implements Job{
             
             // recalculo de valores de prefacturas antes de facturar
             try {
-                String clientesRecalcular = "select id_prefactura from vta_prefactura_todas where por_emitir_destino in('Pichincha', 'WesternUnion', 'Pagomedios') and por_emitir_factura=true" + 
+                String clientesRecalcular = "select id_prefactura from vta_prefactura_todas where por_emitir_destino in('Pichincha', 'WesternUnion', 'Pagomedios', 'SERVIPAGOS') and por_emitir_factura=true" + 
                         ( Fecha.getDia() == 1 
                         ? " union " // convenio de tarjeta de credito prepago mes actual y postpago mes anterior
                             + "select id_prefactura from vta_prefactura_todas as F inner join tbl_instalacion as I  on F.id_instalacion=I.id_instalacion \n"
@@ -273,7 +273,7 @@ public class Facturar implements Job{
             }
             
 
-            String aFacturar = "select *, total+comision_cash as total_comision from vta_prefactura_todas where por_emitir_destino in('Pichincha', 'WesternUnion', 'Pagomedios') and por_emitir_factura=true" + 
+            String aFacturar = "select *, total+comision_cash as total_comision from vta_prefactura_todas where por_emitir_destino in('Pichincha', 'WesternUnion', 'Pagomedios', 'SERVIPAGOS') and por_emitir_factura=true" + 
                     ( Fecha.getDia() == 1 
                         ? " union " // convenio de tarjeta de credito prepago mes actual y postpago mes anterior
                             + "select F.*, total as total_comision from vta_prefactura_todas as F inner join tbl_instalacion as I  on F.id_instalacion=I.id_instalacion \n"

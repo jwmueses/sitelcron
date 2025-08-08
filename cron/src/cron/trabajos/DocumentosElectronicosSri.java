@@ -25,7 +25,8 @@ public class DocumentosElectronicosSri{
     private String mails[][] = null;
     
     
-    public void execute() {
+    public void execute() 
+    {
         
         String doc_ip = Parametro.getDocumentalIp();      //  127.0.0.1     pruebas = 192.168.217.16
         int doc_puerto = Parametro.getDocumentalPuerto();
@@ -61,55 +62,59 @@ public class DocumentosElectronicosSri{
 
 
             //  Envio de facturas
-            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de envio de facturas al SRI. " + rutaArchivoFirmado );
-            String pkFacturasRecibidos = "";
-            try{
-                //  no se enviaran las facturas de 020 > redfacilito,  023 > servipago,   025 > pagomedios(tarjeta de credito desde pag Web)
-                ResultSet rs = objDataBase.consulta("select id_factura_venta, serie_factura || '-' || num_factura as numero, clave_acceso from tbl_factura_venta where estado_documento='f' and fecha_emision >='2024-01-01'");
-                while(rs.next()){
-                    try{
-                        String clave_acceso = rs.getString("clave_acceso")!=null ? rs.getString("clave_acceso") : "";
-                        String numero = rs.getString("numero")!=null ? rs.getString("numero") : "";
-                        String id_factura_venta = rs.getString("id_factura_venta")!=null ? rs.getString("id_factura_venta") : "";
-
-                        ec.gob.sri.comprobantes.ws.RespuestaSolicitud respuestaRecepcion = new ec.gob.sri.comprobantes.ws.RespuestaSolicitud();
-                        File ArchivoXML = new File(rutaArchivoFirmado + File.separatorChar + clave_acceso + ".xml");
-
-                        respuestaRecepcion = EnvioComprobantesWS.obtenerRespuestaEnvio(ArchivoXML, clave_acceso, Parametro.getServicioWebEnvio());
-                        String estado = respuestaRecepcion.getEstado();
-                        if(estado != null){
-                            if(estado.equals("RECIBIDA")){
-//                                System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": " + clave_acceso);
-                                pkFacturasRecibidos += id_factura_venta + ",";
-                            }else {
-                                String respuesta = EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion);
-                                if (estado.equals("DEVUELTA")) {
-                                    objDataBase.ejecutar("update tbl_factura_venta set estado_documento='n', mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
-                                        "' where id_factura_venta="+id_factura_venta);
-                                }else{
-                                    objDataBase.ejecutar("update tbl_factura_venta set mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
-                                        "' where id_factura_venta="+id_factura_venta);
-                                }
-                            }
-                        }else{
-                            objDataBase.ejecutar("update tbl_factura_venta set mensaje=' Error en documento No. " + numero + ". " + EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion)+
-                                "' where id_factura_venta="+id_factura_venta);
-                        }
-                    }catch(Exception e){
-                        System.out.println("Error en envio: " + e.getMessage());
-                    }
-                }
-
-                rs.close();
-            }catch(Exception e){
-                System.out.println(e.getMessage());
-            }
-            if(pkFacturasRecibidos.compareTo("")!=0){
-                pkFacturasRecibidos = pkFacturasRecibidos.substring( 0, pkFacturasRecibidos.length()-1 );
-                objDataBase.ejecutar("update tbl_factura_venta set estado_documento='r' where id_factura_venta in ("+pkFacturasRecibidos+")");
-            }
-
-            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalizacion de envio de facturas al SRI");
+//            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de envio de facturas al SRI. " + rutaArchivoFirmado );
+//            String pkFacturasRecibidos = "";
+//            try{
+//                //  no se enviaran las facturas de 020 > redfacilito,  023 > servipago,   025 > pagomedios(tarjeta de credito desde pag Web)
+//                ResultSet rs = objDataBase.consulta("select id_factura_venta, serie_factura || '-' || num_factura as numero, clave_acceso, fecha_emision from tbl_factura_venta where estado_documento='f' and fecha_emision >='2024-01-01'");
+//                while(rs.next()){
+//                    try{
+//                        String clave_acceso = rs.getString("clave_acceso")!=null ? rs.getString("clave_acceso") : "";
+//                        String numero = rs.getString("numero")!=null ? rs.getString("numero") : "";
+//                        String id_factura_venta = rs.getString("id_factura_venta")!=null ? rs.getString("id_factura_venta") : "";
+//                        String fecha_emision = rs.getString("fecha_emision")!=null ? rs.getString("fecha_emision") : "";
+//
+//                        if ( Fecha.getTimeStamp( fecha_emision )  ==  Fecha.getTimeStamp( Fecha.getFecha("ISO") ) ) {
+//                            ec.gob.sri.comprobantes.ws.RespuestaSolicitud respuestaRecepcion = new ec.gob.sri.comprobantes.ws.RespuestaSolicitud();
+//                            File ArchivoXML = new File(rutaArchivoFirmado + File.separatorChar + clave_acceso + ".xml");
+//
+//                            respuestaRecepcion = EnvioComprobantesWS.obtenerRespuestaEnvio(ArchivoXML, clave_acceso, Parametro.getServicioWebEnvio());
+//                            String estado = respuestaRecepcion.getEstado();
+//                            if(estado != null){
+//                                if(estado.equals("RECIBIDA")){
+//    //                                System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": " + clave_acceso);
+//                                    pkFacturasRecibidos += id_factura_venta + ",";
+//                                }else {
+//                                    String respuesta = EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion);
+//                                    if (estado.equals("DEVUELTA")) {
+//                                        objDataBase.ejecutar("update tbl_factura_venta set estado_documento='n', mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
+//                                            "' where id_factura_venta="+id_factura_venta);
+//                                    }else{
+//                                        objDataBase.ejecutar("update tbl_factura_venta set mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
+//                                            "' where id_factura_venta="+id_factura_venta);
+//                                    }
+//                                }
+//                            }else{
+//                                objDataBase.ejecutar("update tbl_factura_venta set mensaje=' Error en documento No. " + numero + ". " + EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion)+
+//                                    "' where id_factura_venta="+id_factura_venta);
+//                            }
+//                        }
+//                        
+//                    }catch(Exception e){
+//                        System.out.println("Error en envio: " + e.getMessage());
+//                    }
+//                }
+//
+//                rs.close();
+//            }catch(Exception e){
+//                System.out.println(e.getMessage());
+//            }
+//            if(pkFacturasRecibidos.compareTo("")!=0){
+//                pkFacturasRecibidos = pkFacturasRecibidos.substring( 0, pkFacturasRecibidos.length()-1 );
+//                objDataBase.ejecutar("update tbl_factura_venta set estado_documento='r' where id_factura_venta in ("+pkFacturasRecibidos+")");
+//            }
+//
+//            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalizacion de envio de facturas al SRI");
 
 
 
@@ -122,35 +127,38 @@ public class DocumentosElectronicosSri{
             //  Envio de retenciones
             String pkRetencionesRecibidos = "";
             try{
-                ResultSet rs = objDataBase.consulta("select id_retencion_compra, ret_num_serie || '-' || ret_num_retencion as numero, clave_acceso from tbl_retencion_compra where estado_documento='f' and anulado=false");
+                ResultSet rs = objDataBase.consulta("select id_retencion_compra, ret_num_serie || '-' || ret_num_retencion as numero, clave_acceso, ret_fecha_emision from tbl_retencion_compra where estado_documento='f' and anulado=false");
                 while(rs.next()){
                     try{
                         String clave_acceso = rs.getString("clave_acceso")!=null ? rs.getString("clave_acceso") : "";
                         String numero = rs.getString("numero")!=null ? rs.getString("numero") : "";
                         String id_retencion_compra = rs.getString("id_retencion_compra")!=null ? rs.getString("id_retencion_compra") : "";
+                        String fecha_emision = rs.getString("ret_fecha_emision")!=null ? rs.getString("ret_fecha_emision") : "";
 
-                        ec.gob.sri.comprobantes.ws.RespuestaSolicitud respuestaRecepcion = new ec.gob.sri.comprobantes.ws.RespuestaSolicitud();
-                        File ArchivoXML = new File(rutaArchivoFirmado + File.separatorChar + clave_acceso + ".xml");
+                        if ( Fecha.getTimeStamp( fecha_emision )  ==  Fecha.getTimeStamp( Fecha.getFecha("ISO") ) ) {
+                            ec.gob.sri.comprobantes.ws.RespuestaSolicitud respuestaRecepcion = new ec.gob.sri.comprobantes.ws.RespuestaSolicitud();
+                            File ArchivoXML = new File(rutaArchivoFirmado + File.separatorChar + clave_acceso + ".xml");
 
-                        respuestaRecepcion = EnvioComprobantesWS.obtenerRespuestaEnvio(ArchivoXML, clave_acceso, Parametro.getServicioWebEnvio());
-                        String estado = respuestaRecepcion.getEstado();
-                        if(estado != null){
-                            if(estado.equals("RECIBIDA")){
-//                                System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": " + clave_acceso);
-                                pkRetencionesRecibidos += id_retencion_compra + ",";
-                            }else {
-                                String respuesta = EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion);
-                                if (estado.equals("DEVUELTA")) {
-                                    objDataBase.ejecutar("update tbl_retencion_compra set estado_documento='n', mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
-                                        "' where id_retencion_compra="+id_retencion_compra);
-                                }else{
-                                    objDataBase.ejecutar("update tbl_retencion_compra set mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
-                                        "' where id_retencion_compra="+id_retencion_compra);
+                            respuestaRecepcion = EnvioComprobantesWS.obtenerRespuestaEnvio(ArchivoXML, clave_acceso, Parametro.getServicioWebEnvio());
+                            String estado = respuestaRecepcion.getEstado();
+                            if(estado != null){
+                                if(estado.equals("RECIBIDA")){
+    //                                System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": " + clave_acceso);
+                                    pkRetencionesRecibidos += id_retencion_compra + ",";
+                                }else {
+                                    String respuesta = EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion);
+                                    if (estado.equals("DEVUELTA")) {
+                                        objDataBase.ejecutar("update tbl_retencion_compra set estado_documento='n', mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
+                                            "' where id_retencion_compra="+id_retencion_compra);
+                                    }else{
+                                        objDataBase.ejecutar("update tbl_retencion_compra set mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
+                                            "' where id_retencion_compra="+id_retencion_compra);
+                                    }
                                 }
+                            }else{
+                                objDataBase.ejecutar("update tbl_retencion_compra set mensaje=' Error en documento No. " + numero + ". " + EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion)+
+                                    "' where id_retencion_compra="+id_retencion_compra);
                             }
-                        }else{
-                            objDataBase.ejecutar("update tbl_retencion_compra set mensaje=' Error en documento No. " + numero + ". " + EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion)+
-                                "' where id_retencion_compra="+id_retencion_compra);
                         }
                     }catch(Exception e){
                         System.out.println("Error en envio: " + e.getMessage());
@@ -177,35 +185,38 @@ public class DocumentosElectronicosSri{
             //  Envio de notas de credito
             String pkNotasCreditoRecibidos = "";
             try{
-                ResultSet rs = objDataBase.consulta("select id_nota_credito_venta, serie_nota || '-' || num_nota as numero, clave_acceso from tbl_nota_credito_venta where estado_documento='f' and anulado=false");
+                ResultSet rs = objDataBase.consulta("select id_nota_credito_venta, serie_nota || '-' || num_nota as numero, clave_acceso, fecha_emision from tbl_nota_credito_venta where estado_documento='f' and anulado=false");
                 while(rs.next()){
                     try{
                         String clave_acceso = rs.getString("clave_acceso")!=null ? rs.getString("clave_acceso") : "";
                         String numero = rs.getString("numero")!=null ? rs.getString("numero") : "";
                         String id_nota_credito_venta = rs.getString("id_nota_credito_venta")!=null ? rs.getString("id_nota_credito_venta") : "";
+                        String fecha_emision = rs.getString("fecha_emision")!=null ? rs.getString("fecha_emision") : "";
 
-                        ec.gob.sri.comprobantes.ws.RespuestaSolicitud respuestaRecepcion = new ec.gob.sri.comprobantes.ws.RespuestaSolicitud();
-                        File ArchivoXML = new File(rutaArchivoFirmado + File.separatorChar + clave_acceso + ".xml");
+                        if ( Fecha.getTimeStamp( fecha_emision )  ==  Fecha.getTimeStamp( Fecha.getFecha("ISO") ) ) {
+                            ec.gob.sri.comprobantes.ws.RespuestaSolicitud respuestaRecepcion = new ec.gob.sri.comprobantes.ws.RespuestaSolicitud();
+                            File ArchivoXML = new File(rutaArchivoFirmado + File.separatorChar + clave_acceso + ".xml");
 
-                        respuestaRecepcion = EnvioComprobantesWS.obtenerRespuestaEnvio(ArchivoXML, clave_acceso, Parametro.getServicioWebEnvio());
-                        String estado = respuestaRecepcion.getEstado();
-                        if(estado != null){
-                            if(estado.equals("RECIBIDA")){
-//                                System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": " + clave_acceso);
-                                pkNotasCreditoRecibidos += id_nota_credito_venta + ",";
-                            }else {
-                                String respuesta = EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion);
-                                if (estado.equals("DEVUELTA")) {
-                                    objDataBase.ejecutar("update tbl_nota_credito_venta set estado_documento='n', mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
-                                        "' where id_nota_credito_venta="+id_nota_credito_venta);
-                                }else{
-                                    objDataBase.ejecutar("update tbl_nota_credito_venta set mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
-                                        "' where id_nota_credito_venta="+id_nota_credito_venta);
+                            respuestaRecepcion = EnvioComprobantesWS.obtenerRespuestaEnvio(ArchivoXML, clave_acceso, Parametro.getServicioWebEnvio());
+                            String estado = respuestaRecepcion.getEstado();
+                            if(estado != null){
+                                if(estado.equals("RECIBIDA")){
+    //                                System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": " + clave_acceso);
+                                    pkNotasCreditoRecibidos += id_nota_credito_venta + ",";
+                                }else {
+                                    String respuesta = EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion);
+                                    if (estado.equals("DEVUELTA")) {
+                                        objDataBase.ejecutar("update tbl_nota_credito_venta set estado_documento='n', mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
+                                            "' where id_nota_credito_venta="+id_nota_credito_venta);
+                                    }else{
+                                        objDataBase.ejecutar("update tbl_nota_credito_venta set mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
+                                            "' where id_nota_credito_venta="+id_nota_credito_venta);
+                                    }
                                 }
+                            }else{
+                                objDataBase.ejecutar("update tbl_nota_credito_venta set mensaje=' Error en documento No. " + numero + ". " + EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion)+
+                                    "' where id_nota_credito_venta="+id_nota_credito_venta);
                             }
-                        }else{
-                            objDataBase.ejecutar("update tbl_nota_credito_venta set mensaje=' Error en documento No. " + numero + ". " + EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion)+
-                                "' where id_nota_credito_venta="+id_nota_credito_venta);
                         }
                     }catch(Exception e){
                         System.out.println("Error en envio: " + e.getMessage());
@@ -237,35 +248,38 @@ public class DocumentosElectronicosSri{
             //  Envio de notas de credito
             String pkLiquidaciones = "";
             try{
-                ResultSet rs = objDataBase.consulta("select id_liquidacion_compra, serie_liquidacion || '-' || num_liquidacion as numero, clave_acceso from tbl_liquidacion_compra where estado_documento='f' and anulado=false");
+                ResultSet rs = objDataBase.consulta("select id_liquidacion_compra, serie_liquidacion || '-' || num_liquidacion as numero, clave_acceso, fecha_emision from tbl_liquidacion_compra where estado_documento='f' and anulado=false");
                 while(rs.next()){
                     try{
                         String clave_acceso = rs.getString("clave_acceso")!=null ? rs.getString("clave_acceso") : "";
                         String numero = rs.getString("numero")!=null ? rs.getString("numero") : "";
                         String id_liquidacion_compra = rs.getString("id_liquidacion_compra")!=null ? rs.getString("id_liquidacion_compra") : "";
+                        String fecha_emision = rs.getString("fecha_emision")!=null ? rs.getString("fecha_emision") : "";
 
-                        ec.gob.sri.comprobantes.ws.RespuestaSolicitud respuestaRecepcion = new ec.gob.sri.comprobantes.ws.RespuestaSolicitud();
-                        File ArchivoXML = new File(rutaArchivoFirmado + File.separatorChar + clave_acceso + ".xml");
+                        if ( Fecha.getTimeStamp( fecha_emision )  ==  Fecha.getTimeStamp( Fecha.getFecha("ISO") ) ) {
+                            ec.gob.sri.comprobantes.ws.RespuestaSolicitud respuestaRecepcion = new ec.gob.sri.comprobantes.ws.RespuestaSolicitud();
+                            File ArchivoXML = new File(rutaArchivoFirmado + File.separatorChar + clave_acceso + ".xml");
 
-                        respuestaRecepcion = EnvioComprobantesWS.obtenerRespuestaEnvio(ArchivoXML, clave_acceso, Parametro.getServicioWebEnvio());
-                        String estado = respuestaRecepcion.getEstado();
-                        if(estado != null){
-                            if(estado.equals("RECIBIDA")){
-//                                System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": " + clave_acceso);
-                                pkLiquidaciones += id_liquidacion_compra + ",";
-                            }else {
-                                String respuesta = EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion);
-                                if (estado.equals("DEVUELTA")) {
-                                    objDataBase.ejecutar("update tbl_liquidacion_compra set estado_documento='n', mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
-                                        "' where id_liquidacion_compra="+id_liquidacion_compra);
-                                }else{
-                                    objDataBase.ejecutar("update tbl_liquidacion_compra set mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
-                                        "' where id_liquidacion_compra="+id_liquidacion_compra);
+                            respuestaRecepcion = EnvioComprobantesWS.obtenerRespuestaEnvio(ArchivoXML, clave_acceso, Parametro.getServicioWebEnvio());
+                            String estado = respuestaRecepcion.getEstado();
+                            if(estado != null){
+                                if(estado.equals("RECIBIDA")){
+    //                                System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": " + clave_acceso);
+                                    pkLiquidaciones += id_liquidacion_compra + ",";
+                                }else {
+                                    String respuesta = EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion);
+                                    if (estado.equals("DEVUELTA")) {
+                                        objDataBase.ejecutar("update tbl_liquidacion_compra set estado_documento='n', mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
+                                            "' where id_liquidacion_compra="+id_liquidacion_compra);
+                                    }else{
+                                        objDataBase.ejecutar("update tbl_liquidacion_compra set mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
+                                            "' where id_liquidacion_compra="+id_liquidacion_compra);
+                                    }
                                 }
+                            }else{
+                                objDataBase.ejecutar("update tbl_liquidacion_compra set mensaje=' Error en documento No. " + numero + ". " + EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion)+
+                                    "' where id_liquidacion_compra="+id_liquidacion_compra);
                             }
-                        }else{
-                            objDataBase.ejecutar("update tbl_liquidacion_compra set mensaje=' Error en documento No. " + numero + ". " + EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion)+
-                                "' where id_liquidacion_compra="+id_liquidacion_compra);
                         }
                     }catch(Exception e){
                         System.out.println("Error en envio: " + e.getMessage());
@@ -294,54 +308,57 @@ public class DocumentosElectronicosSri{
 
 
 
-            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de envio de guias de remision al SRI");
-            //  Envio de notas de credito
-            String pkguiasRemision= "";
-            try{
-                ResultSet rs = objDataBase.consulta("select id_guia_remision, serie || '-' || numero as numero, clave_acceso from tbl_guia_remision where estado_documento='f' and anulado=false");
-                while(rs.next()){
-                    try{
-                        String clave_acceso = rs.getString("clave_acceso")!=null ? rs.getString("clave_acceso") : "";
-                        String numero = rs.getString("numero")!=null ? rs.getString("numero") : "";
-                        String id_guia_remision = rs.getString("id_guia_remision")!=null ? rs.getString("id_guia_remision") : "";
-
-                        ec.gob.sri.comprobantes.ws.RespuestaSolicitud respuestaRecepcion = new ec.gob.sri.comprobantes.ws.RespuestaSolicitud();
-                        File ArchivoXML = new File(rutaArchivoFirmado + File.separatorChar + clave_acceso + ".xml");
-
-                        respuestaRecepcion = EnvioComprobantesWS.obtenerRespuestaEnvio(ArchivoXML, clave_acceso, Parametro.getServicioWebEnvio());
-                        String estado = respuestaRecepcion.getEstado();
-                        if(estado != null){
-                            if(estado.equals("RECIBIDA")){
-//                                System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": " + clave_acceso);
-                                pkguiasRemision += id_guia_remision + ",";
-                            }else {
-                                String respuesta = EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion);
-                                if (estado.equals("DEVUELTA")) {
-                                    objDataBase.ejecutar("update tbl_guia_remision set estado_documento='n', mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
-                                        "' where id_guia_remision="+id_guia_remision);
-                                }else{
-                                    objDataBase.ejecutar("update tbl_guia_remision set mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
-                                        "' where id_guia_remision="+id_guia_remision);
-                                }
-                            }
-                        }else{
-                            objDataBase.ejecutar("update tbl_guia_remision set mensaje=' Error en documento No. " + numero + ". " + EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion)+
-                                "' where id_guia_remision="+id_guia_remision);
-                        }
-                    }catch(Exception e){
-                        System.out.println("Error en envio: " + e.getMessage());
-                    }
-                }
-                rs.close();
-            }catch(Exception e){
-                System.out.println(e.getMessage());
-            }
-            if(pkguiasRemision.compareTo("")!=0){
-                pkguiasRemision = pkguiasRemision.substring( 0, pkguiasRemision.length()-1 );
-                objDataBase.ejecutar("update tbl_guia_remision set estado_documento='r' where id_guia_remision in("+pkguiasRemision+")");
-            }
-
-            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de envio de guias de remision al SRI");
+//            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de envio de guias de remision al SRI");
+//            //  Envio de notas de credito
+//            String pkguiasRemision= "";
+//            try{
+//                ResultSet rs = objDataBase.consulta("select id_guia_remision, serie || '-' || numero as numero, clave_acceso from tbl_guia_remision where estado_documento='f' and anulado=false");
+//                while(rs.next()){
+//                    try{
+//                        String clave_acceso = rs.getString("clave_acceso")!=null ? rs.getString("clave_acceso") : "";
+//                        String numero = rs.getString("numero")!=null ? rs.getString("numero") : "";
+//                        String id_guia_remision = rs.getString("id_guia_remision")!=null ? rs.getString("id_guia_remision") : "";
+//                        String fecha_emision = rs.getString("fecha_emision")!=null ? rs.getString("fecha_emision") : "";
+//
+//                        if ( Fecha.getTimeStamp( fecha_emision )  ==  Fecha.getTimeStamp( Fecha.getFecha("ISO") ) ) {
+//                        ec.gob.sri.comprobantes.ws.RespuestaSolicitud respuestaRecepcion = new ec.gob.sri.comprobantes.ws.RespuestaSolicitud();
+//                        File ArchivoXML = new File(rutaArchivoFirmado + File.separatorChar + clave_acceso + ".xml");
+//
+//                        respuestaRecepcion = EnvioComprobantesWS.obtenerRespuestaEnvio(ArchivoXML, clave_acceso, Parametro.getServicioWebEnvio());
+//                        String estado = respuestaRecepcion.getEstado();
+//                        if(estado != null){
+//                            if(estado.equals("RECIBIDA")){
+////                                System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": " + clave_acceso);
+//                                pkguiasRemision += id_guia_remision + ",";
+//                            }else {
+//                                String respuesta = EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion);
+//                                if (estado.equals("DEVUELTA")) {
+//                                    objDataBase.ejecutar("update tbl_guia_remision set estado_documento='n', mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
+//                                        "' where id_guia_remision="+id_guia_remision);
+//                                }else{
+//                                    objDataBase.ejecutar("update tbl_guia_remision set mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
+//                                        "' where id_guia_remision="+id_guia_remision);
+//                                }
+//                            }
+//                        }else{
+//                            objDataBase.ejecutar("update tbl_guia_remision set mensaje=' Error en documento No. " + numero + ". " + EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion)+
+//                                "' where id_guia_remision="+id_guia_remision);
+//                        }
+//                      }
+//                    }catch(Exception e){
+//                        System.out.println("Error en envio: " + e.getMessage());
+//                    }
+//                }
+//                rs.close();
+//            }catch(Exception e){
+//                System.out.println(e.getMessage());
+//            }
+//            if(pkguiasRemision.compareTo("")!=0){
+//                pkguiasRemision = pkguiasRemision.substring( 0, pkguiasRemision.length()-1 );
+//                objDataBase.ejecutar("update tbl_guia_remision set estado_documento='r' where id_guia_remision in("+pkguiasRemision+")");
+//            }
+//
+//            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de envio de guias de remision al SRI");
 
 
 
@@ -379,315 +396,334 @@ public class DocumentosElectronicosSri{
 
 
 
-        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de consulta de autorizaciones de facturas al SRI");
-        //  Facturas
+//        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de consulta de autorizaciones de facturas al SRI");
+//        //  Facturas
+//
+////        if(pkFacturasRecibidos.compareTo("")!=0){
+//            try{
+//                ResultSet rs = objDataBase.consulta("select id_sucursal, id_factura_venta as id, serie_factura || '-' || num_factura as numero, vendedor as alias, clave_acceso "
+//                    + "from tbl_factura_venta where estado_documento='r' and anulado=false");
+//                while(rs.next()){
+//                    String id_sucursal = rs.getString("id_sucursal")!=null ? rs.getString("id_sucursal") : "";
+//                    String id_documento = rs.getString("id")!=null ? rs.getString("id") : "";
+//                    String numero = rs.getString("numero")!=null ? rs.getString("numero") : "";
+//                    String alias = rs.getString("alias")!=null ? rs.getString("alias") : "";
+//                    String clave_acceso = rs.getString("clave_acceso")!=null ? rs.getString("clave_acceso") : "";
+//
+//                    String respuestaAutoriz = "";
+//                    //File ArchivoXML = new File(DirectorioConfiguracion.getRutaArchivoFirmado()+ File.separatorChar + clave_acceso + ".xml");
+//                    respuestaAutoriz = AutorizacionComprobantesWS.autorizarComprobanteIndividual(clave_acceso, clave_acceso + ".xml", Parametro.getServicioWebAutoriza());
+//
+//                    if (respuestaAutoriz.equals("AUTORIZADO")) {
+//                        autorizacionXml = AutorizacionComprobantesWS.getAutorizacionXml();
+//                        // obtengo en numero de autorizacion
+//                        Xml xml = new Xml();
+//                        xml.SetXml(autorizacionXml);
+//                        String numAutorizacion = xml.getValor("numeroAutorizacion");
+//                        String fechaAutorizacion = xml.getValor("fechaAutorizacion");
+//                        if ( fechaAutorizacion.length() > 10 ) {
+//                            fechaAutorizacion = Fecha.SQLaISO( fechaAutorizacion.substring(0, 10) );
+//                        }
+//                        pkFacturasAutorizadas += "'" + clave_acceso + "',";
+//                        if( objDataBase.ejecutar("update tbl_factura_venta set autorizacion_fecha='"+fechaAutorizacion+"', estado_documento='a', numero_autorizacion='"+numAutorizacion+"', mensaje=null, documento_xml=null where id_factura_venta="+id_documento) ){
+//                            if( this.existeArchivo(objDocumental, "tbl_factura_venta", id_documento) ){
+//                                objDocumental.ejecutar("update tbl_documentos set documentotexto='"+autorizacionXml+"' where tabla='tbl_factura_venta' and id_tabla="+id_documento);
+//                            }else{
+//                                objDocumental.ejecutar("insert into tbl_documentos(documentotexto, numero_documento, id_sucursal, tabla, id_tabla, campo_tabla) values('"+autorizacionXml +
+//                                        "', "+id_sucursal+numero+", "+id_sucursal+", 'tbl_factura_venta', "+id_documento+", 'documentoxml')");
+//                            }
+//                        }
+//
+//                        //this.setDocumentosMail(objArchivo, clave_acceso);
+//
+//                    }else{
+//                        if(respuestaAutoriz.contains("RECHAZADO") || respuestaAutoriz.contains("NO AUTORIZADO")){
+//                            objDataBase.ejecutar("update tbl_factura_venta set estado_documento='n', mensaje='"+
+//                                    respuestaAutoriz.replace("|", ".").replace("\n", " ").replace("\r", " ").replace("\t", " ")+
+//                                    "' where id_factura_venta="+id_documento);
+//                            this.enviarMailEmpleado(alias, respuestaAutoriz, "Factura", numero);
+//                        }
+//                        System.out.println(respuestaAutoriz);
+//                    }
+//                }
+//                rs.close();
+//            }catch(Exception e){
+//                System.out.println( e.getMessage() );
+//            }
+////        }
+//
+//        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de consulta de autorizaciones de facturas al SRI");
 
-//        if(pkFacturasRecibidos.compareTo("")!=0){
-            try{
-                ResultSet rs = objDataBase.consulta("select id_sucursal, id_factura_venta as id, serie_factura || '-' || num_factura as numero, vendedor as alias, clave_acceso "
-                    + "from tbl_factura_venta where estado_documento='r' and anulado=false");
-                while(rs.next()){
-                    String id_sucursal = rs.getString("id_sucursal")!=null ? rs.getString("id_sucursal") : "";
-                    String id_documento = rs.getString("id")!=null ? rs.getString("id") : "";
-                    String numero = rs.getString("numero")!=null ? rs.getString("numero") : "";
-                    String alias = rs.getString("alias")!=null ? rs.getString("alias") : "";
-                    String clave_acceso = rs.getString("clave_acceso")!=null ? rs.getString("clave_acceso") : "";
 
-                    String respuestaAutoriz = "";
-                    //File ArchivoXML = new File(DirectorioConfiguracion.getRutaArchivoFirmado()+ File.separatorChar + clave_acceso + ".xml");
-                    respuestaAutoriz = AutorizacionComprobantesWS.autorizarComprobanteIndividual(clave_acceso, clave_acceso + ".xml", Parametro.getServicioWebAutoriza());
 
-                    if (respuestaAutoriz.equals("AUTORIZADO")) {
-                        autorizacionXml = AutorizacionComprobantesWS.getAutorizacionXml();
-                        // obtengo en numero de autorizacion
-                        Xml xml = new Xml();
-                        xml.SetXml(autorizacionXml);
-                        String numAutorizacion = xml.getValor("numeroAutorizacion");
-                        pkFacturasAutorizadas += "'" + clave_acceso + "',";
-                        if( objDataBase.ejecutar("update tbl_factura_venta set autorizacion_fecha=now()::date, estado_documento='a', numero_autorizacion='"+numAutorizacion+"', mensaje=null, documento_xml=null where id_factura_venta="+id_documento) ){
-                            if( this.existeArchivo(objDocumental, "tbl_factura_venta", id_documento) ){
-                                objDocumental.ejecutar("update tbl_documentos set documentotexto='"+autorizacionXml+"' where tabla='tbl_factura_venta' and id_tabla="+id_documento);
-                            }else{
-                                objDocumental.ejecutar("insert into tbl_documentos(documentotexto, numero_documento, id_sucursal, tabla, id_tabla, campo_tabla) values('"+autorizacionXml +
-                                        "', "+id_sucursal+numero+", "+id_sucursal+", 'tbl_factura_venta', "+id_documento+", 'documentoxml')");
-                            }
-                        }
 
-                        //this.setDocumentosMail(objArchivo, clave_acceso);
 
-                    }else{
-                        if(respuestaAutoriz.contains("RECHAZADO") || respuestaAutoriz.contains("NO AUTORIZADO")){
-                            objDataBase.ejecutar("update tbl_factura_venta set estado_documento='n', mensaje='"+
-                                    respuestaAutoriz.replace("|", ".").replace("\n", " ").replace("\r", " ").replace("\t", " ")+
-                                    "' where id_factura_venta="+id_documento);
-                            this.enviarMailEmpleado(alias, respuestaAutoriz, "Factura", numero);
-                        }
-                        System.out.println(respuestaAutoriz);
-                    }
-                }
-                rs.close();
-            }catch(Exception e){
-                System.out.println( e.getMessage() );
-            }
+
+
+
+
+//        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de consulta de autorizaciones de retenciones al SRI");
+//        //     Retenciones
+//
+////        if(pkRetencionesRecibidos.compareTo("")!=0){
+//            try{
+//                ResultSet rs = objDataBase.consulta("select id_sucursal, id_retencion_compra as id, ret_num_serie || '-' || ret_num_retencion as numero, usuario as alias, clave_acceso "
+//                            + "from tbl_retencion_compra where estado_documento='r' and anulado=false");
+//                while(rs.next()){
+//                    String id_sucursal = rs.getString("id_sucursal")!=null ? rs.getString("id_sucursal") : "";
+//                    String id_documento = rs.getString("id")!=null ? rs.getString("id") : "";
+//                    String numero = rs.getString("numero")!=null ? rs.getString("numero") : "";
+//                    String alias = rs.getString("alias")!=null ? rs.getString("alias") : "";
+//                    String clave_acceso = rs.getString("clave_acceso")!=null ? rs.getString("clave_acceso") : "";
+//
+//                    String respuestaAutoriz = "";
+//                    //File ArchivoXML = new File(DirectorioConfiguracion.getRutaArchivoFirmado()+ File.separatorChar + clave_acceso + ".xml");
+//                    respuestaAutoriz = AutorizacionComprobantesWS.autorizarComprobanteIndividual(clave_acceso, clave_acceso + ".xml", Parametro.getServicioWebAutoriza());
+//
+//                    if (respuestaAutoriz.equals("AUTORIZADO")) {
+//                        autorizacionXml = AutorizacionComprobantesWS.getAutorizacionXml();
+//                        // obtengo en numero de autorizacion
+//                        Xml xml = new Xml();
+//                        xml.SetXml(autorizacionXml);
+//                        String numAutorizacion = xml.getValor("numeroAutorizacion");String fechaAutorizacion = xml.getValor("fechaAutorizacion");
+//                        if ( fechaAutorizacion.length() > 10 ) {
+//                            fechaAutorizacion = Fecha.SQLaISO( fechaAutorizacion.substring(0, 10) );
+//                        }
+//                        pkRetencionesAutorizadas += "'" + clave_acceso + "',";
+//                        if( objDataBase.ejecutar("update tbl_retencion_compra set autorizacion_fecha='"+fechaAutorizacion+"', estado_documento='a', numero_autorizacion='"+numAutorizacion+"', mensaje=null, documento_xml=null where id_retencion_compra="+id_documento) ){
+//                            if( this.existeArchivo(objDocumental, "tbl_retencion_compra", id_documento) ){
+//                                objDocumental.ejecutar("update tbl_documentos set documentotexto='"+autorizacionXml+"' where tabla='tbl_retencion_compra' and id_tabla="+id_documento);
+//                            }else{
+//                                objDocumental.ejecutar("insert into tbl_documentos(documentotexto, numero_documento, id_sucursal, tabla, id_tabla, campo_tabla) values('"+autorizacionXml +
+//                                        "', "+id_sucursal+numero+", "+id_sucursal+", 'tbl_retencion_compra', "+id_documento+", 'documentoxml')");
+//                            }
+//                        }
+//
+//                        //this.setDocumentosMail(objArchivo, clave_acceso);
+//
+//                    }else{
+//                        if(respuestaAutoriz.contains("RECHAZADO") || respuestaAutoriz.contains("NO AUTORIZADO")){
+//                            objDataBase.ejecutar("update tbl_retencion_compra set estado_documento='n', mensaje='"+
+//                                    respuestaAutoriz.replace("|", ".").replace("\n", " ").replace("\r", " ").replace("\t", " ")+
+//                                    "' where id_retencion_compra="+id_documento);
+//                            this.enviarMailEmpleado(alias, respuestaAutoriz, "Retención", numero);
+//                        }
+//                        System.out.println(respuestaAutoriz);
+//                    }
+//                }
+//                rs.close();
+//            }catch(Exception e){
+//                System.out.println( e.getMessage() );
+//            }
+////        }
+//
+//        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de consulta de autorizaciones de retenciones al SRI");
+//
+//
+//
+//
+//
+//
+//
+//
+//        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de consulta de autorizaciones de notas de crédito al SRI");
+//
+//        //     Notas de credito
+//
+////        if(pkNotasCreditoRecibidos.compareTo("")!=0){
+//            try{
+//                ResultSet rs = objDataBase.consulta("select id_sucursal, id_nota_credito_venta as id, serie_nota || '-' || num_nota as numero, usuario as alias, clave_acceso "
+//                            + "from tbl_nota_credito_venta where estado_documento='r' and anulado=false");
+//                while(rs.next()){
+//                    String id_sucursal = rs.getString("id_sucursal")!=null ? rs.getString("id_sucursal") : "";
+//                    String id_documento = rs.getString("id")!=null ? rs.getString("id") : "";
+//                    String numero = rs.getString("numero")!=null ? rs.getString("numero") : "";
+//                    String alias = rs.getString("alias")!=null ? rs.getString("alias") : "";
+//                    String clave_acceso = rs.getString("clave_acceso")!=null ? rs.getString("clave_acceso") : "";
+//
+//                    String respuestaAutoriz = "";
+//                    //File ArchivoXML = new File(DirectorioConfiguracion.getRutaArchivoFirmado()+ File.separatorChar + clave_acceso + ".xml");
+//                    respuestaAutoriz = AutorizacionComprobantesWS.autorizarComprobanteIndividual(clave_acceso, clave_acceso + ".xml", Parametro.getServicioWebAutoriza());
+//
+//                    if (respuestaAutoriz.equals("AUTORIZADO")) {
+//                        autorizacionXml = AutorizacionComprobantesWS.getAutorizacionXml();
+//                        // obtengo en numero de autorizacion
+//                        Xml xml = new Xml();
+//                        xml.SetXml(autorizacionXml);
+//                        String numAutorizacion = xml.getValor("numeroAutorizacion");
+//                        String fechaAutorizacion = xml.getValor("fechaAutorizacion");
+//                        if ( fechaAutorizacion.length() > 10 ) {
+//                            fechaAutorizacion = Fecha.SQLaISO( fechaAutorizacion.substring(0, 10) );
+//                        }
+//                        pkNotasCreditoAutorizadas += "'" + clave_acceso + "',";
+//                        if( objDataBase.ejecutar("update tbl_nota_credito_venta set autorizacion_fecha='"+fechaAutorizacion+"', estado_documento='a', numero_autorizacion='"+numAutorizacion+"', mensaje=null, documento_xml=null where id_nota_credito_venta="+id_documento) ){
+//                            if( this.existeArchivo(objDocumental, "tbl_nota_credito_venta", id_documento) ){
+//                                objDocumental.ejecutar("update tbl_documentos set documentotexto='"+autorizacionXml+"' where tabla='tbl_nota_credito_venta' and id_tabla="+id_documento);
+//                            }else{
+//                                objDocumental.ejecutar("insert into tbl_documentos(documentotexto, numero_documento, id_sucursal, tabla, id_tabla, campo_tabla) values('"+autorizacionXml +
+//                                        "', "+id_sucursal+numero+", "+id_sucursal+", 'tbl_nota_credito_venta', "+id_documento+", 'documentoxml')");
+//                            }
+//                        }
+//
+//                        //this.setDocumentosMail(objArchivo, clave_acceso);
+//
+//                    }else{
+//                        if(respuestaAutoriz.contains("RECHAZADO") || respuestaAutoriz.contains("NO AUTORIZADO")){
+//                            objDataBase.ejecutar("update tbl_nota_credito_venta set estado_documento='n', mensaje='"+
+//                                    respuestaAutoriz.replace("|", ".").replace("\n", " ").replace("\r", " ").replace("\t", " ")+
+//                                    "' where id_nota_credito_venta="+id_documento);
+//                            this.enviarMailEmpleado(alias, respuestaAutoriz, "Nota de crédito", numero);
+//                        }
+//                        System.out.println(respuestaAutoriz);
+//                    }
+//                }
+//                rs.close();
+//            }catch(Exception e){
+//                System.out.println( e.getMessage() );
+//            }
+////        }
+//
+//        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de consulta de autorizaciones de notas de crédito al SRI");
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de consulta de autorizaciones de liquidaciones de compras y servicios al SRI");
+//
+//        //     Liquidaciones de compras
+//
+////        if(pkLiquidaciones.compareTo("")!=0){
+//            try{
+//                ResultSet rs = objDataBase.consulta("select id_sucursal, id_liquidacion_compra as id, serie_liquidacion || '-' || num_liquidacion as numero, usuario as alias, clave_acceso "
+//                            + "from tbl_liquidacion_compra where estado_documento='r' and anulado=false");
+//                while(rs.next()){
+//                    String id_sucursal = rs.getString("id_sucursal")!=null ? rs.getString("id_sucursal") : "";
+//                    String id_documento = rs.getString("id")!=null ? rs.getString("id") : "";
+//                    String numero = rs.getString("numero")!=null ? rs.getString("numero") : "";
+//                    String alias = rs.getString("alias")!=null ? rs.getString("alias") : "";
+//                    String clave_acceso = rs.getString("clave_acceso")!=null ? rs.getString("clave_acceso") : "";
+//
+//                    String respuestaAutoriz = "";
+//                    //File ArchivoXML = new File(DirectorioConfiguracion.getRutaArchivoFirmado()+ File.separatorChar + clave_acceso + ".xml");
+//                    respuestaAutoriz = AutorizacionComprobantesWS.autorizarComprobanteIndividual(clave_acceso, clave_acceso + ".xml", Parametro.getServicioWebAutoriza());
+//
+//                    if (respuestaAutoriz.equals("AUTORIZADO")) {
+//                        autorizacionXml = AutorizacionComprobantesWS.getAutorizacionXml();
+//                        // obtengo en numero de autorizacion
+//                        Xml xml = new Xml();
+//                        xml.SetXml(autorizacionXml);
+//                        String numAutorizacion = xml.getValor("numeroAutorizacion");
+//                        String fechaAutorizacion = xml.getValor("fechaAutorizacion");
+//                        if ( fechaAutorizacion.length() > 10 ) {
+//                            fechaAutorizacion = Fecha.SQLaISO( fechaAutorizacion.substring(0, 10) );
+//                        }
+//                        pkLiquidacionesAutorizadas += "'" + clave_acceso + "',";
+//                        if( objDataBase.ejecutar("update tbl_liquidacion_compra set autorizacion_fecha='"+fechaAutorizacion+"', estado_documento='a', numero_autorizacion='"+numAutorizacion+"', mensaje=null where id_liquidacion_compra="+id_documento) ){
+//                            if( this.existeArchivo(objDocumental, "tbl_liquidacion_compra", id_documento) ){
+//                                objDocumental.ejecutar("update tbl_documentos set documentotexto='"+autorizacionXml+"' where tabla='tbl_liquidacion_compra' and id_tabla="+id_documento);
+//                            }else{
+//                                objDocumental.ejecutar("insert into tbl_documentos(documentotexto, numero_documento, id_sucursal, tabla, id_tabla, campo_tabla) values('"+autorizacionXml +
+//                                        "', "+id_sucursal+numero+", "+id_sucursal+", 'tbl_liquidacion_compra', "+id_documento+", 'documentoxml')");
+//                            }
+//                        }
+//
+//                        //this.setDocumentosMail(objArchivo, clave_acceso);
+//
+//                    }else{
+//                        if(respuestaAutoriz.contains("RECHAZADO") || respuestaAutoriz.contains("NO AUTORIZADO")){
+//                            objDataBase.ejecutar("update tbl_liquidacion_compra set estado_documento='n', mensaje='"+
+//                                    respuestaAutoriz.replace("|", ".").replace("\n", " ").replace("\r", " ").replace("\t", " ")+
+//                                    "' where tbl_liquidacion_compra="+id_documento);
+//                            this.enviarMailEmpleado(alias, respuestaAutoriz, "Liquidación de compras y servicios", numero);
+//                        }
+//                        System.out.println(respuestaAutoriz);
+//                    }
+//                }
+//                rs.close();
+//            }catch(Exception e){
+//                System.out.println( e.getMessage() );
+//            }
+////        }
+//
+//        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de consulta de autorizaciones de liquidaciones de compras y servicios al SRI");
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de consulta de autorizaciones de guias de remision al SRI");
+//
+//        //     Guias de remision
+
+//        if(pkguiasRemision.compareTo("")!=0){
+//            try{
+//                ResultSet rs = objDataBase.consulta("select id_sucursal, id_guia_remision as id, serie || '-' || numero as numero, usuario as alias, clave_acceso "
+//                            + "from tbl_guia_remision where estado_documento='r'");
+//                while(rs.next()){
+//                    String id_sucursal = rs.getString("id_sucursal")!=null ? rs.getString("id_sucursal") : "";
+//                    String id_documento = rs.getString("id")!=null ? rs.getString("id") : "";
+//                    String numero = rs.getString("numero")!=null ? rs.getString("numero") : "";
+//                    String alias = rs.getString("alias")!=null ? rs.getString("alias") : "";
+//                    String clave_acceso = rs.getString("clave_acceso")!=null ? rs.getString("clave_acceso") : "";
+//
+//                    String respuestaAutoriz = "";
+//                    //File ArchivoXML = new File(DirectorioConfiguracion.getRutaArchivoFirmado()+ File.separatorChar + clave_acceso + ".xml");
+//                    respuestaAutoriz = AutorizacionComprobantesWS.autorizarComprobanteIndividual(clave_acceso, clave_acceso + ".xml", Parametro.getServicioWebAutoriza());
+//
+//                    if (respuestaAutoriz.equals("AUTORIZADO")) {
+//                        autorizacionXml = AutorizacionComprobantesWS.getAutorizacionXml();
+//                        // obtengo en numero de autorizacion
+//                        Xml xml = new Xml();
+//                        xml.SetXml(autorizacionXml);
+//                        String numAutorizacion = xml.getValor("numeroAutorizacion");
+//                        String fechaAutorizacion = xml.getValor("fechaAutorizacion");
+//                        if ( fechaAutorizacion.length() > 10 ) {
+//                            fechaAutorizacion = Fecha.SQLaISO( fechaAutorizacion.substring(0, 10) );
+//                        }
+//                        pkGuiasRemisionAutorizadas += "'" + clave_acceso + "',";
+//                        if( objDataBase.ejecutar("update tbl_guia_remision set autorizacion_fecha='"+fechaAutorizacion+"', estado_documento='a', numero_autorizacion='"+numAutorizacion+"', mensaje=null where id_guia_remision="+id_documento) ){
+//                            if( this.existeArchivo(objDocumental, "tbl_guia_remision", id_documento) ){
+//                                objDocumental.ejecutar("update tbl_documentos set documentotexto='"+autorizacionXml+"' where tabla='tbl_guia_remision' and id_tabla="+id_documento);
+//                            }else{
+//                                objDocumental.ejecutar("insert into tbl_documentos(documentotexto, numero_documento, id_sucursal, tabla, id_tabla, campo_tabla) values('"+autorizacionXml +
+//                                        "', "+id_sucursal+numero+", "+id_sucursal+", 'tbl_guia_remision', "+id_documento+", 'documentoxml')");
+//                            }
+//                        }
+//
+//                        //this.setDocumentosMail(objArchivo, clave_acceso);
+//
+//                    }else{
+//                        if(respuestaAutoriz.contains("RECHAZADO") || respuestaAutoriz.contains("NO AUTORIZADO")){
+//                            objDataBase.ejecutar("update tbl_guia_remision set estado_documento='n', mensaje='"+
+//                                    respuestaAutoriz.replace("|", ".").replace("\n", " ").replace("\r", " ").replace("\t", " ")+
+//                                    "' where id_guia_remision="+id_documento);
+//                            this.enviarMailEmpleado(alias, respuestaAutoriz, "Guía de Remisión", numero);
+//                        }
+//                        System.out.println(respuestaAutoriz);
+//                    }
+//                }
+//                rs.close();
+//            }catch(Exception e){
+//                System.out.println( e.getMessage() );
+//            }
 //        }
-
-        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de consulta de autorizaciones de facturas al SRI");
-
-
-
-
-
-
-
-
-
-        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de consulta de autorizaciones de retenciones al SRI");
-        //     Retenciones
-
-//        if(pkRetencionesRecibidos.compareTo("")!=0){
-            try{
-                ResultSet rs = objDataBase.consulta("select id_sucursal, id_retencion_compra as id, ret_num_serie || '-' || ret_num_retencion as numero, usuario as alias, clave_acceso "
-                            + "from tbl_retencion_compra where estado_documento='r' and anulado=false");
-                while(rs.next()){
-                    String id_sucursal = rs.getString("id_sucursal")!=null ? rs.getString("id_sucursal") : "";
-                    String id_documento = rs.getString("id")!=null ? rs.getString("id") : "";
-                    String numero = rs.getString("numero")!=null ? rs.getString("numero") : "";
-                    String alias = rs.getString("alias")!=null ? rs.getString("alias") : "";
-                    String clave_acceso = rs.getString("clave_acceso")!=null ? rs.getString("clave_acceso") : "";
-
-                    String respuestaAutoriz = "";
-                    //File ArchivoXML = new File(DirectorioConfiguracion.getRutaArchivoFirmado()+ File.separatorChar + clave_acceso + ".xml");
-                    respuestaAutoriz = AutorizacionComprobantesWS.autorizarComprobanteIndividual(clave_acceso, clave_acceso + ".xml", Parametro.getServicioWebAutoriza());
-
-                    if (respuestaAutoriz.equals("AUTORIZADO")) {
-                        autorizacionXml = AutorizacionComprobantesWS.getAutorizacionXml();
-                        // obtengo en numero de autorizacion
-                        Xml xml = new Xml();
-                        xml.SetXml(autorizacionXml);
-                        String numAutorizacion = xml.getValor("numeroAutorizacion");
-                        pkRetencionesAutorizadas += "'" + clave_acceso + "',";
-                        if( objDataBase.ejecutar("update tbl_retencion_compra set autorizacion_fecha=now()::date, estado_documento='a', numero_autorizacion='"+numAutorizacion+"', mensaje=null, documento_xml=null where id_retencion_compra="+id_documento) ){
-                            if( this.existeArchivo(objDocumental, "tbl_retencion_compra", id_documento) ){
-                                objDocumental.ejecutar("update tbl_documentos set documentotexto='"+autorizacionXml+"' where tabla='tbl_retencion_compra' and id_tabla="+id_documento);
-                            }else{
-                                objDocumental.ejecutar("insert into tbl_documentos(documentotexto, numero_documento, id_sucursal, tabla, id_tabla, campo_tabla) values('"+autorizacionXml +
-                                        "', "+id_sucursal+numero+", "+id_sucursal+", 'tbl_retencion_compra', "+id_documento+", 'documentoxml')");
-                            }
-                        }
-
-                        //this.setDocumentosMail(objArchivo, clave_acceso);
-
-                    }else{
-                        if(respuestaAutoriz.contains("RECHAZADO") || respuestaAutoriz.contains("NO AUTORIZADO")){
-                            objDataBase.ejecutar("update tbl_retencion_compra set estado_documento='n', mensaje='"+
-                                    respuestaAutoriz.replace("|", ".").replace("\n", " ").replace("\r", " ").replace("\t", " ")+
-                                    "' where id_retencion_compra="+id_documento);
-                            this.enviarMailEmpleado(alias, respuestaAutoriz, "Retención", numero);
-                        }
-                        System.out.println(respuestaAutoriz);
-                    }
-                }
-                rs.close();
-            }catch(Exception e){
-                System.out.println( e.getMessage() );
-            }
-//        }
-
-        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de consulta de autorizaciones de retenciones al SRI");
-
-
-
-
-
-
-
-
-        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de consulta de autorizaciones de notas de crédito al SRI");
-
-        //     Notas de credito
-
-//        if(pkNotasCreditoRecibidos.compareTo("")!=0){
-            try{
-                ResultSet rs = objDataBase.consulta("select id_sucursal, id_nota_credito_venta as id, serie_nota || '-' || num_nota as numero, usuario as alias, clave_acceso "
-                            + "from tbl_nota_credito_venta where estado_documento='r' and anulado=false");
-                while(rs.next()){
-                    String id_sucursal = rs.getString("id_sucursal")!=null ? rs.getString("id_sucursal") : "";
-                    String id_documento = rs.getString("id")!=null ? rs.getString("id") : "";
-                    String numero = rs.getString("numero")!=null ? rs.getString("numero") : "";
-                    String alias = rs.getString("alias")!=null ? rs.getString("alias") : "";
-                    String clave_acceso = rs.getString("clave_acceso")!=null ? rs.getString("clave_acceso") : "";
-
-                    String respuestaAutoriz = "";
-                    //File ArchivoXML = new File(DirectorioConfiguracion.getRutaArchivoFirmado()+ File.separatorChar + clave_acceso + ".xml");
-                    respuestaAutoriz = AutorizacionComprobantesWS.autorizarComprobanteIndividual(clave_acceso, clave_acceso + ".xml", Parametro.getServicioWebAutoriza());
-
-                    if (respuestaAutoriz.equals("AUTORIZADO")) {
-                        autorizacionXml = AutorizacionComprobantesWS.getAutorizacionXml();
-                        // obtengo en numero de autorizacion
-                        Xml xml = new Xml();
-                        xml.SetXml(autorizacionXml);
-                        String numAutorizacion = xml.getValor("numeroAutorizacion");
-                        pkNotasCreditoAutorizadas += "'" + clave_acceso + "',";
-                        if( objDataBase.ejecutar("update tbl_nota_credito_venta set autorizacion_fecha=now()::date, estado_documento='a', numero_autorizacion='"+numAutorizacion+"', mensaje=null, documento_xml=null where id_nota_credito_venta="+id_documento) ){
-                            if( this.existeArchivo(objDocumental, "tbl_nota_credito_venta", id_documento) ){
-                                objDocumental.ejecutar("update tbl_documentos set documentotexto='"+autorizacionXml+"' where tabla='tbl_nota_credito_venta' and id_tabla="+id_documento);
-                            }else{
-                                objDocumental.ejecutar("insert into tbl_documentos(documentotexto, numero_documento, id_sucursal, tabla, id_tabla, campo_tabla) values('"+autorizacionXml +
-                                        "', "+id_sucursal+numero+", "+id_sucursal+", 'tbl_nota_credito_venta', "+id_documento+", 'documentoxml')");
-                            }
-                        }
-
-                        //this.setDocumentosMail(objArchivo, clave_acceso);
-
-                    }else{
-                        if(respuestaAutoriz.contains("RECHAZADO") || respuestaAutoriz.contains("NO AUTORIZADO")){
-                            objDataBase.ejecutar("update tbl_nota_credito_venta set estado_documento='n', mensaje='"+
-                                    respuestaAutoriz.replace("|", ".").replace("\n", " ").replace("\r", " ").replace("\t", " ")+
-                                    "' where id_nota_credito_venta="+id_documento);
-                            this.enviarMailEmpleado(alias, respuestaAutoriz, "Nota de crédito", numero);
-                        }
-                        System.out.println(respuestaAutoriz);
-                    }
-                }
-                rs.close();
-            }catch(Exception e){
-                System.out.println( e.getMessage() );
-            }
-//        }
-
-        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de consulta de autorizaciones de notas de crédito al SRI");
-
-
-
-
-
-
-
-
-
-
-
-        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de consulta de autorizaciones de liquidaciones de compras y servicios al SRI");
-
-        //     Liquidaciones de compras
-
-//        if(pkLiquidaciones.compareTo("")!=0){
-            try{
-                ResultSet rs = objDataBase.consulta("select id_sucursal, id_liquidacion_compra as id, serie_liquidacion || '-' || num_liquidacion as numero, usuario as alias, clave_acceso "
-                            + "from tbl_liquidacion_compra where estado_documento='r' and anulado=false");
-                while(rs.next()){
-                    String id_sucursal = rs.getString("id_sucursal")!=null ? rs.getString("id_sucursal") : "";
-                    String id_documento = rs.getString("id")!=null ? rs.getString("id") : "";
-                    String numero = rs.getString("numero")!=null ? rs.getString("numero") : "";
-                    String alias = rs.getString("alias")!=null ? rs.getString("alias") : "";
-                    String clave_acceso = rs.getString("clave_acceso")!=null ? rs.getString("clave_acceso") : "";
-
-                    String respuestaAutoriz = "";
-                    //File ArchivoXML = new File(DirectorioConfiguracion.getRutaArchivoFirmado()+ File.separatorChar + clave_acceso + ".xml");
-                    respuestaAutoriz = AutorizacionComprobantesWS.autorizarComprobanteIndividual(clave_acceso, clave_acceso + ".xml", Parametro.getServicioWebAutoriza());
-
-                    if (respuestaAutoriz.equals("AUTORIZADO")) {
-                        autorizacionXml = AutorizacionComprobantesWS.getAutorizacionXml();
-                        // obtengo en numero de autorizacion
-                        Xml xml = new Xml();
-                        xml.SetXml(autorizacionXml);
-                        String numAutorizacion = xml.getValor("numeroAutorizacion");
-                        pkLiquidacionesAutorizadas += "'" + clave_acceso + "',";
-                        if( objDataBase.ejecutar("update tbl_liquidacion_compra set autorizacion_fecha=now()::date, estado_documento='a', numero_autorizacion='"+numAutorizacion+"', mensaje=null where id_liquidacion_compra="+id_documento) ){
-                            if( this.existeArchivo(objDocumental, "tbl_liquidacion_compra", id_documento) ){
-                                objDocumental.ejecutar("update tbl_documentos set documentotexto='"+autorizacionXml+"' where tabla='tbl_liquidacion_compra' and id_tabla="+id_documento);
-                            }else{
-                                objDocumental.ejecutar("insert into tbl_documentos(documentotexto, numero_documento, id_sucursal, tabla, id_tabla, campo_tabla) values('"+autorizacionXml +
-                                        "', "+id_sucursal+numero+", "+id_sucursal+", 'tbl_liquidacion_compra', "+id_documento+", 'documentoxml')");
-                            }
-                        }
-
-                        //this.setDocumentosMail(objArchivo, clave_acceso);
-
-                    }else{
-                        if(respuestaAutoriz.contains("RECHAZADO") || respuestaAutoriz.contains("NO AUTORIZADO")){
-                            objDataBase.ejecutar("update tbl_liquidacion_compra set estado_documento='n', mensaje='"+
-                                    respuestaAutoriz.replace("|", ".").replace("\n", " ").replace("\r", " ").replace("\t", " ")+
-                                    "' where tbl_liquidacion_compra="+id_documento);
-                            this.enviarMailEmpleado(alias, respuestaAutoriz, "Liquidación de compras y servicios", numero);
-                        }
-                        System.out.println(respuestaAutoriz);
-                    }
-                }
-                rs.close();
-            }catch(Exception e){
-                System.out.println( e.getMessage() );
-            }
-//        }
-
-        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de consulta de autorizaciones de liquidaciones de compras y servicios al SRI");
-
-
-
-
-
-
-
-
-
-
-
-
-
-        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de consulta de autorizaciones de guias de remision al SRI");
-
-        //     Guias de remision
-
-        if(pkguiasRemision.compareTo("")!=0){
-            try{
-                ResultSet rs = objDataBase.consulta("select id_sucursal, id_guia_remision as id, serie || '-' || numero as numero, usuario as alias, clave_acceso "
-                            + "from tbl_guia_remision where estado_documento='r'");
-                while(rs.next()){
-                    String id_sucursal = rs.getString("id_sucursal")!=null ? rs.getString("id_sucursal") : "";
-                    String id_documento = rs.getString("id")!=null ? rs.getString("id") : "";
-                    String numero = rs.getString("numero")!=null ? rs.getString("numero") : "";
-                    String alias = rs.getString("alias")!=null ? rs.getString("alias") : "";
-                    String clave_acceso = rs.getString("clave_acceso")!=null ? rs.getString("clave_acceso") : "";
-
-                    String respuestaAutoriz = "";
-                    //File ArchivoXML = new File(DirectorioConfiguracion.getRutaArchivoFirmado()+ File.separatorChar + clave_acceso + ".xml");
-                    respuestaAutoriz = AutorizacionComprobantesWS.autorizarComprobanteIndividual(clave_acceso, clave_acceso + ".xml", Parametro.getServicioWebAutoriza());
-
-                    if (respuestaAutoriz.equals("AUTORIZADO")) {
-                        autorizacionXml = AutorizacionComprobantesWS.getAutorizacionXml();
-                        // obtengo en numero de autorizacion
-                        Xml xml = new Xml();
-                        xml.SetXml(autorizacionXml);
-                        String numAutorizacion = xml.getValor("numeroAutorizacion");
-                        pkGuiasRemisionAutorizadas += "'" + clave_acceso + "',";
-                        if( objDataBase.ejecutar("update tbl_guia_remision set autorizacion_fecha=now()::date, estado_documento='a', numero_autorizacion='"+numAutorizacion+"', mensaje=null where id_guia_remision="+id_documento) ){
-                            if( this.existeArchivo(objDocumental, "tbl_guia_remision", id_documento) ){
-                                objDocumental.ejecutar("update tbl_documentos set documentotexto='"+autorizacionXml+"' where tabla='tbl_guia_remision' and id_tabla="+id_documento);
-                            }else{
-                                objDocumental.ejecutar("insert into tbl_documentos(documentotexto, numero_documento, id_sucursal, tabla, id_tabla, campo_tabla) values('"+autorizacionXml +
-                                        "', "+id_sucursal+numero+", "+id_sucursal+", 'tbl_guia_remision', "+id_documento+", 'documentoxml')");
-                            }
-                        }
-
-                        //this.setDocumentosMail(objArchivo, clave_acceso);
-
-                    }else{
-                        if(respuestaAutoriz.contains("RECHAZADO") || respuestaAutoriz.contains("NO AUTORIZADO")){
-                            objDataBase.ejecutar("update tbl_guia_remision set estado_documento='n', mensaje='"+
-                                    respuestaAutoriz.replace("|", ".").replace("\n", " ").replace("\r", " ").replace("\t", " ")+
-                                    "' where id_guia_remision="+id_documento);
-                            this.enviarMailEmpleado(alias, respuestaAutoriz, "Guía de Remisión", numero);
-                        }
-                        System.out.println(respuestaAutoriz);
-                    }
-                }
-                rs.close();
-            }catch(Exception e){
-                System.out.println( e.getMessage() );
-            }
-        }
-
-        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de consulta de autorizaciones de guias de remision al SRI");
+//
+//        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de consulta de autorizaciones de guias de remision al SRI");
 
 
 
@@ -1027,6 +1063,363 @@ public class DocumentosElectronicosSri{
         return claveAcceso;
     }
     
+    
+    public void obtenerAutorizaciones()
+    {
+
+        String doc_ip = Parametro.getDocumentalIp();      //  127.0.0.1     pruebas = 192.168.217.16
+        int doc_puerto = Parametro.getDocumentalPuerto();
+        String doc_db = Parametro.getDocumentalBaseDatos();
+        String doc_usuario = Parametro.getDocumentalUsuario();
+        String doc_clave = Parametro.getDocumentalClave();
+        DataBase objDocumental = new DataBase( doc_ip, doc_puerto, doc_db, doc_usuario, doc_clave );
+        
+        Archivo objDataBase = new Archivo( Parametro.getIp(), Parametro.getPuerto(), Parametro.getBaseDatos(), Parametro.getUsuario(), Parametro.getClave() );
+        
+        String autorizacionXml;
+        
+        try {
+        
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de consulta de autorizaciones de facturas al SRI");
+            //  Facturas
+
+    //        if(pkFacturasRecibidos.compareTo("")!=0){
+                try{
+                    ResultSet rs = objDataBase.consulta("select id_sucursal, id_factura_venta as id, serie_factura || '-' || num_factura as numero, vendedor as alias, clave_acceso "
+                        + "from tbl_factura_venta where estado_documento='r' and anulado=false");
+                    while(rs.next()){
+                        String id_sucursal = rs.getString("id_sucursal")!=null ? rs.getString("id_sucursal") : "";
+                        String id_documento = rs.getString("id")!=null ? rs.getString("id") : "";
+                        String numero = rs.getString("numero")!=null ? rs.getString("numero") : "";
+                        String alias = rs.getString("alias")!=null ? rs.getString("alias") : "";
+                        String clave_acceso = rs.getString("clave_acceso")!=null ? rs.getString("clave_acceso") : "";
+
+                        String respuestaAutoriz = "";
+                        //File ArchivoXML = new File(DirectorioConfiguracion.getRutaArchivoFirmado()+ File.separatorChar + clave_acceso + ".xml");
+                        respuestaAutoriz = AutorizacionComprobantesWS.autorizarComprobanteIndividual(clave_acceso, clave_acceso + ".xml", Parametro.getServicioWebAutoriza());
+
+                        if (respuestaAutoriz.equals("AUTORIZADO")) {
+                            autorizacionXml = AutorizacionComprobantesWS.getAutorizacionXml();
+                            // obtengo en numero de autorizacion
+                            Xml xml = new Xml();
+                            xml.SetXml(autorizacionXml);
+                            String numAutorizacion = xml.getValor("numeroAutorizacion");
+                            String fechaAutorizacion = xml.getValor("fechaAutorizacion");
+                            if ( fechaAutorizacion.length() > 10 ) {
+                                fechaAutorizacion = Fecha.SQLaISO( fechaAutorizacion.substring(0, 10) );
+                            }
+                            
+                            if( objDataBase.ejecutar("update tbl_factura_venta set autorizacion_fecha='"+fechaAutorizacion+"', estado_documento='a', numero_autorizacion='"+numAutorizacion+"', mensaje=null, documento_xml=null where id_factura_venta="+id_documento) ){
+                                if( this.existeArchivo(objDocumental, "tbl_factura_venta", id_documento) ){
+                                    objDocumental.ejecutar("update tbl_documentos set documentotexto='"+autorizacionXml+"' where tabla='tbl_factura_venta' and id_tabla="+id_documento);
+                                }else{
+                                    objDocumental.ejecutar("insert into tbl_documentos(documentotexto, numero_documento, id_sucursal, tabla, id_tabla, campo_tabla) values('"+autorizacionXml +
+                                            "', "+id_sucursal+numero+", "+id_sucursal+", 'tbl_factura_venta', "+id_documento+", 'documentoxml')");
+                                }
+                            }
+
+                            //this.setDocumentosMail(objArchivo, clave_acceso);
+
+                        }else{
+                            if(respuestaAutoriz.contains("RECHAZADO") || respuestaAutoriz.contains("NO AUTORIZADO")){
+                                objDataBase.ejecutar("update tbl_factura_venta set estado_documento='n', mensaje='"+
+                                        respuestaAutoriz.replace("|", ".").replace("\n", " ").replace("\r", " ").replace("\t", " ")+
+                                        "' where id_factura_venta="+id_documento);
+                                this.enviarMailEmpleado(alias, respuestaAutoriz, "Factura", numero);
+                            }
+                            System.out.println(respuestaAutoriz);
+                        }
+                    }
+                    rs.close();
+                }catch(Exception e){
+                    System.out.println( e.getMessage() );
+                }
+    //        }
+
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de consulta de autorizaciones de facturas al SRI");
+
+
+
+
+
+
+
+
+
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de consulta de autorizaciones de retenciones al SRI");
+            //     Retenciones
+
+    //        if(pkRetencionesRecibidos.compareTo("")!=0){
+                try{
+                    ResultSet rs = objDataBase.consulta("select id_sucursal, id_retencion_compra as id, ret_num_serie || '-' || ret_num_retencion as numero, usuario as alias, clave_acceso "
+                                + "from tbl_retencion_compra where estado_documento='r' and anulado=false");
+                    while(rs.next()){
+                        String id_sucursal = rs.getString("id_sucursal")!=null ? rs.getString("id_sucursal") : "";
+                        String id_documento = rs.getString("id")!=null ? rs.getString("id") : "";
+                        String numero = rs.getString("numero")!=null ? rs.getString("numero") : "";
+                        String alias = rs.getString("alias")!=null ? rs.getString("alias") : "";
+                        String clave_acceso = rs.getString("clave_acceso")!=null ? rs.getString("clave_acceso") : "";
+
+                        String respuestaAutoriz = "";
+                        //File ArchivoXML = new File(DirectorioConfiguracion.getRutaArchivoFirmado()+ File.separatorChar + clave_acceso + ".xml");
+                        respuestaAutoriz = AutorizacionComprobantesWS.autorizarComprobanteIndividual(clave_acceso, clave_acceso + ".xml", Parametro.getServicioWebAutoriza());
+
+                        if (respuestaAutoriz.equals("AUTORIZADO")) {
+                            autorizacionXml = AutorizacionComprobantesWS.getAutorizacionXml();
+                            // obtengo en numero de autorizacion
+                            Xml xml = new Xml();
+                            xml.SetXml(autorizacionXml);
+                            String numAutorizacion = xml.getValor("numeroAutorizacion");String fechaAutorizacion = xml.getValor("fechaAutorizacion");
+                            if ( fechaAutorizacion.length() > 10 ) {
+                                fechaAutorizacion = Fecha.SQLaISO( fechaAutorizacion.substring(0, 10) );
+                            }
+                            
+                            if( objDataBase.ejecutar("update tbl_retencion_compra set autorizacion_fecha='"+fechaAutorizacion+"', estado_documento='a', numero_autorizacion='"+numAutorizacion+"', mensaje=null, documento_xml=null where id_retencion_compra="+id_documento) ){
+                                if( this.existeArchivo(objDocumental, "tbl_retencion_compra", id_documento) ){
+                                    objDocumental.ejecutar("update tbl_documentos set documentotexto='"+autorizacionXml+"' where tabla='tbl_retencion_compra' and id_tabla="+id_documento);
+                                }else{
+                                    objDocumental.ejecutar("insert into tbl_documentos(documentotexto, numero_documento, id_sucursal, tabla, id_tabla, campo_tabla) values('"+autorizacionXml +
+                                            "', "+id_sucursal+numero+", "+id_sucursal+", 'tbl_retencion_compra', "+id_documento+", 'documentoxml')");
+                                }
+                            }
+
+                            //this.setDocumentosMail(objArchivo, clave_acceso);
+
+                        }else{
+                            if(respuestaAutoriz.contains("RECHAZADO") || respuestaAutoriz.contains("NO AUTORIZADO")){
+                                objDataBase.ejecutar("update tbl_retencion_compra set estado_documento='n', mensaje='"+
+                                        respuestaAutoriz.replace("|", ".").replace("\n", " ").replace("\r", " ").replace("\t", " ")+
+                                        "' where id_retencion_compra="+id_documento);
+                                this.enviarMailEmpleado(alias, respuestaAutoriz, "Retención", numero);
+                            }
+                            System.out.println(respuestaAutoriz);
+                        }
+                    }
+                    rs.close();
+                }catch(Exception e){
+                    System.out.println( e.getMessage() );
+                }
+    //        }
+
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de consulta de autorizaciones de retenciones al SRI");
+
+
+
+
+
+
+
+
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de consulta de autorizaciones de notas de crédito al SRI");
+
+            //     Notas de credito
+
+    //        if(pkNotasCreditoRecibidos.compareTo("")!=0){
+                try{
+                    ResultSet rs = objDataBase.consulta("select id_sucursal, id_nota_credito_venta as id, serie_nota || '-' || num_nota as numero, usuario as alias, clave_acceso "
+                                + "from tbl_nota_credito_venta where estado_documento='r' and anulado=false");
+                    while(rs.next()){
+                        String id_sucursal = rs.getString("id_sucursal")!=null ? rs.getString("id_sucursal") : "";
+                        String id_documento = rs.getString("id")!=null ? rs.getString("id") : "";
+                        String numero = rs.getString("numero")!=null ? rs.getString("numero") : "";
+                        String alias = rs.getString("alias")!=null ? rs.getString("alias") : "";
+                        String clave_acceso = rs.getString("clave_acceso")!=null ? rs.getString("clave_acceso") : "";
+
+                        String respuestaAutoriz = "";
+                        //File ArchivoXML = new File(DirectorioConfiguracion.getRutaArchivoFirmado()+ File.separatorChar + clave_acceso + ".xml");
+                        respuestaAutoriz = AutorizacionComprobantesWS.autorizarComprobanteIndividual(clave_acceso, clave_acceso + ".xml", Parametro.getServicioWebAutoriza());
+
+                        if (respuestaAutoriz.equals("AUTORIZADO")) {
+                            autorizacionXml = AutorizacionComprobantesWS.getAutorizacionXml();
+                            // obtengo en numero de autorizacion
+                            Xml xml = new Xml();
+                            xml.SetXml(autorizacionXml);
+                            String numAutorizacion = xml.getValor("numeroAutorizacion");
+                            String fechaAutorizacion = xml.getValor("fechaAutorizacion");
+                            if ( fechaAutorizacion.length() > 10 ) {
+                                fechaAutorizacion = Fecha.SQLaISO( fechaAutorizacion.substring(0, 10) );
+                            }
+                            
+                            if( objDataBase.ejecutar("update tbl_nota_credito_venta set autorizacion_fecha='"+fechaAutorizacion+"', estado_documento='a', numero_autorizacion='"+numAutorizacion+"', mensaje=null, documento_xml=null where id_nota_credito_venta="+id_documento) ){
+                                if( this.existeArchivo(objDocumental, "tbl_nota_credito_venta", id_documento) ){
+                                    objDocumental.ejecutar("update tbl_documentos set documentotexto='"+autorizacionXml+"' where tabla='tbl_nota_credito_venta' and id_tabla="+id_documento);
+                                }else{
+                                    objDocumental.ejecutar("insert into tbl_documentos(documentotexto, numero_documento, id_sucursal, tabla, id_tabla, campo_tabla) values('"+autorizacionXml +
+                                            "', "+id_sucursal+numero+", "+id_sucursal+", 'tbl_nota_credito_venta', "+id_documento+", 'documentoxml')");
+                                }
+                            }
+
+                            //this.setDocumentosMail(objArchivo, clave_acceso);
+
+                        }else{
+                            if(respuestaAutoriz.contains("RECHAZADO") || respuestaAutoriz.contains("NO AUTORIZADO")){
+                                objDataBase.ejecutar("update tbl_nota_credito_venta set estado_documento='n', mensaje='"+
+                                        respuestaAutoriz.replace("|", ".").replace("\n", " ").replace("\r", " ").replace("\t", " ")+
+                                        "' where id_nota_credito_venta="+id_documento);
+                                this.enviarMailEmpleado(alias, respuestaAutoriz, "Nota de crédito", numero);
+                            }
+                            System.out.println(respuestaAutoriz);
+                        }
+                    }
+                    rs.close();
+                }catch(Exception e){
+                    System.out.println( e.getMessage() );
+                }
+    //        }
+
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de consulta de autorizaciones de notas de crédito al SRI");
+
+
+
+
+
+
+
+
+
+
+
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de consulta de autorizaciones de liquidaciones de compras y servicios al SRI");
+
+            //     Liquidaciones de compras
+
+    //        if(pkLiquidaciones.compareTo("")!=0){
+                try{
+                    ResultSet rs = objDataBase.consulta("select id_sucursal, id_liquidacion_compra as id, serie_liquidacion || '-' || num_liquidacion as numero, usuario as alias, clave_acceso "
+                                + "from tbl_liquidacion_compra where estado_documento='r' and anulado=false");
+                    while(rs.next()){
+                        String id_sucursal = rs.getString("id_sucursal")!=null ? rs.getString("id_sucursal") : "";
+                        String id_documento = rs.getString("id")!=null ? rs.getString("id") : "";
+                        String numero = rs.getString("numero")!=null ? rs.getString("numero") : "";
+                        String alias = rs.getString("alias")!=null ? rs.getString("alias") : "";
+                        String clave_acceso = rs.getString("clave_acceso")!=null ? rs.getString("clave_acceso") : "";
+
+                        String respuestaAutoriz = "";
+                        //File ArchivoXML = new File(DirectorioConfiguracion.getRutaArchivoFirmado()+ File.separatorChar + clave_acceso + ".xml");
+                        respuestaAutoriz = AutorizacionComprobantesWS.autorizarComprobanteIndividual(clave_acceso, clave_acceso + ".xml", Parametro.getServicioWebAutoriza());
+
+                        if (respuestaAutoriz.equals("AUTORIZADO")) {
+                            autorizacionXml = AutorizacionComprobantesWS.getAutorizacionXml();
+                            // obtengo en numero de autorizacion
+                            Xml xml = new Xml();
+                            xml.SetXml(autorizacionXml);
+                            String numAutorizacion = xml.getValor("numeroAutorizacion");
+                            String fechaAutorizacion = xml.getValor("fechaAutorizacion");
+                            if ( fechaAutorizacion.length() > 10 ) {
+                                fechaAutorizacion = Fecha.SQLaISO( fechaAutorizacion.substring(0, 10) );
+                            }
+                            
+                            if( objDataBase.ejecutar("update tbl_liquidacion_compra set autorizacion_fecha='"+fechaAutorizacion+"', estado_documento='a', numero_autorizacion='"+numAutorizacion+"', mensaje=null where id_liquidacion_compra="+id_documento) ){
+                                if( this.existeArchivo(objDocumental, "tbl_liquidacion_compra", id_documento) ){
+                                    objDocumental.ejecutar("update tbl_documentos set documentotexto='"+autorizacionXml+"' where tabla='tbl_liquidacion_compra' and id_tabla="+id_documento);
+                                }else{
+                                    objDocumental.ejecutar("insert into tbl_documentos(documentotexto, numero_documento, id_sucursal, tabla, id_tabla, campo_tabla) values('"+autorizacionXml +
+                                            "', "+id_sucursal+numero+", "+id_sucursal+", 'tbl_liquidacion_compra', "+id_documento+", 'documentoxml')");
+                                }
+                            }
+
+                            //this.setDocumentosMail(objArchivo, clave_acceso);
+
+                        }else{
+                            if(respuestaAutoriz.contains("RECHAZADO") || respuestaAutoriz.contains("NO AUTORIZADO")){
+                                objDataBase.ejecutar("update tbl_liquidacion_compra set estado_documento='n', mensaje='"+
+                                        respuestaAutoriz.replace("|", ".").replace("\n", " ").replace("\r", " ").replace("\t", " ")+
+                                        "' where tbl_liquidacion_compra="+id_documento);
+                                this.enviarMailEmpleado(alias, respuestaAutoriz, "Liquidación de compras y servicios", numero);
+                            }
+                            System.out.println(respuestaAutoriz);
+                        }
+                    }
+                    rs.close();
+                }catch(Exception e){
+                    System.out.println( e.getMessage() );
+                }
+    //        }
+
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de consulta de autorizaciones de liquidaciones de compras y servicios al SRI");
+
+
+
+
+
+
+
+
+
+
+
+
+
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de consulta de autorizaciones de guias de remision al SRI");
+
+            //     Guias de remision
+
+//            if(pkguiasRemision.compareTo("")!=0){
+                try{
+                    ResultSet rs = objDataBase.consulta("select id_sucursal, id_guia_remision as id, serie || '-' || numero as numero, usuario as alias, clave_acceso "
+                                + "from tbl_guia_remision where estado_documento='r'");
+                    while(rs.next()){
+                        String id_sucursal = rs.getString("id_sucursal")!=null ? rs.getString("id_sucursal") : "";
+                        String id_documento = rs.getString("id")!=null ? rs.getString("id") : "";
+                        String numero = rs.getString("numero")!=null ? rs.getString("numero") : "";
+                        String alias = rs.getString("alias")!=null ? rs.getString("alias") : "";
+                        String clave_acceso = rs.getString("clave_acceso")!=null ? rs.getString("clave_acceso") : "";
+
+                        String respuestaAutoriz = "";
+                        //File ArchivoXML = new File(DirectorioConfiguracion.getRutaArchivoFirmado()+ File.separatorChar + clave_acceso + ".xml");
+                        respuestaAutoriz = AutorizacionComprobantesWS.autorizarComprobanteIndividual(clave_acceso, clave_acceso + ".xml", Parametro.getServicioWebAutoriza());
+
+                        if (respuestaAutoriz.equals("AUTORIZADO")) {
+                            autorizacionXml = AutorizacionComprobantesWS.getAutorizacionXml();
+                            // obtengo en numero de autorizacion
+                            Xml xml = new Xml();
+                            xml.SetXml(autorizacionXml);
+                            String numAutorizacion = xml.getValor("numeroAutorizacion");
+                            String fechaAutorizacion = xml.getValor("fechaAutorizacion");
+                            if ( fechaAutorizacion.length() > 10 ) {
+                                fechaAutorizacion = Fecha.SQLaISO( fechaAutorizacion.substring(0, 10) );
+                            }
+                            
+                            if( objDataBase.ejecutar("update tbl_guia_remision set autorizacion_fecha='"+fechaAutorizacion+"', estado_documento='a', numero_autorizacion='"+numAutorizacion+"', mensaje=null where id_guia_remision="+id_documento) ){
+                                if( this.existeArchivo(objDocumental, "tbl_guia_remision", id_documento) ){
+                                    objDocumental.ejecutar("update tbl_documentos set documentotexto='"+autorizacionXml+"' where tabla='tbl_guia_remision' and id_tabla="+id_documento);
+                                }else{
+                                    objDocumental.ejecutar("insert into tbl_documentos(documentotexto, numero_documento, id_sucursal, tabla, id_tabla, campo_tabla) values('"+autorizacionXml +
+                                            "', "+id_sucursal+numero+", "+id_sucursal+", 'tbl_guia_remision', "+id_documento+", 'documentoxml')");
+                                }
+                            }
+
+                            //this.setDocumentosMail(objArchivo, clave_acceso);
+
+                        }else{
+                            if(respuestaAutoriz.contains("RECHAZADO") || respuestaAutoriz.contains("NO AUTORIZADO")){
+                                objDataBase.ejecutar("update tbl_guia_remision set estado_documento='n', mensaje='"+
+                                        respuestaAutoriz.replace("|", ".").replace("\n", " ").replace("\r", " ").replace("\t", " ")+
+                                        "' where id_guia_remision="+id_documento);
+                                this.enviarMailEmpleado(alias, respuestaAutoriz, "Guía de Remisión", numero);
+                            }
+                            System.out.println(respuestaAutoriz);
+                        }
+                    }
+                    rs.close();
+                }catch(Exception e){
+                    System.out.println( e.getMessage() );
+                }
+//            }
+
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de consulta de autorizaciones de guias de remision al SRI");
+
+        
+        }catch(Exception e){
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": " + e.getMessage());
+        }finally{
+            objDataBase.cerrar();
+            objDocumental.cerrar();
+        }
+        
+    }
+    
+    
     private boolean enviarMailEmpleado (String alias, String respuestaAutoriz, String documento, String numero)
     {
         try{
@@ -1047,5 +1440,5 @@ public class DocumentosElectronicosSri{
         }    
         return false;
     }
-     
+    
 }

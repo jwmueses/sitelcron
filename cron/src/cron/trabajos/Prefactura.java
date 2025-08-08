@@ -112,9 +112,21 @@ public class Prefactura implements Job{
         
         
         //      Generar Prefacturas
-        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando generación de prefacturas, carga de 5 dias a morosos");
+        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando generación de prefacturas");
         try{
             objDataBase.consulta("select proc_generarPreFacturas();");
+        }finally{
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalizando generación de prefacturas");
+        }
+        
+        
+        
+        
+        
+        
+        //      Generar Prefacturas
+        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando generación de prefacturas, carga de 5 dias a morosos");
+        try{
 //            prepagos todos
             objDataBase.consulta("select proc_actualizaPrefacturaMasDiasAntesCortesPrepago();");
             objDataBase.consulta("select proc_actualizaPrefacturaMasDiasAntesCortesPostpago();");

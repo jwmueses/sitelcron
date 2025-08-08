@@ -12,6 +12,9 @@
 
 package cron.trabajos;
 import ec.gob.sri.FirmaXadesBes;
+import ec.gob.sri.wsc.AutorizacionComprobantesWS;
+import ec.gob.sri.wsc.DirectorioConfiguracion;
+import ec.gob.sri.wsc.EnvioComprobantesWS;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -148,6 +151,10 @@ public class FacturaVenta extends DataBase{
         
         Promocion objPromocion = new Promocion();
         try{    
+            
+            String rutaArchivoFirmado = DirectorioConfiguracion.getRutaArchivoFirmado();
+            
+            
             while(rs.next()){
                 String id_prefactura = rs.getString("id_prefactura")!=null ? rs.getString("id_prefactura") : "-1";
 //                System.out.println("id_prefactura " + id_prefactura);
@@ -194,407 +201,493 @@ public class FacturaVenta extends DataBase{
                     String por_emitir_destino = rs.getString("por_emitir_destino")!=null ? rs.getString("por_emitir_destino") : "";
                             
                     
-                    
-                    try {
-                        ResultSet r = this.consulta("SELECT nombre_comercial, mail_info, num_contacto, sitio_web FROM tbl_sucursal where id_sucursal=" + id_sucursal);
-                        if (r.next()) {
-                            nombre_comercial = (r.getString("nombre_comercial") != null) ? r.getString("nombre_comercial") : "";
-                            emalSaitel = (r.getString("mail_info") != null) ? r.getString("mail_info") : "";
-                            numContSaitel = (r.getString("num_contacto") != null) ? r.getString("num_contacto") : "";
-                            sitioWeb = (r.getString("sitio_web") != null) ? r.getString("sitio_web") : "";
-                            r.close();
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    
-                    
-                    String idFormaPago="97";        //  id forma de pago cash
-                    String formaPago="20";          //  con utilizacion del sistema financiero
-                    String formaPagoCodInterno="h"; //  cash
-                    
-                    
-                    
-                    // CONVENIO DE DEBITO
-                    
-                    if( Matriz.enMatriz(matDebitos, id_instalacion, 0) >=0 && registro_archivo_cash.compareTo("")==0){
-                        idFormaPago="99";        //  id forma de pago credito
-                        formaPago="20";          //  con utilizacion del sistema financiero
-                        formaPagoCodInterno="d";
-                    }
-                    
-                    
-                    if(por_emitir_destino.trim().compareTo("")!=0){
-                    
-                        // WEB SERVICES => SERVIPAGOS    -   PRODUBANCO
-                        if( por_emitir_destino.toLowerCase().compareTo("servipagos")==0 && registro_archivo_cash.compareTo("")!=0){
-                            idFormaPago="23";        //  id forma de pago pagomedios
-                            formaPago="20";          //  con utilizacion del sistema financiero
-                            formaPagoCodInterno="s2";
-                            id_plan_cuenta_banco="284";
-                        } 
-
-                        // WEB SERVICES => PAGOMEDIOS
-    //System.out.println("por_emitir_destino " + por_emitir_destino + ", registro_archivo_cash " + registro_archivo_cash);
-                        if( por_emitir_destino.compareTo("pagomedios")==0 && registro_archivo_cash.compareTo("")!=0){
-                            idFormaPago="24";        //  id forma de pago pagomedios
-                            formaPago="20";          //  con utilizacion del sistema financiero
-                            formaPagoCodInterno="s3";
-                            id_plan_cuenta_banco="569";
-                        }
+                    if ( Float.parseFloat(total_pagar) > 0 ) {
                         
-                        try{
-                            ResultSet rsBanco = this.consulta("SELECT id_plan_cuenta_caja FROM tbl_empresa as E inner join tbl_punto_emision as PE on E.id_punto_emision =PE.id_punto_emision where upper(empresa) like '%" + por_emitir_destino.trim().toUpperCase() + "%'");
-                            if(rsBanco.next()){
-                                id_plan_cuenta_banco = rsBanco.getString("id_plan_cuenta_caja")!=null ? rsBanco.getString("id_plan_cuenta_caja") : id_plan_cuenta_banco;
-                                rsBanco.close();
+                        try {
+                            ResultSet r = this.consulta("SELECT nombre_comercial, mail_info, num_contacto, sitio_web FROM tbl_sucursal where id_sucursal=" + id_sucursal);
+                            if (r.next()) {
+                                nombre_comercial = (r.getString("nombre_comercial") != null) ? r.getString("nombre_comercial") : "";
+                                emalSaitel = (r.getString("mail_info") != null) ? r.getString("mail_info") : "";
+                                numContSaitel = (r.getString("num_contacto") != null) ? r.getString("num_contacto") : "";
+                                sitioWeb = (r.getString("sitio_web") != null) ? r.getString("sitio_web") : "";
+                                r.close();
                             }
-                        }catch(Exception e){
+                        } catch (Exception e) {
                             e.printStackTrace();
                         }
-                        
-                    }
-                                                       
-                    //  POR ANTICIPOS
-                    String idCliAnt = "";
-                    String monto_vajar = "";
-                    if(matAnticipos != null){
-                        if(!matAnticipos.isEmpty()){    
-                            idFormaPago="98";
-                            formaPagoCodInterno="a";
 
-                            double totalPagar = Double.parseDouble(total_pagar);
-                            double minTotalPagarACredito = Double.parseDouble(total_pagar) * pminValorVajaCredito / 100;
-                            double abonos = 0;
-                            double axUltimoAbono = 0;
-                            String axIdCliAnt = "";
-                            String axMontoVajar = "";
-                            Iterator it = matAnticipos.iterator();
-                            while(it.hasNext()){
-                                String matAnticipo[] = (String[])it.next();
 
-    //                            System.out.println("mat anticipo " + matAnticipo[1] + " - " + matAnticipo[3]);
+                        String idFormaPago="97";        //  id forma de pago cash
+                        String formaPago="20";          //  con utilizacion del sistema financiero
+                        String formaPagoCodInterno="h"; //  cash
 
-                                if(matAnticipo[1].compareTo(id_cliente)==0 && matAnticipo[3].compareTo(id_instalacion)==0){    //  verificao si el cliente tiene registrado anticipo
-                                    if( Double.parseDouble(matAnticipo[2]) >= totalPagar){    //  si el anticipo cubre el total de la factura 
-                                        idCliAnt = matAnticipo[0];
-                                        monto_vajar = total_pagar;
-                                        break;
-                                    } else {        //  si el anticipo no cubre el monto
-                                        abonos += Double.parseDouble(matAnticipo[2]);
-                                        axUltimoAbono = Double.parseDouble(matAnticipo[2]);
-                                        axIdCliAnt += matAnticipo[0] + ",";
-                                        axMontoVajar += matAnticipo[2] + ",";
-                                        if(abonos >= totalPagar){     //  si el o los abonos cubren el total se salta al pago
+
+
+                        // CONVENIO DE DEBITO
+
+                        if( Matriz.enMatriz(matDebitos, id_instalacion, 0) >=0 && registro_archivo_cash.compareTo("")==0){
+                            idFormaPago="99";        //  id forma de pago credito
+                            formaPago="20";          //  con utilizacion del sistema financiero
+                            formaPagoCodInterno="d";
+                        }
+
+
+                        if(por_emitir_destino.trim().compareTo("")!=0){
+
+                            // WEB SERVICES => SERVIPAGOS    -   PRODUBANCO
+                            if( por_emitir_destino.toLowerCase().compareTo("servipagos")==0 && registro_archivo_cash.compareTo("")!=0){
+                                idFormaPago="23";        //  id forma de pago pagomedios
+                                formaPago="20";          //  con utilizacion del sistema financiero
+                                formaPagoCodInterno="s2";
+                                id_plan_cuenta_banco="284";
+                            } 
+
+                            // WEB SERVICES => PAGOMEDIOS
+        //System.out.println("por_emitir_destino " + por_emitir_destino + ", registro_archivo_cash " + registro_archivo_cash);
+                            if( por_emitir_destino.compareTo("pagomedios")==0 && registro_archivo_cash.compareTo("")!=0){
+                                idFormaPago="24";        //  id forma de pago pagomedios
+                                formaPago="20";          //  con utilizacion del sistema financiero
+                                formaPagoCodInterno="s3";
+                                id_plan_cuenta_banco="569";
+                            }
+
+                            try{
+                                ResultSet rsBanco = this.consulta("SELECT id_plan_cuenta_caja FROM tbl_empresa as E inner join tbl_punto_emision as PE on E.id_punto_emision =PE.id_punto_emision where upper(empresa) like '%" + por_emitir_destino.trim().toUpperCase() + "%'");
+                                if(rsBanco.next()){
+                                    id_plan_cuenta_banco = rsBanco.getString("id_plan_cuenta_caja")!=null ? rsBanco.getString("id_plan_cuenta_caja") : id_plan_cuenta_banco;
+                                    rsBanco.close();
+                                }
+                            }catch(Exception e){
+                                e.printStackTrace();
+                            }
+
+                        }
+
+                        //  POR ANTICIPOS
+                        String idCliAnt = "";
+                        String monto_vajar = "";
+                        if(matAnticipos != null){
+                            if(!matAnticipos.isEmpty()){    
+                                idFormaPago="98";
+                                formaPagoCodInterno="a";
+
+                                double totalPagar = Double.parseDouble(total_pagar);
+                                double minTotalPagarACredito = Double.parseDouble(total_pagar) * pminValorVajaCredito / 100;
+                                double abonos = 0;
+                                double axUltimoAbono = 0;
+                                String axIdCliAnt = "";
+                                String axMontoVajar = "";
+                                Iterator it = matAnticipos.iterator();
+                                while(it.hasNext()){
+                                    String matAnticipo[] = (String[])it.next();
+
+        //                            System.out.println("mat anticipo " + matAnticipo[1] + " - " + matAnticipo[3]);
+
+                                    if(matAnticipo[1].compareTo(id_cliente)==0 && matAnticipo[3].compareTo(id_instalacion)==0){    //  verificao si el cliente tiene registrado anticipo
+                                        if( Double.parseDouble(matAnticipo[2]) >= totalPagar){    //  si el anticipo cubre el total de la factura 
+                                            idCliAnt = matAnticipo[0];
+                                            monto_vajar = total_pagar;
                                             break;
-                                        }
-                                    }
-                                }
-                            }
-
-                            if(axIdCliAnt.compareTo("")!=0 && abonos>0){
-                                idCliAnt = axIdCliAnt.substring(0, axIdCliAnt.length()-1);
-                                monto_vajar = axMontoVajar = axMontoVajar.substring(0, axMontoVajar.length()-1);
-                                if(abonos == totalPagar){       //  si los abonos cubre el total de la factura se vaja la factura completa
-                                    monto_vajar = axMontoVajar;
-                                } else if(abonos > totalPagar){     // se cubre más del total de la factura se vaja la factura completa
-                                            monto_vajar = axMontoVajar.substring( 0, axMontoVajar.lastIndexOf(",") )  + ","  +  Addons.redondear(totalPagar - (abonos - axUltimoAbono) ) + ","; //    el ultimo abono debe ser 
-                                } else if(abonos >= minTotalPagarACredito){     //  si los abono cubren por lo menos el minimo a vajar se vana credito
-                                            monto_vajar = axMontoVajar;
-                                }
-                            }
-                        }
-                    }    
-                        
-                    
-//System.out.println("por_emitir_destino " + por_emitir_destino + ", registro_archivo_cash " + registro_archivo_cash + ", idFormaPago " + idFormaPago);
-                    
-                    int p = Matriz.enMatriz(matPuntosVirtuales, id_sucursal, 0);
-                    if(p!=-1){
-                        
-                        
-                        String idPuntoEmision = matPuntosVirtuales[p][1];
-                        String usuario = matPuntosVirtuales[p][2];
-                        String serie_factura = matPuntosVirtuales[p][3];
-                        String num_factura = matPuntosVirtuales[p][4];
-                        String direccion_sucursal = matPuntosVirtuales[p][5];
-                        String num_comp_pago = registro_archivo_cash.compareTo("")!=0 
-                                ? registro_archivo_cash 
-                                : fecha_pago.replace("-", "") + hora_pago.replace(":", "") + id_instalacion;
-                        int pos = Matriz.enMatriz(matDetalleFactura, new String[]{id_sucursal,id_producto}, new int[]{0,1});
-                        String p_u = String.valueOf( Addons.redondear(valor_internet / dias_conexion,  4) );
-                        String totalpr = String.valueOf( Addons.redondear( total_internet ) );
-
-                        String ids_productos = id_producto;
-                        String descripciones = "SERVICIO DE INTERNET PLAN "+plan+" Mbps PERIODO FACTURADO "+txt_periodo+" ~";
-                        String cantidades = String.valueOf( dias_conexion );
-                        String preciosUnitarios = p_u;
-//                        int p_des0 = ((edad>=65 || carne_conadis.compareTo("")!=0) && Float.parseFloat(descuento)>0) ? 50 : 0;
-                        String descuentos = "0";
-                        String subtotales = String.valueOf(valor_internet);
-                        String ivas = iva_internet;
-                        String pIvas = matDetalleFactura[pos][6];
-                        String codigoIvas = matDetalleFactura[pos][11];
-                        String totales = totalpr;
-                        String tipoRubros = "p";
-                        String idsPrefacturaRubro = "";
-                        
-                        
-                        
-                        //  promociones
-                        if( objPromocion.aplicarPromocion(id_sucursal, edad, carne_conadis, convenio_pago, forma_pago_cliente, tipo_cuenta, num_cuenta, tarjeta_credito_caduca, 
-                                id_plan_actual, total_internet, Float.parseFloat(descuento), Integer.parseInt(matDetalleFactura[pos][6]) ) ){
-                            descuento = String.valueOf( objPromocion.getDescuento() );
-                            ivas = iva_internet = String.valueOf( objPromocion.getIva() );
-                            totales = totalpr = String.valueOf( objPromocion.getTotal() );
-                        }
-                        
-                        
-                        
-
-                        String matParamAsientoAx[][] = null;
-                        
-                        if(formaPagoCodInterno.compareTo("d")==0){
-                            matParamAsientoAx = Matriz.poner(matParamAsientoAx, new String[]{id_plan_cuenta_x_cobrar, String.valueOf(total_pagar), "0"});
-//                        }else if(forma_pago.compareTo("e")==0){
-//                                 matParamAsientoAx = Matriz.poner(matParamAsientoAx, new String[]{id_plan_cuenta_caja, String.valueOf(ax_total), "0"});
-                        }else if(formaPagoCodInterno.compareTo("c")==0 || formaPagoCodInterno.compareTo("p")==0 || formaPagoCodInterno.compareTo("h")==0){
-                                 matParamAsientoAx = Matriz.poner(matParamAsientoAx, new String[]{id_plan_cuenta_banco, String.valueOf(total_pagar), "0"});
-//                        }else if(forma_pago.compareTo("t")==0 || forma_pago.compareTo("j")==0){
-//                                 float gastosBancarios = Float.parseFloat(gastos_bancos);
-//                                 if(gastosBancarios==0){
-//                                     matParamAsientoAx = Matriz.poner(matParamAsientoAx, new String[]{id_plan_cuenta_banco, String.valueOf(total_pagar), "0"});
-//                                 }else{
-//                                     double diferencia = Addons.redondear( Float.parseFloat(total_pagar) - gastosBancarios );
-//                                     matParamAsientoAx = Matriz.poner(matParamAsientoAx, new String[]{id_plan_cuenta_banco, String.valueOf(diferencia), "0"});
-//                                     matParamAsientoAx = Matriz.poner(matParamAsientoAx, new String[]{idPlanCuentaGastosBancos, String.valueOf(gastosBancarios), "0"});
-//                                 }
-                        }else if(formaPagoCodInterno.compareTo("a")==0){
-                                 matParamAsientoAx = Matriz.poner(matParamAsientoAx, new String[]{id_plan_cuenta_anticipo, String.valueOf(total_pagar), "0"});
-                        }
-                        
-//                        matParamAsientoAx = Matriz.poner(matParamAsientoAx, new String[]{id_plan_cuenta_banco, total_pagar, "0"});
-                        if(Float.parseFloat(descuento)>0){
-                            matParamAsientoAx = Matriz.poner(matParamAsientoAx, new String[]{desc_venta, descuento, "0"});
-                            descuentos = descuento;
-                        }
-                        matParamAsientoAx = Matriz.poner(matParamAsientoAx, new String[]{matDetalleFactura[pos][12], "0", String.valueOf(valor_internet)});//   id_planCuenta del servicio
-
-                        String id_cuenta_iva = matDetalleFactura[pos][14];
-                        matParamAsientoAx = Matriz.poner(matParamAsientoAx, new String[]{id_cuenta_iva, "0", iva_internet});
-
-
-                        String paramArtic = "['"+id_producto+"', '"+dias_conexion+"', '"+p_u+"', '"+valor_internet+
-                            "', '"+descuento+"', '"+iva_internet+"', '"+totalpr+"', '"+descripciones+
-                            "', '"+matDetalleFactura[pos][4]+"', '"+matDetalleFactura[pos][9]+"', '"+pIvas+"', '"+codigoIvas+"', '"+tipoRubros+"', '-1'],";
-
-                        int anio = Fecha.datePart("anio", periodo);
-                        int mes = Fecha.datePart("mes", periodo);
-                        String ini = anio + "-" + mes + "-01";
-                        String fin = anio + "-" + mes + "-" + Fecha.getUltimoDiaMes(anio, mes);
-        
-                        ResultSet rsRubrosAdicionales = this.consulta(  
-                            "SELECT distinct id_rubro, usuario, fecha_creacion, id_producto, rubro, temporal, fecha_inicio, fecha_fin, id_sucursal, id_instalacion, " +
-                            "periodo, monto, subtotal_12, iva_12, codigo, descripcion, porcentaje, codigo_iva, tipo, id_plan_cuenta_venta, " +
-                            "id_iva, id_plan_cuenta_venta_servicio, id_plan_cuenta_venta_bien, canproductos, rubro_prefactura, tiporubro, estadocobro, id_prefactura_rubro " +
-                            "from vta_prefactura_rubro "+ 
-                            "WHERE estadocobro=false and id_instalacion="+id_instalacion+" and id_sucursal="+id_sucursal+" and tiporubro='a' and periodo between '" + ini + "' and '" + fin + "' " +
-                            "union all " +
-                            "SELECT distinct id_rubro, usuario, fecha_creacion, id_producto, rubro, temporal, fecha_inicio, fecha_fin, id_sucursal, id_instalacion, " +
-                            "periodo, monto, subtotal_12, iva_12, codigo, descripcion, porcentaje, codigo_iva, tipo, id_plan_cuenta_venta, " +
-                            "id_iva, id_plan_cuenta_venta_servicio, id_plan_cuenta_venta_bien, canproductos, rubro_prefactura, tiporubro, estadocobro, id_prefactura_rubro " +
-                            "from vta_prefactura_rubro "+ 
-                            "WHERE estadocobro=false and id_instalacion="+id_instalacion+" and id_sucursal="+id_sucursal+" and tiporubro='p' and estadocobro='false' and periodo <= '" + fin + "' " +
-                            "union all " +
-                    //  suministros
-                            "SELECT distinct PR.id_rubro, 'administrador' as usuario, now()::date as fecha_creacion, PR.idproductos::int8 as id_producto, PR.rubro, true as temporal, \n" +
-                            "now()::date as fecha_inicio, now()::date as fecha_fin, PR.id_sucursal, PR.id_instalacion, \n" +
-                            "PR.periodo, (PR.monto + (PR.monto * I.porcentaje::numeric / 100))::numeric(13,2) as total, PR.monto as subtotal_12, \n" +
-                            "(PR.monto * I.porcentaje::numeric / 100)::numeric(13,2) as iva_12, P.codigo, descripcion, porcentaje, I.codigo as codigo_iva, tipo, id_plan_cuenta_venta, \n" +
-                            "I.id_iva, id_plan_cuenta_venta_servicio, id_plan_cuenta_venta_bien, PR.canproductos, PR.rubro as rubro_prefactura, PR.tiporubro, PR.estadocobro, id_prefactura_rubro \n" +
-                            "FROM (((tbl_prefactura_rubro as PR inner join vta_producto_n as P on PR.idproductos::int=P.id_producto) \n" +
-                            "inner join tbl_sucursal_producto as SP on P.id_producto=SP.id_producto) \n" +
-                            "inner join tbl_iva as I on I.id_iva=SP.id_iva) \n" +
-                            "WHERE PR.id_rubro is null and PR.estadocobro=false and PR.tiporubro='p' and PR.id_instalacion=" + id_instalacion + " and PR.periodo<='" + fin + "' " + 
-                    // activos
-                            "union all " + 
-                            "SELECT distinct id_rubro, 'administrador' as usuario, now()::date as fecha_creacion, idproductos::int8 as id_producto, rubro, " + 
-                            "true as temporal, now()::date as fecha_inicio, now()::date as fecha_fin, PR.id_sucursal, id_instalacion, periodo,  " +
-                            "(select PR.monto + (PR.monto * valor::numeric / 100 )::numeric(13,2) from tbl_configuracion where parametro='p_iva1') as monto,  " +
-                            "monto as subtotal_12,  " +
-                            "(select (PR.monto * valor::numeric / 100 )::numeric(13,2) from tbl_configuracion where parametro='p_iva1') as iva_12,  " +
-                            "P.codigo_activo as codigo, P.descripcion, porcentaje, " +
-                            "(select I.codigo from tbl_iva as I inner join tbl_configuracion as C on C.valor::int=I.porcentaje where parametro='p_iva1') as codigo_iva,  " +
-                            "'a' as tipo,  " + 
-                            "(select D.id_plan_cuenta_grupo from tbl_activo as A inner join tbl_tabla_depreciacion as D on A.id_tabla_depreciacion=D.id_tabla_depreciacion where A.id_activo=P.id_activo) as id_plan_cuenta_venta,  " +
-                            "(select I.id_iva from tbl_iva as I inner join tbl_configuracion as C on C.valor::int=I.porcentaje where parametro='p_iva1') as id_iva,  " +
-                            "(select D.id_plan_cuenta_grupo from tbl_activo as A inner join tbl_tabla_depreciacion as D on A.id_tabla_depreciacion=D.id_tabla_depreciacion where A.id_activo=P.id_activo) as id_plan_cuenta_venta_servicio,  " +
-                            "(select D.id_plan_cuenta_grupo from tbl_activo as A inner join tbl_tabla_depreciacion as D on A.id_tabla_depreciacion=D.id_tabla_depreciacion where A.id_activo=P.id_activo) as id_plan_cuenta_venta_bien,  " +
-                            "canproductos, rubro as rubro_prefactura, PR.tiporubro, PR.estadocobro, PR.id_prefactura_rubro " +
-                            "FROM (tbl_prefactura_rubro as PR inner join vta_activo_n as P on PR.idproductos::int=P.id_activo)  " +
-                            "WHERE id_rubro is null and estadocobro=false and tiporubro='1' and id_instalacion="+id_instalacion+" and periodo<='"+fin+"'"
-                        );
-                        String rubrosAdicionales[][] = Matriz.ResultSetAMatriz(rsRubrosAdicionales);
-                        if(rubrosAdicionales!=null){
-                            for(int a=0; a<rubrosAdicionales.length; a++){
-//                                if(rubrosAdicionales[a][8].compareTo(id_sucursal)==0 && rubrosAdicionales[a][9].compareTo(id_instalacion)==0 && rubrosAdicionales[a][10].compareTo(periodo)==0){
-                                    double pU = Addons.redondear( Double.parseDouble(rubrosAdicionales[a][12]) / Double.parseDouble(rubrosAdicionales[a][23]) , 4 );
-                                    if(rubrosAdicionales[a][18].compareTo("1")==0){ // activo
-                                        try {
-                                            
-                                            paramArtic += "['"+rubrosAdicionales[a][3]+"', '"+rubrosAdicionales[a][23]+"', '"+pU+"', '"+rubrosAdicionales[a][12]+
-                                            "', '0', '"+rubrosAdicionales[a][13]+"', '"+rubrosAdicionales[a][11]+"', '"+rubrosAdicionales[a][15]+
-                                            "', '"+pU+"', '"+rubrosAdicionales[a][18]+"', '"+rubrosAdicionales[a][16]+"', '"+rubrosAdicionales[a][17]+"', '1', '"+rubrosAdicionales[a][27]+"'],";
-                                            
-                                            double pVenta = Double.parseDouble(rubrosAdicionales[a][12]);
-                                            ResultSet rsActivo = this.consulta("select D.id_plan_cuenta_grupo, D.id_plan_cuenta, sum(A.valor_compra) as valor_compra, sum(A.valor_depreciado) as valor_depreciado, "
-                                                + "sum(valor_compra) - sum(valor_depreciado) as valor_util \n"
-                                                + "from tbl_activo as A inner join tbl_tabla_depreciacion as D on A.id_tabla_depreciacion=D.id_tabla_depreciacion \n"
-                                                + "where A.id_activo in (" + id_producto + ") group by D.id_plan_cuenta_grupo, D.id_plan_cuenta;");
-                                            while (rsActivo.next()) {
-                                                String valor_compra = rsActivo.getString("valor_compra") != null ? rsActivo.getString("valor_compra") : "0";
-                                                String valor_depreciado = rs.getString("valor_depreciado") != null ? rsActivo.getString("valor_depreciado") : "0";
-                                                String valor_util = rsActivo.getString("valor_util") != null ? rsActivo.getString("valor_util") : "0";
-                                                String id_plan_cuenta_grupo = rsActivo.getString("id_plan_cuenta_grupo") != null ? rsActivo.getString("id_plan_cuenta_grupo") : "";
-                                                String id_plan_cuenta_venta = rsActivo.getString("id_plan_cuenta") != null ? rsActivo.getString("id_plan_cuenta") : "";
-
-                                                matParamAsientoAx = Matriz.poner(matParamAsientoAx, new String[]{id_plan_cuenta_venta, valor_depreciado, "0"});
-                                                matParamAsientoAx = Matriz.poner(matParamAsientoAx, new String[]{id_plan_cuenta_grupo, "0", valor_compra});
-                                                double diferencia = pVenta - Double.parseDouble(valor_util);
-                                                if (diferencia > 0) {
-                                                    matParamAsientoAx = Matriz.poner(matParamAsientoAx, new String[]{idPlanCuentaUtilidadActivo, "0", String.valueOf(Addons.redondear(diferencia))});
-                                                }
-                                                matParamAsientoAx = Matriz.poner(matParamAsientoAx, new String[]{idPlanCuentaIvaActivos, "0", rubrosAdicionales[a][13]});
-
+                                        } else {        //  si el anticipo no cubre el monto
+                                            abonos += Double.parseDouble(matAnticipo[2]);
+                                            axUltimoAbono = Double.parseDouble(matAnticipo[2]);
+                                            axIdCliAnt += matAnticipo[0] + ",";
+                                            axMontoVajar += matAnticipo[2] + ",";
+                                            if(abonos >= totalPagar){     //  si el o los abonos cubren el total se salta al pago
+                                                break;
                                             }
-                                            rsActivo.close();
-                                        } catch (Exception e) {
-                                            e.printStackTrace();
                                         }
-                                        
-                                    }else{
-                                        
-                                        paramArtic += "['"+rubrosAdicionales[a][3]+"', '"+rubrosAdicionales[a][23]+"', '"+pU+"', '"+rubrosAdicionales[a][12]+
-                                            "', '0', '"+rubrosAdicionales[a][13]+"', '"+rubrosAdicionales[a][11]+"', '"+rubrosAdicionales[a][15]+
-                                            "', '"+pU+"', '"+rubrosAdicionales[a][18]+"', '"+rubrosAdicionales[a][16]+"', '"+rubrosAdicionales[a][17]+"', 'p', '"+rubrosAdicionales[a][27]+"'],";
-                                        
-                                        id_cuenta_iva = rubrosAdicionales[a][18].compareTo("s")==0 ? rubrosAdicionales[a][21] : rubrosAdicionales[a][22];
-                                        
-                                        matParamAsientoAx = Matriz.poner(matParamAsientoAx, new String[]{rubrosAdicionales[a][19], "0", rubrosAdicionales[a][12]});
-                                        matParamAsientoAx = Matriz.poner(matParamAsientoAx, new String[]{id_cuenta_iva, "0", rubrosAdicionales[a][13]});
                                     }
-                                    
-                                    idsPrefacturaRubro += rubrosAdicionales[a][27] + ",";
-                                    
-                                    ids_productos += "," + rubrosAdicionales[a][3];
-                                    descripciones += "," + rubrosAdicionales[a][15]; 
-                                    cantidades += "," + rubrosAdicionales[a][23];
-                                    preciosUnitarios += "," + pU;
-                                    descuentos += ",0";
-                                    subtotales += "," + rubrosAdicionales[a][12];
-                                    ivas += "," + rubrosAdicionales[a][13];
-                                    pIvas += "," + rubrosAdicionales[a][16]; 
-                                    codigoIvas += "," + rubrosAdicionales[a][17];
-                                    totales = rubrosAdicionales[a][11];
-//                                }
+                                }
+
+                                if(axIdCliAnt.compareTo("")!=0 && abonos>0){
+                                    idCliAnt = axIdCliAnt.substring(0, axIdCliAnt.length()-1);
+                                    monto_vajar = axMontoVajar = axMontoVajar.substring(0, axMontoVajar.length()-1);
+                                    if(abonos == totalPagar){       //  si los abonos cubre el total de la factura se vaja la factura completa
+                                        monto_vajar = axMontoVajar;
+                                    } else if(abonos > totalPagar){     // se cubre más del total de la factura se vaja la factura completa
+                                                monto_vajar = axMontoVajar.substring( 0, axMontoVajar.lastIndexOf(",") )  + ","  +  Addons.redondear(totalPagar - (abonos - axUltimoAbono) ) + ","; //    el ultimo abono debe ser 
+                                    } else if(abonos >= minTotalPagarACredito){     //  si los abono cubren por lo menos el minimo a vajar se vana credito
+                                                monto_vajar = axMontoVajar;
+                                    }
+                                }
                             }
-                        }
-
-                        String matParamAsiento[][] = Matriz.suprimirDuplicados(matParamAsientoAx, 0);
-                        String paramAsiento = "";
-                        for(int i=0; i<matParamAsiento.length; i++){
-                            paramAsiento += "['"+matParamAsiento[i][0]+"', '"+matParamAsiento[i][1]+"', '"+matParamAsiento[i][2]+"'],";
-                        }
-                        if(paramAsiento.compareTo("")!=0){
-                            paramAsiento = paramAsiento.substring(0, paramAsiento.length()-1);
-                        }
-
-                        paramArtic = paramArtic.substring(0, paramArtic.length()-1);
-
-                        
-                
-                
-                        /*String prod_sin_stock = this.verificarStock(id_sucursal, ids_productos, cantidades_prod);     //     no se necesita ya quye es solo el servicio
-                        if(prod_sin_stock.compareTo("")==0){*/
-
-                            if(!this.facturaDuplicada(serie_factura, num_factura )){
-
-                                String xmlFirmado = "";
-                                String estadoDocumento = "";
-                                String certificado = DOCS_ELECTRONICOS + "certificado.p12";
-                                String rutaSalida = DOCS_ELECTRONICOS + "firmados";
-                                String claveAcceso = "";
-                                String autorizacionXml = "";
-                                //String respuestaAutoriz = "";
-                                String vecSerie[] = serie_factura.split("-");
-
-                                
-                                FacturaElectronica objFE = new FacturaElectronica();    //   se tiene que blanquear un nuevo archivo XML
-
-                                claveAcceso = objFE.getClaveAcceso(Fecha.getFecha("SQL"), "01", ruc_empresa, ambiente, vecSerie[0]+vecSerie[1], Cadena.setSecuencial(num_factura), tipoEmision);
-                                
-                                objFE.generarXml(claveAcceso, ambiente, tipoEmision, razon_social_empresa, nombre_comercial, ruc_empresa, emalSaitel, numContSaitel, sitioWeb, 
-                                        "01", vecSerie[0], vecSerie[1], 
-                                        Cadena.setSecuencial(num_factura), dir_matriz, Fecha.getFecha("SQL"), direccion_sucursal, num_resolucion, oblga_contabilidad, 
-                                        tipo_documento, razon_social, ruc, subtotal, descuento, "0", subtotal_2, iva_2, subtotal_3, iva_3, total_pagar, formaPago, 
-                                        ids_productos, descripciones, cantidades, preciosUnitarios, descuentos, subtotales, ivas, pIvas, codigoIvas, direccion, plan, emailCliente);
-                                String documentoXml = DOCS_ELECTRONICOS + "generados/" + claveAcceso + ".xml";
-                                objFE.salvar(documentoXml);
-                                String error = objFE.getError();
-                                
-                                if(error.compareTo("")==0){
-                                    estadoDocumento = "g";
-                                    String archivoSalida = claveAcceso + ".xml";
-                                    FirmaXadesBes firmaDigital = new FirmaXadesBes(certificado, clave_certificado, documentoXml, rutaSalida, archivoSalida);
-                                    firmaDigital.execute();
-                                    error = firmaDigital.getError();
-                                    
-                                    if(error.compareTo("")==0){
-                                        estadoDocumento = "f";
-                                        autorizacionXml = this.getStringFromFile(DOCS_ELECTRONICOS + "firmados/" + claveAcceso + ".xml");
-
-                                        
-                                        
-                                        String idFactura = this.emitir(id_sucursal, Integer.parseInt(idPuntoEmision), id_prefactura, id_instalacion, usuario, serie_factura, num_factura, "1119999999", ruc,
-                                                idFormaPago, formaPagoCodInterno, "Pichincha", "", num_comp_pago, "0", id_plan_cuenta_banco, "", "Emisión de la factura por servicios de Internet Nro. " + serie_factura + "-" + num_factura, 
-                                                subtotal, "0", subtotal_2, subtotal_3, descuento, iva_2, iva_3, total_pagar, "array[" + paramArtic + "]", "", "0", 
-                                                "", "", "", "NULL", "0", "array[]::varchar[]", "array[" + paramAsiento + "]", xmlFirmado, String.valueOf(dias_conexion), ids_productos, cantidades, 
-                                                preciosUnitarios, descuentos, subtotales, ivas, totales, tipoRubros, idsPrefacturaRubro, idCliAnt, monto_vajar, estado_servicio);
+                        }    
 
 
-                                        if(idFactura.compareTo("-1")!=0){
-                                            long numFacturaAux = Long.parseLong(num_factura) + 1;
-                                            matPuntosVirtuales[p][4] = String.valueOf(numFacturaAux);
-                                            
-                                            this.ejecutar("update tbl_prefactura set por_emitir_factura=false where id_prefactura="+id_prefactura);
-                                            
-                                            this.ejecutar("update tbl_factura_venta set estado_documento='"+estadoDocumento+"', clave_acceso='"+claveAcceso
-                                            +"' where id_factura_venta="+idFactura);
-                                            
-                                            //   registro de documento en la base documental
-                                            this.objDocumental.ejecutar("insert into tbl_documentos(documentotexto, numero_documento, id_sucursal, tabla, id_tabla, campo_tabla) values('"+
-                                                    autorizacionXml+"', "+id_sucursal+serie_factura+num_factura+", "+id_sucursal+", 'tbl_factura_venta', "+idFactura+", 'documentoxml')");
+    //System.out.println("por_emitir_destino " + por_emitir_destino + ", registro_archivo_cash " + registro_archivo_cash + ", idFormaPago " + idFormaPago);
 
-                                            String transaccion = "EMISION DE LA FACTURA NRO. "+serie_factura+"-"+num_factura+" CLIENTE CON RUC: "+ruc+" PARA EL PERIODO "+txt_periodo;
-                                            this.ejecutar("INSERT INTO tbl_auditoria(alias,ip_maquina,hora,fecha,transaccion) " +
-                                                    "values('"+usuario+"','127.0.0.1','"+Fecha.getHora()+"','"+Fecha.getFecha("ISO")+"', '"+transaccion+"');");
-                                            
+                        int p = Matriz.enMatriz(matPuntosVirtuales, id_sucursal, 0);
+                        if(p!=-1){
+
+
+                            String idPuntoEmision = matPuntosVirtuales[p][1];
+                            String usuario = matPuntosVirtuales[p][2];
+                            String serie_factura = matPuntosVirtuales[p][3];
+                            String num_factura = matPuntosVirtuales[p][4];
+                            String direccion_sucursal = matPuntosVirtuales[p][5];
+                            String num_comp_pago = registro_archivo_cash.compareTo("")!=0 
+                                    ? registro_archivo_cash 
+                                    : fecha_pago.replace("-", "") + hora_pago.replace(":", "") + id_instalacion;
+                            int pos = Matriz.enMatriz(matDetalleFactura, new String[]{id_sucursal,id_producto}, new int[]{0,1});
+                            String p_u = String.valueOf( Addons.redondear(valor_internet / dias_conexion,  4) );
+                            String totalpr = String.valueOf( Addons.redondear( total_internet ) );
+
+                            String ids_productos = id_producto;
+                            String descripciones = "SERVICIO DE INTERNET PLAN "+plan+" Mbps PERIODO FACTURADO "+txt_periodo+" ~";
+                            String cantidades = String.valueOf( dias_conexion );
+                            String preciosUnitarios = p_u;
+    //                        int p_des0 = ((edad>=65 || carne_conadis.compareTo("")!=0) && Float.parseFloat(descuento)>0) ? 50 : 0;
+                            String descuentos = "0";
+                            String subtotales = String.valueOf(valor_internet);
+                            String ivas = iva_internet;
+                            String pIvas = matDetalleFactura[pos][6];
+                            String codigoIvas = matDetalleFactura[pos][11];
+                            String totales = totalpr;
+                            String tipoRubros = "p";
+                            String idsPrefacturaRubro = "";
+
+
+
+                            //  promociones
+                            if( objPromocion.aplicarPromocion(id_sucursal, edad, carne_conadis, convenio_pago, forma_pago_cliente, tipo_cuenta, num_cuenta, tarjeta_credito_caduca, 
+                                    id_plan_actual, total_internet, Float.parseFloat(descuento), Integer.parseInt(matDetalleFactura[pos][6]) ) ){
+                                descuento = String.valueOf( objPromocion.getDescuento() );
+                                ivas = iva_internet = String.valueOf( objPromocion.getIva() );
+                                totales = totalpr = String.valueOf( objPromocion.getTotal() );
+                            }
+
+
+
+
+                            String matParamAsientoAx[][] = null;
+
+                            if(formaPagoCodInterno.compareTo("d")==0){
+                                matParamAsientoAx = Matriz.poner(matParamAsientoAx, new String[]{id_plan_cuenta_x_cobrar, String.valueOf(total_pagar), "0"});
+    //                        }else if(forma_pago.compareTo("e")==0){
+    //                                 matParamAsientoAx = Matriz.poner(matParamAsientoAx, new String[]{id_plan_cuenta_caja, String.valueOf(ax_total), "0"});
+    //                        }else if(forma_pago.compareTo("t")==0 || forma_pago.compareTo("j")==0){
+    //                                 float gastosBancarios = Float.parseFloat(gastos_bancos);
+    //                                 if(gastosBancarios==0){
+    //                                     matParamAsientoAx = Matriz.poner(matParamAsientoAx, new String[]{id_plan_cuenta_banco, String.valueOf(total_pagar), "0"});
+    //                                 }else{
+    //                                     double diferencia = Addons.redondear( Float.parseFloat(total_pagar) - gastosBancarios );
+    //                                     matParamAsientoAx = Matriz.poner(matParamAsientoAx, new String[]{id_plan_cuenta_banco, String.valueOf(diferencia), "0"});
+    //                                     matParamAsientoAx = Matriz.poner(matParamAsientoAx, new String[]{idPlanCuentaGastosBancos, String.valueOf(gastosBancarios), "0"});
+    //                                 }
+                            }else if(formaPagoCodInterno.compareTo("a")==0){
+                                     matParamAsientoAx = Matriz.poner(matParamAsientoAx, new String[]{id_plan_cuenta_anticipo, String.valueOf(total_pagar), "0"});
+                            } else {
+                                matParamAsientoAx = Matriz.poner(matParamAsientoAx, new String[]{id_plan_cuenta_banco, String.valueOf(total_pagar), "0"});
+                            }
+
+    //                        matParamAsientoAx = Matriz.poner(matParamAsientoAx, new String[]{id_plan_cuenta_banco, total_pagar, "0"});
+                            if(Float.parseFloat(descuento)>0){
+                                matParamAsientoAx = Matriz.poner(matParamAsientoAx, new String[]{desc_venta, descuento, "0"});
+                                descuentos = descuento;
+                            }
+                            matParamAsientoAx = Matriz.poner(matParamAsientoAx, new String[]{matDetalleFactura[pos][12], "0", String.valueOf(valor_internet)});//   id_planCuenta del servicio
+
+                            String id_cuenta_iva = matDetalleFactura[pos][14];
+                            matParamAsientoAx = Matriz.poner(matParamAsientoAx, new String[]{id_cuenta_iva, "0", iva_internet});
+
+
+                            String paramArtic = "['"+id_producto+"', '"+dias_conexion+"', '"+p_u+"', '"+valor_internet+
+                                "', '"+descuento+"', '"+iva_internet+"', '"+totalpr+"', '"+descripciones+
+                                "', '"+matDetalleFactura[pos][4]+"', '"+matDetalleFactura[pos][9]+"', '"+pIvas+"', '"+codigoIvas+"', '"+tipoRubros+"', '-1'],";
+
+                            int anio = Fecha.datePart("anio", periodo);
+                            int mes = Fecha.datePart("mes", periodo);
+                            String ini = anio + "-" + mes + "-01";
+                            String fin = anio + "-" + mes + "-" + Fecha.getUltimoDiaMes(anio, mes);
+
+                            ResultSet rsRubrosAdicionales = this.consulta(  
+                                "SELECT distinct id_rubro, usuario, fecha_creacion, id_producto, rubro, temporal, fecha_inicio, fecha_fin, id_sucursal, id_instalacion, " +
+                                "periodo, monto, subtotal_12, iva_12, codigo, descripcion, porcentaje, codigo_iva, tipo, id_plan_cuenta_venta, " +
+                                "id_iva, id_plan_cuenta_venta_servicio, id_plan_cuenta_venta_bien, canproductos, rubro_prefactura, tiporubro, estadocobro, id_prefactura_rubro " +
+                                "from vta_prefactura_rubro "+ 
+                                "WHERE estadocobro=false and id_instalacion="+id_instalacion+" and id_sucursal="+id_sucursal+" and tiporubro='a' and periodo between '" + ini + "' and '" + fin + "' " +
+                                "union all " +
+                                "SELECT distinct id_rubro, usuario, fecha_creacion, id_producto, rubro, temporal, fecha_inicio, fecha_fin, id_sucursal, id_instalacion, " +
+                                "periodo, monto, subtotal_12, iva_12, codigo, descripcion, porcentaje, codigo_iva, tipo, id_plan_cuenta_venta, " +
+                                "id_iva, id_plan_cuenta_venta_servicio, id_plan_cuenta_venta_bien, canproductos, rubro_prefactura, tiporubro, estadocobro, id_prefactura_rubro " +
+                                "from vta_prefactura_rubro "+ 
+                                "WHERE estadocobro=false and id_instalacion="+id_instalacion+" and id_sucursal="+id_sucursal+" and tiporubro='p' and estadocobro='false' and periodo <= '" + fin + "' " +
+                                "union all " +
+                        //  suministros
+                                "SELECT distinct PR.id_rubro, 'administrador' as usuario, now()::date as fecha_creacion, PR.idproductos::int8 as id_producto, PR.rubro, true as temporal, \n" +
+                                "now()::date as fecha_inicio, now()::date as fecha_fin, PR.id_sucursal, PR.id_instalacion, \n" +
+                                "PR.periodo, (PR.monto + (PR.monto * I.porcentaje::numeric / 100))::numeric(13,2) as total, PR.monto as subtotal_12, \n" +
+                                "(PR.monto * I.porcentaje::numeric / 100)::numeric(13,2) as iva_12, P.codigo, descripcion, porcentaje, I.codigo as codigo_iva, tipo, id_plan_cuenta_venta, \n" +
+                                "I.id_iva, id_plan_cuenta_venta_servicio, id_plan_cuenta_venta_bien, PR.canproductos, PR.rubro as rubro_prefactura, PR.tiporubro, PR.estadocobro, id_prefactura_rubro \n" +
+                                "FROM (((tbl_prefactura_rubro as PR inner join vta_producto_n as P on PR.idproductos::int=P.id_producto) \n" +
+                                "inner join tbl_sucursal_producto as SP on P.id_producto=SP.id_producto) \n" +
+                                "inner join tbl_iva as I on I.id_iva=SP.id_iva) \n" +
+                                "WHERE PR.id_rubro is null and PR.estadocobro=false and PR.tiporubro='p' and PR.id_instalacion=" + id_instalacion + " and PR.periodo<='" + fin + "' " + 
+                        // activos
+                                "union all " + 
+                                "SELECT distinct id_rubro, 'administrador' as usuario, now()::date as fecha_creacion, idproductos::int8 as id_producto, rubro, " + 
+                                "true as temporal, now()::date as fecha_inicio, now()::date as fecha_fin, PR.id_sucursal, id_instalacion, periodo,  " +
+                                "(select PR.monto + (PR.monto * valor::numeric / 100 )::numeric(13,2) from tbl_configuracion where parametro='p_iva1') as monto,  " +
+                                "monto as subtotal_12,  " +
+                                "(select (PR.monto * valor::numeric / 100 )::numeric(13,2) from tbl_configuracion where parametro='p_iva1') as iva_12,  " +
+                                "P.codigo_activo as codigo, P.descripcion, porcentaje, " +
+                                "(select I.codigo from tbl_iva as I inner join tbl_configuracion as C on C.valor::int=I.porcentaje where parametro='p_iva1') as codigo_iva,  " +
+                                "'a' as tipo,  " + 
+                                "(select D.id_plan_cuenta_grupo from tbl_activo as A inner join tbl_tabla_depreciacion as D on A.id_tabla_depreciacion=D.id_tabla_depreciacion where A.id_activo=P.id_activo) as id_plan_cuenta_venta,  " +
+                                "(select I.id_iva from tbl_iva as I inner join tbl_configuracion as C on C.valor::int=I.porcentaje where parametro='p_iva1') as id_iva,  " +
+                                "(select D.id_plan_cuenta_grupo from tbl_activo as A inner join tbl_tabla_depreciacion as D on A.id_tabla_depreciacion=D.id_tabla_depreciacion where A.id_activo=P.id_activo) as id_plan_cuenta_venta_servicio,  " +
+                                "(select D.id_plan_cuenta_grupo from tbl_activo as A inner join tbl_tabla_depreciacion as D on A.id_tabla_depreciacion=D.id_tabla_depreciacion where A.id_activo=P.id_activo) as id_plan_cuenta_venta_bien,  " +
+                                "canproductos, rubro as rubro_prefactura, PR.tiporubro, PR.estadocobro, PR.id_prefactura_rubro " +
+                                "FROM (tbl_prefactura_rubro as PR inner join vta_activo_n as P on PR.idproductos::int=P.id_activo)  " +
+                                "WHERE id_rubro is null and estadocobro=false and tiporubro='1' and id_instalacion="+id_instalacion+" and periodo<='"+fin+"'"
+                            );
+                            String rubrosAdicionales[][] = Matriz.ResultSetAMatriz(rsRubrosAdicionales);
+                            if(rubrosAdicionales!=null){
+                                for(int a=0; a<rubrosAdicionales.length; a++){
+    //                                if(rubrosAdicionales[a][8].compareTo(id_sucursal)==0 && rubrosAdicionales[a][9].compareTo(id_instalacion)==0 && rubrosAdicionales[a][10].compareTo(periodo)==0){
+                                        double pU = Addons.redondear( Double.parseDouble(rubrosAdicionales[a][12]) / Double.parseDouble(rubrosAdicionales[a][23]) , 4 );
+                                        if(rubrosAdicionales[a][18].compareTo("1")==0){ // activo
+                                            try {
+
+                                                paramArtic += "['"+rubrosAdicionales[a][3]+"', '"+rubrosAdicionales[a][23]+"', '"+pU+"', '"+rubrosAdicionales[a][12]+
+                                                "', '0', '"+rubrosAdicionales[a][13]+"', '"+rubrosAdicionales[a][11]+"', '"+rubrosAdicionales[a][15]+
+                                                "', '"+pU+"', '"+rubrosAdicionales[a][18]+"', '"+rubrosAdicionales[a][16]+"', '"+rubrosAdicionales[a][17]+"', '1', '"+rubrosAdicionales[a][27]+"'],";
+
+                                                double pVenta = Double.parseDouble(rubrosAdicionales[a][12]);
+                                                ResultSet rsActivo = this.consulta("select D.id_plan_cuenta_grupo, D.id_plan_cuenta, sum(A.valor_compra) as valor_compra, sum(A.valor_depreciado) as valor_depreciado, "
+                                                    + "sum(valor_compra) - sum(valor_depreciado) as valor_util \n"
+                                                    + "from tbl_activo as A inner join tbl_tabla_depreciacion as D on A.id_tabla_depreciacion=D.id_tabla_depreciacion \n"
+                                                    + "where A.id_activo in (" + id_producto + ") group by D.id_plan_cuenta_grupo, D.id_plan_cuenta;");
+                                                while (rsActivo.next()) {
+                                                    String valor_compra = rsActivo.getString("valor_compra") != null ? rsActivo.getString("valor_compra") : "0";
+                                                    String valor_depreciado = rs.getString("valor_depreciado") != null ? rsActivo.getString("valor_depreciado") : "0";
+                                                    String valor_util = rsActivo.getString("valor_util") != null ? rsActivo.getString("valor_util") : "0";
+                                                    String id_plan_cuenta_grupo = rsActivo.getString("id_plan_cuenta_grupo") != null ? rsActivo.getString("id_plan_cuenta_grupo") : "";
+                                                    String id_plan_cuenta_venta = rsActivo.getString("id_plan_cuenta") != null ? rsActivo.getString("id_plan_cuenta") : "";
+
+                                                    matParamAsientoAx = Matriz.poner(matParamAsientoAx, new String[]{id_plan_cuenta_venta, valor_depreciado, "0"});
+                                                    matParamAsientoAx = Matriz.poner(matParamAsientoAx, new String[]{id_plan_cuenta_grupo, "0", valor_compra});
+                                                    double diferencia = pVenta - Double.parseDouble(valor_util);
+                                                    if (diferencia > 0) {
+                                                        matParamAsientoAx = Matriz.poner(matParamAsientoAx, new String[]{idPlanCuentaUtilidadActivo, "0", String.valueOf(Addons.redondear(diferencia))});
+                                                    }
+                                                    matParamAsientoAx = Matriz.poner(matParamAsientoAx, new String[]{idPlanCuentaIvaActivos, "0", rubrosAdicionales[a][13]});
+
+                                                }
+                                                rsActivo.close();
+                                            } catch (Exception e) {
+                                                e.printStackTrace();
+                                            }
+
                                         }else{
-                                            System.out.println("Error al emitir la factura " + serie_factura + "-" + num_factura + " del cliente con RUC " + ruc + ". " + this.getError() );
+
+                                            paramArtic += "['"+rubrosAdicionales[a][3]+"', '"+rubrosAdicionales[a][23]+"', '"+pU+"', '"+rubrosAdicionales[a][12]+
+                                                "', '0', '"+rubrosAdicionales[a][13]+"', '"+rubrosAdicionales[a][11]+"', '"+rubrosAdicionales[a][15]+
+                                                "', '"+pU+"', '"+rubrosAdicionales[a][18]+"', '"+rubrosAdicionales[a][16]+"', '"+rubrosAdicionales[a][17]+"', 'p', '"+rubrosAdicionales[a][27]+"'],";
+
+                                            id_cuenta_iva = rubrosAdicionales[a][18].compareTo("s")==0 ? rubrosAdicionales[a][21] : rubrosAdicionales[a][22];
+
+                                            matParamAsientoAx = Matriz.poner(matParamAsientoAx, new String[]{rubrosAdicionales[a][19], "0", rubrosAdicionales[a][12]});
+                                            matParamAsientoAx = Matriz.poner(matParamAsientoAx, new String[]{id_cuenta_iva, "0", rubrosAdicionales[a][13]});
+                                        }
+
+                                        idsPrefacturaRubro += rubrosAdicionales[a][27] + ",";
+
+                                        ids_productos += "," + rubrosAdicionales[a][3];
+                                        descripciones += "," + rubrosAdicionales[a][15]; 
+                                        cantidades += "," + rubrosAdicionales[a][23];
+                                        preciosUnitarios += "," + pU;
+                                        descuentos += ",0";
+                                        subtotales += "," + rubrosAdicionales[a][12];
+                                        ivas += "," + rubrosAdicionales[a][13];
+                                        pIvas += "," + rubrosAdicionales[a][16]; 
+                                        codigoIvas += "," + rubrosAdicionales[a][17];
+                                        totales = rubrosAdicionales[a][11];
+    //                                }
+                                }
+                            }
+
+                            String matParamAsiento[][] = Matriz.suprimirDuplicados(matParamAsientoAx, 0);
+                            String paramAsiento = "";
+                            for(int i=0; i<matParamAsiento.length; i++){
+                                paramAsiento += "['"+matParamAsiento[i][0]+"', '"+matParamAsiento[i][1]+"', '"+matParamAsiento[i][2]+"'],";
+                            }
+                            if(paramAsiento.compareTo("")!=0){
+                                paramAsiento = paramAsiento.substring(0, paramAsiento.length()-1);
+                            }
+
+                            paramArtic = paramArtic.substring(0, paramArtic.length()-1);
+
+
+
+
+                            /*String prod_sin_stock = this.verificarStock(id_sucursal, ids_productos, cantidades_prod);     //     no se necesita ya quye es solo el servicio
+                            if(prod_sin_stock.compareTo("")==0){*/
+
+                                if(!this.facturaDuplicada(serie_factura, num_factura )){
+
+                                    String xmlFirmado = "";
+//                                    String estadoDocumento = "";
+                                    String certificado = DOCS_ELECTRONICOS + "certificado.p12";
+                                    String rutaSalida = DOCS_ELECTRONICOS + "firmados";
+                                    String claveAcceso = "";
+                                    String estadoDocumento ="";
+                                    String autorizacionXml = "";
+                                    String fechaAutorizacion = "null";
+                                    String mensaje = "";
+                                    String numAutorizacion = "";
+                                    String vecSerie[] = serie_factura.split("-");
+                                    String fechaEmisionSql = Fecha.getFecha("SQL");
+                                    String fechaEmision = Fecha.getFecha("ISO");
+                                    String numero = serie_factura.replace("-", "") + num_factura;
+
+                                    FacturaElectronica objFE = new FacturaElectronica();    //   se tiene que blanquear un nuevo archivo XML
+
+                                    claveAcceso = objFE.getClaveAcceso(fechaEmisionSql, "01", ruc_empresa, ambiente, vecSerie[0]+vecSerie[1], Cadena.setSecuencial(num_factura), tipoEmision);
+
+                                    objFE.generarXml(claveAcceso, ambiente, tipoEmision, razon_social_empresa, nombre_comercial, ruc_empresa, emalSaitel, numContSaitel, sitioWeb, 
+                                            "01", vecSerie[0], vecSerie[1], 
+                                            Cadena.setSecuencial(num_factura), dir_matriz, fechaEmisionSql, direccion_sucursal, num_resolucion, oblga_contabilidad, 
+                                            tipo_documento, razon_social, ruc, subtotal, descuento, "0", subtotal_2, iva_2, subtotal_3, iva_3, total_pagar, formaPago, 
+                                            ids_productos, descripciones, cantidades, preciosUnitarios, descuentos, subtotales, ivas, pIvas, codigoIvas, direccion, plan, emailCliente);
+                                    String documentoXml = DOCS_ELECTRONICOS + "generados/" + claveAcceso + ".xml";
+                                    objFE.salvar(documentoXml);
+                                    String error = objFE.getError();
+
+                                    if(error.compareTo("")==0){
+                                        estadoDocumento = "g";
+                                        String archivoSalida = claveAcceso + ".xml";
+                                        FirmaXadesBes firmaDigital = new FirmaXadesBes(certificado, clave_certificado, documentoXml, rutaSalida, archivoSalida);
+                                        firmaDigital.execute();
+                                        error = firmaDigital.getError();
+
+                                        if(error.compareTo("")==0){
+                                            estadoDocumento = "f";
+                                            autorizacionXml = this.getStringFromFile(DOCS_ELECTRONICOS + "firmados/" + claveAcceso + ".xml");
+
+
+
+                                            String idFactura = this.emitir(id_sucursal, Integer.parseInt(idPuntoEmision), id_prefactura, id_instalacion, usuario, serie_factura, num_factura, "1119999999", ruc,
+                                                    idFormaPago, formaPagoCodInterno, "Pichincha", "", num_comp_pago, "0", id_plan_cuenta_banco, "", "Emisión de la factura por servicios de Internet Nro. " + serie_factura + "-" + num_factura, 
+                                                    subtotal, "0", subtotal_2, subtotal_3, descuento, iva_2, iva_3, total_pagar, "array[" + paramArtic + "]", "", "0", 
+                                                    "", "", "", "NULL", "0", "array[]::varchar[]", "array[" + paramAsiento + "]", xmlFirmado, String.valueOf(dias_conexion), ids_productos, cantidades, 
+                                                    preciosUnitarios, descuentos, subtotales, ivas, totales, tipoRubros, idsPrefacturaRubro, idCliAnt, monto_vajar, estado_servicio, claveAcceso);
+
+
+                                            if(idFactura.compareTo("-1")!=0){
+                                                long numFacturaAux = Long.parseLong(num_factura) + 1;
+                                                matPuntosVirtuales[p][4] = String.valueOf(numFacturaAux);
+
+                                                this.ejecutar("update tbl_prefactura set por_emitir_factura=false where id_prefactura="+id_prefactura);
+                                                
+                                                try{
+//                                                    String numero = rs.getString("numero")!=null ? rs.getString("numero") : "";
+//                                                    String fecha_emision = rs.getString("fecha_emision")!=null ? rs.getString("fecha_emision") : "";
+
+                                                    if ( Fecha.getTimeStamp( fechaEmision )  ==  Fecha.getTimeStamp( Fecha.getFecha("ISO") ) ) {
+                                                        ec.gob.sri.comprobantes.ws.RespuestaSolicitud respuestaRecepcion = new ec.gob.sri.comprobantes.ws.RespuestaSolicitud();
+                                                        File ArchivoXML = new File(rutaArchivoFirmado + File.separatorChar + claveAcceso + ".xml");
+
+                                                        respuestaRecepcion = EnvioComprobantesWS.obtenerRespuestaEnvio(ArchivoXML, claveAcceso, Parametro.getServicioWebEnvio());
+                                                        String estado = respuestaRecepcion.getEstado();
+                                                        String respuesta = EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion).replace("|", ".").replace("\n", ". ").replace("\r", ". ").replace("\t", " ");
+                                                        if(estado != null){
+                                                            if(estado.equals("RECIBIDA")){
+                                                                
+                                                                estadoDocumento = "r";
+                                                                
+                                                                String respuestaAutoriz = AutorizacionComprobantesWS.autorizarComprobanteIndividual(claveAcceso, claveAcceso + ".xml", Parametro.getServicioWebAutoriza());
+                                                                if (respuestaAutoriz.equals("AUTORIZADO")) {
+                                                                    estadoDocumento = "a";
+                                                                    autorizacionXml = AutorizacionComprobantesWS.getAutorizacionXml();
+                                                                    // obtengo en numero de autorizacion
+                                                                    Xml xml = new Xml();
+                                                                    xml.SetXml(autorizacionXml);
+                                                                    numAutorizacion = xml.getValor("numeroAutorizacion");
+                                                                    String auxFechaAutorizacion = xml.getValor("fechaAutorizacion");
+                                                                    fechaAutorizacion = Fecha.FechaConverter( auxFechaAutorizacion );
+                                                                    fechaAutorizacion = fechaAutorizacion.compareTo("")!=0 && fechaAutorizacion.toLowerCase().compareTo("null")!=0 ? "'" + fechaAutorizacion + "'" : "null";
+//                                                                    if( this.ejecutar("update tbl_factura_venta set autorizacion_fecha='"+fechaAutorizacion+"', estado_documento='" + estadoDocumento + "', numero_autorizacion='"+numAutorizacion+"', mensaje='"+mensaje+"', documento_xml='' where id_factura_venta="+idFactura) ){
+                                                                        if( this.existeArchivo(this.objDocumental, "tbl_factura_venta", idFactura) ){
+                                                                            this.objDocumental.ejecutar("update tbl_documentos set documentotexto='"+autorizacionXml+"' where tabla='tbl_factura_venta' and id_tabla="+idFactura);
+                                                                        }else{
+                                                                            this.objDocumental.ejecutar("insert into tbl_documentos(documentotexto, numero_documento, id_sucursal, tabla, id_tabla, campo_tabla) values('"+autorizacionXml +
+                                                                                    "', "+id_sucursal+numero+", "+id_sucursal+", 'tbl_factura_venta', "+idFactura+", 'documentoxml')");
+                                                                        }
+//                                                                    }
+
+                                                                    //this.setDocumentosMail(objArchivo, clave_acceso);
+                                                                    mensaje = "";
+                                                                    
+                                                                }else{
+                                                                    if(respuestaAutoriz.contains("RECHAZADO") || respuestaAutoriz.contains("NO AUTORIZADO")){
+                                                                        estadoDocumento = "n";
+                                                                        mensaje = respuestaAutoriz.replace("|", ".").replace("\n", " ").replace("\r", " ").replace("\t", " ");
+//                                                                        this.ejecutar("update tbl_factura_venta set estado_documento='n', mensaje='"+
+//                                                                                respuestaAutoriz.replace("|", ".").replace("\n", " ").replace("\r", " ").replace("\t", " ")+"' where id_factura_venta="+idFactura);
+//                                                                        this.enviarMailEmpleado(alias, respuestaAutoriz, "Factura", numero);
+                                                                    }
+                                                                }
+                                                                
+                                                                
+                                                            } else {
+                                                                
+                                                                if (estado.equals("DEVUELTA")) {
+                                                                    estadoDocumento = "n";
+//                                                                    this.ejecutar("update tbl_factura_venta set estado_documento='n', mensaje='"+respuesta+"' where id_factura_venta="+idFactura);
+//                                                                }else{
+//                                                                    this.ejecutar("update tbl_factura_venta set mensaje='"+respuesta+"' where id_factura_venta="+idFactura);
+                                                                }
+                                                                mensaje = respuesta;
+                                                            }
+                                                        } else {
+                                                            mensaje = respuesta;
+//                                                            this.ejecutar("update tbl_factura_venta set mensaje=' Error en documento No. " + numero + ". " + EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion).replace("|", ".").replace("\n", " ").replace("\r", " ").replace("\t", " ") +
+//                                                                "' where id_factura_venta="+idFactura);
+                                                        }
+                                                    }
+
+                                                }catch(Exception e){
+                                                    //   registro de documento en la base documental
+                                                    this.objDocumental.ejecutar("insert into tbl_documentos(documentotexto, numero_documento, id_sucursal, tabla, id_tabla, campo_tabla) values('"+
+                                                        autorizacionXml+"', "+id_sucursal+serie_factura+num_factura+", "+id_sucursal+", 'tbl_factura_venta', "+idFactura+", 'documentoxml')");
+                                                    System.out.println("Error en envio: " + e.getMessage());
+                                                }
+                                                
+                                                this.ejecutar("update tbl_factura_venta set autorizacion_fecha="+fechaAutorizacion+", estado_documento='" + estadoDocumento + "', numero_autorizacion='"+numAutorizacion
+                                                        +"', mensaje='"+mensaje.replace("|", ".").replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+"', documento_xml='"+autorizacionXml+"' where id_factura_venta="+idFactura ) ;
+
+//                                                this.ejecutar("update tbl_factura_venta set estado_documento='"+estadoDocumento+"', clave_acceso='"+claveAcceso
+//                                                +"' where id_factura_venta="+idFactura);
+
+                                                //   registro de documento en la base documental
+//                                                this.objDocumental.ejecutar("insert into tbl_documentos(documentotexto, numero_documento, id_sucursal, tabla, id_tabla, campo_tabla) values('"+
+//                                                        autorizacionXml+"', "+id_sucursal+serie_factura+num_factura+", "+id_sucursal+", 'tbl_factura_venta', "+idFactura+", 'documentoxml')");
+
+                                                String transaccion = "EMISION DE LA FACTURA NRO. "+serie_factura+"-"+num_factura+" CLIENTE CON RUC: "+ruc+" PARA EL PERIODO "+txt_periodo;
+                                                this.ejecutar("INSERT INTO tbl_auditoria(alias,ip_maquina,hora,fecha,transaccion) " +
+                                                        "values('"+usuario+"','127.0.0.1','"+Fecha.getHora()+"','"+Fecha.getFecha("ISO")+"', '"+transaccion+"');");
+
+                                            }else{
+                                                System.out.println("Error al emitir la factura " + serie_factura + "-" + num_factura + " del cliente con RUC " + ruc + ". " + this.getError() );
+                                            }
+                                        }else{
+                                            System.out.println("Error al firmar la factura en formato xml. " + error);
                                         }
                                     }else{
-                                        System.out.println("Error al firmar la factura en formato xml. " + error);
+                                        System.out.println("Error al generar la factura en formato xml. " + error);
                                     }
                                 }else{
-                                    System.out.println("Error al generar la factura en formato xml. " + error);
+                                    System.out.println("El número de factura "+serie_factura+"-"+num_factura+" ya ha sido emitido.");
                                 }
-                            }else{
-                                System.out.println("El número de factura "+serie_factura+"-"+num_factura+" ya ha sido emitido.");
-                            }
 
+                        }else{
+                            System.out.println("La sucursal de código " + id_sucursal + "No tiene un punto de emisión virtual");
+                        }
                     }else{
-                        System.out.println("La sucursal de código " + id_sucursal + "No tiene un punto de emisión virtual");
-                    }
+                        System.out.println("Total a pagar en 0");
+                    }    
                 }catch(Exception e){
                     String msg = "Error en la emision de la prefactura ID: " + id_prefactura + ". " + e.getMessage() + ". " + this.getError();
                     System.out.println(msg);
@@ -622,7 +715,7 @@ public class FacturaVenta extends DataBase{
             String ret_fecha_emision, String ret_ejercicio_fiscal_mes, String ret_ejercicio_fiscal, String ret_impuesto_retenido, 
             String paramRet, String paramAsiento, String xmlFirmado, String dias_conexion, String ids_productos, String cantidades, 
             String preciosUnitarios, String descuentos, String subtotales, String ivas, String totales, String tipoRubros, String idsPrefacturaRubro,
-            String idCliAnt, String monto_vajar, String estado_servicio)
+            String idCliAnt, String monto_vajar, String estado_servicio, String claveAcceso)
     {
         String idFact = "-1";
         try{
@@ -702,7 +795,7 @@ public class FacturaVenta extends DataBase{
                 String vecFactComp[] = idFactComp.split(":");
                 idFact = vecFactComp[0];
                 if(idFact.compareTo("-1")!=0){
-                    this.ejecutar("update tbl_factura_venta set id_instalacion="+id_instalacion+", ip='"+ip+"', radusername='"+radusername+"' where id_factura_venta="+idFact+";");
+                    this.ejecutar("update tbl_factura_venta set id_instalacion="+id_instalacion+", ip='"+ip+"', radusername='"+radusername+"', estado_documento='f', clave_acceso='" + claveAcceso + "' where id_factura_venta="+idFact+";");
                     this.ejecutar("update tbl_prefactura set id_factura_venta="+idFact+", fecha_emision=now()::date, es_fact_impago=false, dias_conexion="+dias_conexion+" where id_prefactura="+id_prefactura+";");
                     
                     if(estado_servicio.compareTo("c")==0||estado_servicio.compareTo("n")==0){
@@ -755,7 +848,7 @@ public class FacturaVenta extends DataBase{
                     }
                     this.transacciones(sql);
                     
-                    }
+                }
                 
                 
                 
@@ -787,6 +880,12 @@ public class FacturaVenta extends DataBase{
         return false;
     }
     
+    
+    public boolean existeArchivo(DataBase objDocumental, String tabla, String idTabla)
+    {
+        ResultSet rs = objDocumental.consulta("select * from tbl_documentos where tabla='"+tabla+"' and id_tabla='"+idTabla+"'");
+        return objDocumental.getFilas(rs) > 0;
+    }
     
     public String[][] getPuntosEmisionVirtuales()
     {
