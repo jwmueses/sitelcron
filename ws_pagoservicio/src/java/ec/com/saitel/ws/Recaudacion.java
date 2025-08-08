@@ -5,6 +5,7 @@
  */
 package ec.com.saitel.ws;
 
+import ec.com.saitel.lib.Archivo;
 import ec.com.saitel.lib.Cadena;
 import ec.com.saitel.lib.Configuracion;
 //import ec.com.saitel.lib.Correo;
@@ -14,6 +15,14 @@ import ec.com.saitel.lib.Fecha;
 import ec.com.saitel.lib.Matriz;
 import ec.com.saitel.lib.Mikrotik;
 import ec.com.saitel.lib.PreFactura;
+import ec.com.saitel.lib.Xml;
+import ec.gob.sri.FirmaXadesBes;
+import ec.gob.sri.wsc.AutorizacionComprobantesWS;
+import ec.gob.sri.wsc.EnvioComprobantesWS;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 //import java.io.BufferedReader;
 //import java.io.File;
 //import java.io.FileReader;
@@ -35,7 +44,17 @@ public class Recaudacion {
     private static final String db = "db_isp";
     private static final String usuario = "postgres";
     private static final String clave = "Gi%9875.-*5+$)"; //  postgres    A0Lpni2       Gi%9875.-*5+$)
+    
+    private String _ipdocumental = "192.168.217.31";    //   192.168.217.16       127.0.0.1
+    private int _puertodocumental = 5432;
+    private String _dbdocumental = "db_isp_documentos";
+    private String _usuariodocumental = "postgres";
+    private String _clavedocumental = "Gi%9875.-*5+$)"; //  postgres    A0Lpni2       Gi%9875.-*5+$)
+    
+    private String ambiente = "2";  //  1=pruebas   2=produccion
     private static final String _dir = "/opt/lampp/htdocs/anexos/fe/"; //       /home/saitel/Documentos/fe/      /opt/lampp/htdocs/anexos/fe/
+    private String _WSENVIO = "https://cel.sri.gob.ec/comprobantes-electronicos-ws/RecepcionComprobantesOffline?wsdl";
+    private String _WSAUTORIZA = "https://cel.sri.gob.ec/comprobantes-electronicos-ws/AutorizacionComprobantesOffline?wsdl";
     
     private static final String _svrMail = "pro.turbo-smtp.com";      //      facturacion.saitelapp.ec    
     private static final int _svrMailPuerto = 587;              //      587
@@ -410,11 +429,10 @@ public class Recaudacion {
             
             Configuracion objDB = new Configuracion(maquina, puerto, db, usuario, clave);
             
-            
+            String clave_certificado = "";
             /*String clave_certificado = objDB.getValor("clave_certificado");
             String ruta_docs_generados = objDB.getValor("docs_generados"); 
             String ruta_docs_firmados = objDB.getValor("docs_firmados"); */
-            String ambiente = "2";
             String ruc_empresa = "1091728857001";
             String razon_social_empresa = "SOLUCIONES AVANZADAS INFORMATICAS Y TELECOMUNICACIONES SAITEL";
             String nombre_comercial = "SAITEL";
@@ -429,7 +447,7 @@ public class Recaudacion {
             String modoSincronizacionMikrotiks = "scripts";
             /*String PAGINA_WEB = objDB.getValor("pagina_web");*/
     //        double  p_iva = Integer.parseInt( objDB.getValor("p_iva1") );
-
+            String tipoEmision = "1"; // 1=normal    2=Indisponibilidad del sistema
 
 
             //String DOCS_ELECTRONICOS = Parametro.getRutaArchivos();
@@ -442,7 +460,6 @@ public class Recaudacion {
                 }
 
                 String desc_venta = "121";
-                String tipoEmision = "1"; // 1=normal    2=Indisponibilidad del sistema
                 //String clave_certificado = "";
                 try{
                     ResultSet r = objDB.consulta("SELECT * FROM tbl_configuracion order by parametro;");
@@ -460,9 +477,9 @@ public class Recaudacion {
                         if(parametro.compareTo("ruc")==0){
                             ruc_empresa = r.getString("valor")!=null ? r.getString("valor") : "1091728857001";
                         }
-                        /*if(parametro.compareTo("clave_certificado")==0){
+                        if(parametro.compareTo("clave_certificado")==0){
                             clave_certificado = r.getString("valor")!=null ? r.getString("valor") : "";
-                        }*/
+                        }
                         if(parametro.compareTo("razon_social")==0){
                             razon_social_empresa = r.getString("valor")!=null ? r.getString("valor") : "SOLUCIONES AVANZADAS INFORMATICAS Y TELECOMUNICACIONES SAITEL";
                         }
@@ -746,11 +763,12 @@ public class Recaudacion {
                                 if(!objPrefactura.facturaDuplicada(serie_factura, num_factura )){
 
                                     String estadoDocumento = "p";
-                                    //String certificado = DOCS_ELECTRONICOS + "certificado.p12";
-                                    //String rutaSalida = DOCS_ELECTRONICOS + "firmados";
+                                    String certificado = _dir + "certificado.p12";
+                                    String rutaSalida = _dir + "firmados";
                                     String claveAcceso = "";
-                                    //String autorizacionXml = "";
-                                    //String respuestaAutoriz = "";
+                                    String autorizacionXml = "";
+                                    String numAutorizacion = "";
+                                    String fechaAutorizacion =  "null";
                                     String vecSerie[] = serie_factura.split("-");
 
 
@@ -758,11 +776,15 @@ public class Recaudacion {
 
                                     claveAcceso = objFE.getClaveAcceso(Fecha.getFecha("SQL"), "01", ruc_empresa, ambiente, vecSerie[0]+vecSerie[1], Cadena.setSecuencial(num_factura), tipoEmision);
 
+//  PRUEBAS
+//razon_social = "PRUEBAS SERVICIO DE RENTAS INTERNAS";
+
                                     String xmlFirmado =objFE.generarXml(claveAcceso, ambiente, tipoEmision, razon_social_empresa, nombre_comercial, ruc_empresa, "01", vecSerie[0], vecSerie[1], 
                                             Cadena.setSecuencial(num_factura), dir_matriz, Fecha.getFecha("SQL"), dir_matriz, num_resolucion, oblga_contabilidad, 
                                             tipo_documento, razon_social, ruc, subtotal, descuento, "0", subtotal_2, iva_2, subtotal_3, iva_3, total_pagar, formaPago, 
                                             ids_productos, descripciones, cantidades, preciosUnitarios, descuentos, subtotales, ivas, pIvas, codigoIvas, direccion, plan);
-    /*                                String documentoXml = _dir + "generados/" + claveAcceso + ".xml";
+                                    
+                                    String documentoXml = _dir + "generados/" + claveAcceso + ".xml";
                                     objFE.salvar(documentoXml);
                                     String error = objFE.getError();
 
@@ -774,18 +796,16 @@ public class Recaudacion {
                                         error = firmaDigital.getError();
 
 
-
                                         if(error.compareTo("")==0){
                                             estadoDocumento = "f";
                                             autorizacionXml = this.getStringFromFile(_dir + "firmados/" + claveAcceso + ".xml");
 
-                                            */
-
+                                            
                                             String idFactura = objPrefactura.emitir(id_sucursal, Integer.parseInt(idPuntoEmision), idPrefactura, id_instalacion, usuarioCaja, serie_factura, num_factura, "1119999999", ruc,
                                                     idFormaPago, formaPagoSaitel, descripcionFormaPago, "", num_documento, "0", id_plan_cuenta_banco, "", "Emisión de la factura por servicios de Internet Nro. " + serie_factura + "-" + num_factura, 
                                                     subtotal, "0", subtotal_2, subtotal_3, descuento, iva_2, iva_3, total_pagar, "array[" + paramArtic + "]", "", "0", 
                                                     "", "", "", "NULL", "0", "array[]::varchar[]", "array[" + paramAsiento + "]", xmlFirmado, String.valueOf(dias_conexion), ids_productos, cantidades, 
-                                                    preciosUnitarios, descuentos, subtotales, ivas, totales, tipoRubros, idsPrefacturaRubro, "", "", estado_servicio);
+                                                    preciosUnitarios, descuentos, subtotales, ivas, totales, tipoRubros, idsPrefacturaRubro, "", "", estado_servicio, claveAcceso);
 
 
                                             if(idFactura.compareTo("-1")!=0){
@@ -794,9 +814,63 @@ public class Recaudacion {
 
                                                 objDB.ejecutar("update tbl_prefactura set por_emitir_factura=false where id_prefactura="+idPrefactura);
 
-                                                objDB.ejecutar("update tbl_factura_venta set conciliado=false, estado_documento='"+estadoDocumento+"', clave_acceso='"+claveAcceso
-                                                +"' where id_factura_venta="+idFactura);
+//                                                objDB.ejecutar("update tbl_factura_venta set conciliado=false, estado_documento='"+estadoDocumento+"', clave_acceso='"+claveAcceso
+//                                                +"' where id_factura_venta="+idFactura);
 
+                                                try {
+                                                    //  envio al sri
+                                                    String rutaArchivoFirmado = _dir + "firmados";
+                                                    ec.gob.sri.comprobantes.ws.RespuestaSolicitud respuestaRecepcion = new ec.gob.sri.comprobantes.ws.RespuestaSolicitud();
+                                                    File ArchivoXML = new File(rutaArchivoFirmado+ File.separatorChar + claveAcceso + ".xml");
+
+                                                    respuestaRecepcion = EnvioComprobantesWS.obtenerRespuestaEnvio(ArchivoXML, claveAcceso, _WSENVIO);
+                                                    String estado = respuestaRecepcion.getEstado();
+                                                    if(estado.equals("RECIBIDA")){
+                                                        estadoDocumento = "r";
+                                                        error = "";
+
+    //                                                    System.out.print("Iniciando consulta de autorizacion: " + Fecha.getHora());
+//                                                        String respuestaAutoriz = AutorizacionComprobantesWS.autorizarComprobanteIndividual(claveAcceso, claveAcceso + ".xml", _WSAUTORIZA);
+//                                                        if (respuestaAutoriz.equals("AUTORIZADO")) {
+//                                                            estadoDocumento = "a";
+//            //                                                objArchivo.setArchivoDocumentalTexto(autorizacionXml, num_factura, "" + id_sucursal, "tbl_factura_venta", id_factura_, "documentoxml", "public", "db_isp");
+//
+//                                                            autorizacionXml = AutorizacionComprobantesWS.getAutorizacionXml();
+//                                                            // obtengo en numero de autorizacion
+//                                                            Xml xml = new Xml();
+//                                                            xml.SetXml(autorizacionXml);
+//                                                            numAutorizacion = xml.getValor("numeroAutorizacion");
+//                                                            fechaAutorizacion = xml.getValor("fechaAutorizacion");
+//                                                            fechaAutorizacion = Fecha.FechaConverter( fechaAutorizacion );
+//                                                            fechaAutorizacion = fechaAutorizacion.compareTo("")!=0 && fechaAutorizacion.toLowerCase().compareTo("null")!=0 ? "'" + fechaAutorizacion + "'" : "null";
+//            //                                                this.setDocumentosMail(objArchivo, clave_acceso, archivo);
+//
+//                                                        } else {
+//                                                            if (respuestaAutoriz.contains("RECHAZADO") || respuestaAutoriz.contains("NO AUTORIZADO")) {
+//                                                                estadoDocumento = "n";
+//                                                            }
+//                                                            error = respuestaAutoriz.replace("|", ".").replace("\n", " ").replace("\r", " ").replace("\t", " ");
+//                                                        }
+//                                                        System.out.print("Fin consulta de autorizacion: " + Fecha.getHora());
+
+            //                                          ok = true;
+                                                    }else{ 
+                                                        String respuesta = EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion);
+                                                        estadoDocumento = "n";
+                                                        error = respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ");
+                                                    }
+                                                } catch(Exception e) {
+                                                    e.printStackTrace();
+                                                }
+                                                objDB.ejecutar("update tbl_factura_venta set estado_documento='" + estadoDocumento + "', numero_autorizacion='" + numAutorizacion + "', autorizacion_fecha=" + fechaAutorizacion 
+                                                    + ", clave_acceso='" + claveAcceso + "', documento_xml='" + autorizacionXml + "', mensaje='" + error.replace("|", ".").replace("\n", " ").replace("\r", " ")
+                                                    + "' where (estado_documento<>'a' or estado_documento is null) and id_factura_venta=" + idFactura);
+                                                
+                                                Archivo objArchivo = new Archivo(_ipdocumental, _puertodocumental, _dbdocumental, _usuariodocumental, _clavedocumental);
+                                                objArchivo.setArchivoDocumentalTexto(autorizacionXml, num_factura, "" + id_sucursal, "tbl_factura_venta", idFactura, "documentoxml", "public", "db_isp");
+                                                objArchivo.cerrar();
+                                                
+                                                
                                                 transaccion = "EMISION DE LA FACTURA NRO. "+serie_factura+"-"+num_factura+" CLIENTE CON RUC: "+ruc+" PARA EL PERIODO "+txt_periodo;
 
                                                 if( modoSincronizacionMikrotiks.compareTo("apis") == 0 ) {
@@ -814,12 +888,12 @@ public class Recaudacion {
                                                 mensaje = "Cliente con DNI "+ruc+", para el periodo "+txt_periodo + ". Error al emitir la factura.";
                                                 transaccion += mensaje + objDB.getError();
                                             }
-                                        /*}else{
+                                        }else{
                                             System.out.println("Error al firmar la factura en formato xml. " + error);
                                         }
                                     }else{
                                         System.out.println("Error al generar la factura en formato xml. " + error);
-                                    }*/
+                                    }
                                 }else{
                                     codigoError = "12";
                                     mensaje = "Cliente con DNI "+ruc+", para el periodo "+txt_periodo + ". El número de factura "+serie_factura+"-"+num_factura+" ya ha sido emitido.";
@@ -867,6 +941,18 @@ public class Recaudacion {
         
         
         return mensaje.replace("\n", ". ");
+    }
+    
+    private String getStringFromFile(String archivo) throws IOException {
+        File file = new File(archivo);
+        FileReader fr = new FileReader(file);
+        BufferedReader br = new BufferedReader(fr);
+        StringBuilder cadXml = new StringBuilder();
+        String linea;
+        while ((linea = br.readLine()) != null) {
+            cadXml.append(linea);
+        }
+        return cadXml.toString();
     }
     
 //    

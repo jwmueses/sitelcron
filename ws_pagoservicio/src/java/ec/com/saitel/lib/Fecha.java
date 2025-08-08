@@ -12,6 +12,8 @@
 
 package ec.com.saitel.lib;
 import java.sql.ResultSet;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 
 public class Fecha
@@ -312,7 +314,7 @@ public class Fecha
         String fechaSQL = fecha;
         if(fecha.indexOf("/")>0){
             String vecFecha[] = fecha.split("/");
-            fechaSQL = vecFecha[0] + "-" + vecFecha[1] + "-" + vecFecha[2];
+            fechaSQL = vecFecha[2] + "-" + vecFecha[1] + "-" + vecFecha[0];
         }
         return fechaSQL;
     }
@@ -495,5 +497,43 @@ public class Fecha
         return fecha;
     }
     
+    public static String getFechaHora() {
+        Calendar cal = Calendar.getInstance();
+        int hora = cal.get(Calendar.HOUR_OF_DAY);
+        int minuto = cal.get(Calendar.MINUTE);
+        int segundo = cal.get(Calendar.SECOND);
+        int milisegundo = cal.get(Calendar.MILLISECOND);
+        String hora_actual = hora + "" + minuto + "" + segundo + "" + milisegundo;
+        String FechaHora = getFecha("ISO") + "" + hora_actual;
+        FechaHora = FechaHora.replaceAll("-", "");
+        return FechaHora;
+    }
+    
+    public static String FechaConverter(String cadenaFecha)
+    {
+        String fechaISO = cadenaFecha;
+        if ( cadenaFecha.length() > 10 ) {
+            // Formato de salida deseado
+            DateTimeFormatter formatoSalida = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            try {
+                if ( cadenaFecha.indexOf("/") > 0 ) {
+                    // Convertir la segunda cadena
+                    // Definir un formateador para la entrada
+                    DateTimeFormatter formatoEntrada2 = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss.SSS");
+                    ZonedDateTime zonedDateTime2 = ZonedDateTime.parse(cadenaFecha, formatoEntrada2);
+                    fechaISO = zonedDateTime2.format(formatoSalida);
+                } else {
+                    // Convertir la primera cadena
+                    // ZonedDateTime es ideal para cadenas con zona horaria (-05:00)
+                    ZonedDateTime zonedDateTime = ZonedDateTime.parse(cadenaFecha);
+                    fechaISO = zonedDateTime.format(formatoSalida);
+                }
+            } catch (Exception e) {
+                fechaISO = cadenaFecha.substring(0, 10);
+                e.printStackTrace();
+            }
+        }
+        return Fecha.SQLaISO( fechaISO );
+    }
     
 }

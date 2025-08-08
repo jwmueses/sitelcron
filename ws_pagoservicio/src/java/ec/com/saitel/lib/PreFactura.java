@@ -266,7 +266,7 @@ public class PreFactura extends DataBase{
             String ret_fecha_emision, String ret_ejercicio_fiscal_mes, String ret_ejercicio_fiscal, String ret_impuesto_retenido, 
             String paramRet, String paramAsiento, String xmlFirmado, String dias_conexion, String ids_productos, String cantidades, 
             String preciosUnitarios, String descuentos, String subtotales, String ivas, String totales, String tipoRubros, String idsPrefacturaRubro, 
-            String idCliAnt, String monto_vajar, String estado_servicio)
+            String idCliAnt, String monto_vajar, String estado_servicio, String claveAcceso)
     {
         String idFact = "-1";
         try{
@@ -326,7 +326,7 @@ public class PreFactura extends DataBase{
                 String vecFactComp[] = idFactComp.split(":");
                 idFact = vecFactComp[0];
                 if(idFact.compareTo("-1")!=0){
-                    this.ejecutar("update tbl_factura_venta set id_instalacion="+id_instalacion+", ip='"+ip+"', radusername='"+radusername+"', conciliado=false where id_factura_venta="+idFact+";");
+                    this.ejecutar("update tbl_factura_venta set id_instalacion="+id_instalacion+", ip='"+ip+"', radusername='"+radusername+"', clave_acceso='"+claveAcceso+"', estado_documento='f', conciliado=false where id_factura_venta="+idFact+";");
                     this.ejecutar("update tbl_prefactura set id_factura_venta="+idFact+", fecha_emision=now()::date, es_fact_impago=false, dias_conexion="+dias_conexion+" where id_prefactura="+id_prefactura+";");
                     
                     if(estado_servicio.compareTo("c")==0||estado_servicio.compareTo("n")==0){
