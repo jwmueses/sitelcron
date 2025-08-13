@@ -13,7 +13,7 @@ import org.quartz.JobExecutionException;
  *
  * @author Sistemas
  */
-public class SRI implements Job{
+public class SRIAutorizacion implements Job{
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException 
     {

@@ -40,13 +40,13 @@ public class VerificacionProcesos {
 
 
                 //  se controla que verifique a partir del dia 6, para prepago y postpago
-                SetReconexionesPostPago reconecionesPostPago = new SetReconexionesPostPago();
-                reconecionesPostPago.execute(null);
+//                SetReconexionesPostPago reconecionesPostPago = new SetReconexionesPostPago();
+//                reconecionesPostPago.execute(null);
 
 
                 //  se controla que verifique a partir del dia 16
-                SetReconexionesPrePago reconecionesPrePago = new SetReconexionesPrePago();
-                reconecionesPrePago.execute(null);
+//                SetReconexionesPrePago reconecionesPrePago = new SetReconexionesPrePago();
+//                reconecionesPrePago.execute(null);
 
 
                 //  se controla que verifique a partir del dia 25 a las 23 horas

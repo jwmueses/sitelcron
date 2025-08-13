@@ -35,8 +35,8 @@ public class DocumentosElectronicosSri{
         String doc_clave = Parametro.getDocumentalClave();
         DataBase objDocumental = new DataBase( doc_ip, doc_puerto, doc_db, doc_usuario, doc_clave );
         
-        Archivo objDataBase = new Archivo( Parametro.getIp(), Parametro.getPuerto(), Parametro.getBaseDatos(), Parametro.getUsuario(), Parametro.getClave() );
-        String rutaArchivoFirmado = DirectorioConfiguracion.getRutaArchivoFirmado();
+//        Archivo objDataBase = new Archivo( Parametro.getIp(), Parametro.getPuerto(), Parametro.getBaseDatos(), Parametro.getUsuario(), Parametro.getClave() );
+//        String rutaArchivoFirmado = DirectorioConfiguracion.getRutaArchivoFirmado();
         
         
 //        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de generación de facturas XML firmadas. " + rutaArchivoFirmado );
@@ -46,6 +46,8 @@ public class DocumentosElectronicosSri{
         FacturaVenta dbFacturaVenta = new FacturaVenta(objDocumental, Parametro.getIp(), Parametro.getPuerto(), Parametro.getBaseDatos(), Parametro.getUsuario(), Parametro.getClave());
         dbFacturaVenta.procesarXmlSriTodos();
         dbFacturaVenta.cerrarConexiones();
+        
+        objDocumental.cerrar();
             
 //        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Fin de generación de facturas XML firmadas. " + rutaArchivoFirmado );
         
@@ -54,7 +56,7 @@ public class DocumentosElectronicosSri{
         
         
         
-        try{
+//        try{
 
 
             
@@ -123,178 +125,178 @@ public class DocumentosElectronicosSri{
 
 
 
-            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de envio de retenciones al SRI");
-            //  Envio de retenciones
-            String pkRetencionesRecibidos = "";
-            try{
-                ResultSet rs = objDataBase.consulta("select id_retencion_compra, ret_num_serie || '-' || ret_num_retencion as numero, clave_acceso, ret_fecha_emision from tbl_retencion_compra where estado_documento='f' and anulado=false");
-                while(rs.next()){
-                    try{
-                        String clave_acceso = rs.getString("clave_acceso")!=null ? rs.getString("clave_acceso") : "";
-                        String numero = rs.getString("numero")!=null ? rs.getString("numero") : "";
-                        String id_retencion_compra = rs.getString("id_retencion_compra")!=null ? rs.getString("id_retencion_compra") : "";
-                        String fecha_emision = rs.getString("ret_fecha_emision")!=null ? rs.getString("ret_fecha_emision") : "";
-
-                        if ( Fecha.getTimeStamp( fecha_emision )  ==  Fecha.getTimeStamp( Fecha.getFecha("ISO") ) ) {
-                            ec.gob.sri.comprobantes.ws.RespuestaSolicitud respuestaRecepcion = new ec.gob.sri.comprobantes.ws.RespuestaSolicitud();
-                            File ArchivoXML = new File(rutaArchivoFirmado + File.separatorChar + clave_acceso + ".xml");
-
-                            respuestaRecepcion = EnvioComprobantesWS.obtenerRespuestaEnvio(ArchivoXML, clave_acceso, Parametro.getServicioWebEnvio());
-                            String estado = respuestaRecepcion.getEstado();
-                            if(estado != null){
-                                if(estado.equals("RECIBIDA")){
-    //                                System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": " + clave_acceso);
-                                    pkRetencionesRecibidos += id_retencion_compra + ",";
-                                }else {
-                                    String respuesta = EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion);
-                                    if (estado.equals("DEVUELTA")) {
-                                        objDataBase.ejecutar("update tbl_retencion_compra set estado_documento='n', mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
-                                            "' where id_retencion_compra="+id_retencion_compra);
-                                    }else{
-                                        objDataBase.ejecutar("update tbl_retencion_compra set mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
-                                            "' where id_retencion_compra="+id_retencion_compra);
-                                    }
-                                }
-                            }else{
-                                objDataBase.ejecutar("update tbl_retencion_compra set mensaje=' Error en documento No. " + numero + ". " + EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion)+
-                                    "' where id_retencion_compra="+id_retencion_compra);
-                            }
-                        }
-                    }catch(Exception e){
-                        System.out.println("Error en envio: " + e.getMessage());
-                    }
-                }
-                rs.close();
-            }catch(Exception e){
-                System.out.println(e.getMessage());
-            }
-            if(pkRetencionesRecibidos.compareTo("")!=0){
-                pkRetencionesRecibidos = pkRetencionesRecibidos.substring( 0, pkRetencionesRecibidos.length()-1 );
-                objDataBase.ejecutar("update tbl_retencion_compra set estado_documento='r' where id_retencion_compra in("+pkRetencionesRecibidos+")");
-            }
-
-            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de envio de retenciones al SRI");
-
-
-
-
-
-
-
-            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de envio de notas de crédito al SRI");
-            //  Envio de notas de credito
-            String pkNotasCreditoRecibidos = "";
-            try{
-                ResultSet rs = objDataBase.consulta("select id_nota_credito_venta, serie_nota || '-' || num_nota as numero, clave_acceso, fecha_emision from tbl_nota_credito_venta where estado_documento='f' and anulado=false");
-                while(rs.next()){
-                    try{
-                        String clave_acceso = rs.getString("clave_acceso")!=null ? rs.getString("clave_acceso") : "";
-                        String numero = rs.getString("numero")!=null ? rs.getString("numero") : "";
-                        String id_nota_credito_venta = rs.getString("id_nota_credito_venta")!=null ? rs.getString("id_nota_credito_venta") : "";
-                        String fecha_emision = rs.getString("fecha_emision")!=null ? rs.getString("fecha_emision") : "";
-
-                        if ( Fecha.getTimeStamp( fecha_emision )  ==  Fecha.getTimeStamp( Fecha.getFecha("ISO") ) ) {
-                            ec.gob.sri.comprobantes.ws.RespuestaSolicitud respuestaRecepcion = new ec.gob.sri.comprobantes.ws.RespuestaSolicitud();
-                            File ArchivoXML = new File(rutaArchivoFirmado + File.separatorChar + clave_acceso + ".xml");
-
-                            respuestaRecepcion = EnvioComprobantesWS.obtenerRespuestaEnvio(ArchivoXML, clave_acceso, Parametro.getServicioWebEnvio());
-                            String estado = respuestaRecepcion.getEstado();
-                            if(estado != null){
-                                if(estado.equals("RECIBIDA")){
-    //                                System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": " + clave_acceso);
-                                    pkNotasCreditoRecibidos += id_nota_credito_venta + ",";
-                                }else {
-                                    String respuesta = EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion);
-                                    if (estado.equals("DEVUELTA")) {
-                                        objDataBase.ejecutar("update tbl_nota_credito_venta set estado_documento='n', mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
-                                            "' where id_nota_credito_venta="+id_nota_credito_venta);
-                                    }else{
-                                        objDataBase.ejecutar("update tbl_nota_credito_venta set mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
-                                            "' where id_nota_credito_venta="+id_nota_credito_venta);
-                                    }
-                                }
-                            }else{
-                                objDataBase.ejecutar("update tbl_nota_credito_venta set mensaje=' Error en documento No. " + numero + ". " + EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion)+
-                                    "' where id_nota_credito_venta="+id_nota_credito_venta);
-                            }
-                        }
-                    }catch(Exception e){
-                        System.out.println("Error en envio: " + e.getMessage());
-                    }
-                }
-                rs.close();
-            }catch(Exception e){
-                System.out.println(e.getMessage());
-            }
-            if(pkNotasCreditoRecibidos.compareTo("")!=0){
-                pkNotasCreditoRecibidos = pkNotasCreditoRecibidos.substring( 0, pkNotasCreditoRecibidos.length()-1 );
-                objDataBase.ejecutar("update tbl_nota_credito_venta set estado_documento='r' where id_nota_credito_venta in("+pkNotasCreditoRecibidos+")");
-            }
-
-            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de envio de notas de crédito al SRI");
-
-
-
-
-
-
-
-
-
-
-
-
-            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de envio de liquidaciones de compras y servicios al SRI");
-            //  Envio de notas de credito
-            String pkLiquidaciones = "";
-            try{
-                ResultSet rs = objDataBase.consulta("select id_liquidacion_compra, serie_liquidacion || '-' || num_liquidacion as numero, clave_acceso, fecha_emision from tbl_liquidacion_compra where estado_documento='f' and anulado=false");
-                while(rs.next()){
-                    try{
-                        String clave_acceso = rs.getString("clave_acceso")!=null ? rs.getString("clave_acceso") : "";
-                        String numero = rs.getString("numero")!=null ? rs.getString("numero") : "";
-                        String id_liquidacion_compra = rs.getString("id_liquidacion_compra")!=null ? rs.getString("id_liquidacion_compra") : "";
-                        String fecha_emision = rs.getString("fecha_emision")!=null ? rs.getString("fecha_emision") : "";
-
-                        if ( Fecha.getTimeStamp( fecha_emision )  ==  Fecha.getTimeStamp( Fecha.getFecha("ISO") ) ) {
-                            ec.gob.sri.comprobantes.ws.RespuestaSolicitud respuestaRecepcion = new ec.gob.sri.comprobantes.ws.RespuestaSolicitud();
-                            File ArchivoXML = new File(rutaArchivoFirmado + File.separatorChar + clave_acceso + ".xml");
-
-                            respuestaRecepcion = EnvioComprobantesWS.obtenerRespuestaEnvio(ArchivoXML, clave_acceso, Parametro.getServicioWebEnvio());
-                            String estado = respuestaRecepcion.getEstado();
-                            if(estado != null){
-                                if(estado.equals("RECIBIDA")){
-    //                                System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": " + clave_acceso);
-                                    pkLiquidaciones += id_liquidacion_compra + ",";
-                                }else {
-                                    String respuesta = EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion);
-                                    if (estado.equals("DEVUELTA")) {
-                                        objDataBase.ejecutar("update tbl_liquidacion_compra set estado_documento='n', mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
-                                            "' where id_liquidacion_compra="+id_liquidacion_compra);
-                                    }else{
-                                        objDataBase.ejecutar("update tbl_liquidacion_compra set mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
-                                            "' where id_liquidacion_compra="+id_liquidacion_compra);
-                                    }
-                                }
-                            }else{
-                                objDataBase.ejecutar("update tbl_liquidacion_compra set mensaje=' Error en documento No. " + numero + ". " + EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion)+
-                                    "' where id_liquidacion_compra="+id_liquidacion_compra);
-                            }
-                        }
-                    }catch(Exception e){
-                        System.out.println("Error en envio: " + e.getMessage());
-                    }
-                }
-                rs.close();
-            }catch(Exception e){
-                System.out.println(e.getMessage());
-            }
-            if(pkLiquidaciones.compareTo("")!=0){
-                pkLiquidaciones = pkLiquidaciones.substring( 0, pkLiquidaciones.length()-1 );
-                objDataBase.ejecutar("update tbl_liquidacion_compra set estado_documento='r' where id_liquidacion_compra in("+pkLiquidaciones+")");
-            }
-
-            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de envio de liquidaciones de compras y servicios al SRI");
+//            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de envio de retenciones al SRI");
+//            //  Envio de retenciones
+//            String pkRetencionesRecibidos = "";
+//            try{
+//                ResultSet rs = objDataBase.consulta("select id_retencion_compra, ret_num_serie || '-' || ret_num_retencion as numero, clave_acceso, ret_fecha_emision from tbl_retencion_compra where estado_documento='f' and anulado=false");
+//                while(rs.next()){
+//                    try{
+//                        String clave_acceso = rs.getString("clave_acceso")!=null ? rs.getString("clave_acceso") : "";
+//                        String numero = rs.getString("numero")!=null ? rs.getString("numero") : "";
+//                        String id_retencion_compra = rs.getString("id_retencion_compra")!=null ? rs.getString("id_retencion_compra") : "";
+//                        String fecha_emision = rs.getString("ret_fecha_emision")!=null ? rs.getString("ret_fecha_emision") : "";
+//
+//                        if ( Fecha.getTimeStamp( fecha_emision )  ==  Fecha.getTimeStamp( Fecha.getFecha("ISO") ) ) {
+//                            ec.gob.sri.comprobantes.ws.RespuestaSolicitud respuestaRecepcion = new ec.gob.sri.comprobantes.ws.RespuestaSolicitud();
+//                            File ArchivoXML = new File(rutaArchivoFirmado + File.separatorChar + clave_acceso + ".xml");
+//
+//                            respuestaRecepcion = EnvioComprobantesWS.obtenerRespuestaEnvio(ArchivoXML, clave_acceso, Parametro.getServicioWebEnvio());
+//                            String estado = respuestaRecepcion.getEstado();
+//                            if(estado != null){
+//                                if(estado.equals("RECIBIDA")){
+//    //                                System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": " + clave_acceso);
+//                                    pkRetencionesRecibidos += id_retencion_compra + ",";
+//                                }else {
+//                                    String respuesta = EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion);
+//                                    if (estado.equals("DEVUELTA")) {
+//                                        objDataBase.ejecutar("update tbl_retencion_compra set estado_documento='n', mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
+//                                            "' where id_retencion_compra="+id_retencion_compra);
+//                                    }else{
+//                                        objDataBase.ejecutar("update tbl_retencion_compra set mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
+//                                            "' where id_retencion_compra="+id_retencion_compra);
+//                                    }
+//                                }
+//                            }else{
+//                                objDataBase.ejecutar("update tbl_retencion_compra set mensaje=' Error en documento No. " + numero + ". " + EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion)+
+//                                    "' where id_retencion_compra="+id_retencion_compra);
+//                            }
+//                        }
+//                    }catch(Exception e){
+//                        System.out.println("Error en envio: " + e.getMessage());
+//                    }
+//                }
+//                rs.close();
+//            }catch(Exception e){
+//                System.out.println(e.getMessage());
+//            }
+//            if(pkRetencionesRecibidos.compareTo("")!=0){
+//                pkRetencionesRecibidos = pkRetencionesRecibidos.substring( 0, pkRetencionesRecibidos.length()-1 );
+//                objDataBase.ejecutar("update tbl_retencion_compra set estado_documento='r' where id_retencion_compra in("+pkRetencionesRecibidos+")");
+//            }
+//
+//            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de envio de retenciones al SRI");
+//
+//
+//
+//
+//
+//
+//
+//            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de envio de notas de crédito al SRI");
+//            //  Envio de notas de credito
+//            String pkNotasCreditoRecibidos = "";
+//            try{
+//                ResultSet rs = objDataBase.consulta("select id_nota_credito_venta, serie_nota || '-' || num_nota as numero, clave_acceso, fecha_emision from tbl_nota_credito_venta where estado_documento='f' and anulado=false");
+//                while(rs.next()){
+//                    try{
+//                        String clave_acceso = rs.getString("clave_acceso")!=null ? rs.getString("clave_acceso") : "";
+//                        String numero = rs.getString("numero")!=null ? rs.getString("numero") : "";
+//                        String id_nota_credito_venta = rs.getString("id_nota_credito_venta")!=null ? rs.getString("id_nota_credito_venta") : "";
+//                        String fecha_emision = rs.getString("fecha_emision")!=null ? rs.getString("fecha_emision") : "";
+//
+//                        if ( Fecha.getTimeStamp( fecha_emision )  ==  Fecha.getTimeStamp( Fecha.getFecha("ISO") ) ) {
+//                            ec.gob.sri.comprobantes.ws.RespuestaSolicitud respuestaRecepcion = new ec.gob.sri.comprobantes.ws.RespuestaSolicitud();
+//                            File ArchivoXML = new File(rutaArchivoFirmado + File.separatorChar + clave_acceso + ".xml");
+//
+//                            respuestaRecepcion = EnvioComprobantesWS.obtenerRespuestaEnvio(ArchivoXML, clave_acceso, Parametro.getServicioWebEnvio());
+//                            String estado = respuestaRecepcion.getEstado();
+//                            if(estado != null){
+//                                if(estado.equals("RECIBIDA")){
+//    //                                System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": " + clave_acceso);
+//                                    pkNotasCreditoRecibidos += id_nota_credito_venta + ",";
+//                                }else {
+//                                    String respuesta = EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion);
+//                                    if (estado.equals("DEVUELTA")) {
+//                                        objDataBase.ejecutar("update tbl_nota_credito_venta set estado_documento='n', mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
+//                                            "' where id_nota_credito_venta="+id_nota_credito_venta);
+//                                    }else{
+//                                        objDataBase.ejecutar("update tbl_nota_credito_venta set mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
+//                                            "' where id_nota_credito_venta="+id_nota_credito_venta);
+//                                    }
+//                                }
+//                            }else{
+//                                objDataBase.ejecutar("update tbl_nota_credito_venta set mensaje=' Error en documento No. " + numero + ". " + EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion)+
+//                                    "' where id_nota_credito_venta="+id_nota_credito_venta);
+//                            }
+//                        }
+//                    }catch(Exception e){
+//                        System.out.println("Error en envio: " + e.getMessage());
+//                    }
+//                }
+//                rs.close();
+//            }catch(Exception e){
+//                System.out.println(e.getMessage());
+//            }
+//            if(pkNotasCreditoRecibidos.compareTo("")!=0){
+//                pkNotasCreditoRecibidos = pkNotasCreditoRecibidos.substring( 0, pkNotasCreditoRecibidos.length()-1 );
+//                objDataBase.ejecutar("update tbl_nota_credito_venta set estado_documento='r' where id_nota_credito_venta in("+pkNotasCreditoRecibidos+")");
+//            }
+//
+//            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de envio de notas de crédito al SRI");
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de envio de liquidaciones de compras y servicios al SRI");
+//            //  Envio de notas de credito
+//            String pkLiquidaciones = "";
+//            try{
+//                ResultSet rs = objDataBase.consulta("select id_liquidacion_compra, serie_liquidacion || '-' || num_liquidacion as numero, clave_acceso, fecha_emision from tbl_liquidacion_compra where estado_documento='f' and anulado=false");
+//                while(rs.next()){
+//                    try{
+//                        String clave_acceso = rs.getString("clave_acceso")!=null ? rs.getString("clave_acceso") : "";
+//                        String numero = rs.getString("numero")!=null ? rs.getString("numero") : "";
+//                        String id_liquidacion_compra = rs.getString("id_liquidacion_compra")!=null ? rs.getString("id_liquidacion_compra") : "";
+//                        String fecha_emision = rs.getString("fecha_emision")!=null ? rs.getString("fecha_emision") : "";
+//
+//                        if ( Fecha.getTimeStamp( fecha_emision )  ==  Fecha.getTimeStamp( Fecha.getFecha("ISO") ) ) {
+//                            ec.gob.sri.comprobantes.ws.RespuestaSolicitud respuestaRecepcion = new ec.gob.sri.comprobantes.ws.RespuestaSolicitud();
+//                            File ArchivoXML = new File(rutaArchivoFirmado + File.separatorChar + clave_acceso + ".xml");
+//
+//                            respuestaRecepcion = EnvioComprobantesWS.obtenerRespuestaEnvio(ArchivoXML, clave_acceso, Parametro.getServicioWebEnvio());
+//                            String estado = respuestaRecepcion.getEstado();
+//                            if(estado != null){
+//                                if(estado.equals("RECIBIDA")){
+//    //                                System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": " + clave_acceso);
+//                                    pkLiquidaciones += id_liquidacion_compra + ",";
+//                                }else {
+//                                    String respuesta = EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion);
+//                                    if (estado.equals("DEVUELTA")) {
+//                                        objDataBase.ejecutar("update tbl_liquidacion_compra set estado_documento='n', mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
+//                                            "' where id_liquidacion_compra="+id_liquidacion_compra);
+//                                    }else{
+//                                        objDataBase.ejecutar("update tbl_liquidacion_compra set mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
+//                                            "' where id_liquidacion_compra="+id_liquidacion_compra);
+//                                    }
+//                                }
+//                            }else{
+//                                objDataBase.ejecutar("update tbl_liquidacion_compra set mensaje=' Error en documento No. " + numero + ". " + EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion)+
+//                                    "' where id_liquidacion_compra="+id_liquidacion_compra);
+//                            }
+//                        }
+//                    }catch(Exception e){
+//                        System.out.println("Error en envio: " + e.getMessage());
+//                    }
+//                }
+//                rs.close();
+//            }catch(Exception e){
+//                System.out.println(e.getMessage());
+//            }
+//            if(pkLiquidaciones.compareTo("")!=0){
+//                pkLiquidaciones = pkLiquidaciones.substring( 0, pkLiquidaciones.length()-1 );
+//                objDataBase.ejecutar("update tbl_liquidacion_compra set estado_documento='r' where id_liquidacion_compra in("+pkLiquidaciones+")");
+//            }
+//
+//            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de envio de liquidaciones de compras y servicios al SRI");
 
 
 
@@ -380,14 +382,14 @@ public class DocumentosElectronicosSri{
 
 
 
-        ResultSet rsMails = objDataBase.consulta("select alias, nombre || ' ' || apellido as empleado, email from tbl_empleado where estado=true and eliminado=false order by alias");
-        this.mails =  Matriz.ResultSetAMatriz(rsMails);
-        String autorizacionXml = "";
-        String pkFacturasAutorizadas = "";
-        String pkRetencionesAutorizadas = "";
-        String pkNotasCreditoAutorizadas = "";
-        String pkLiquidacionesAutorizadas = "";
-        String pkGuiasRemisionAutorizadas = "";
+//        ResultSet rsMails = objDataBase.consulta("select alias, nombre || ' ' || apellido as empleado, email from tbl_empleado where estado=true and eliminado=false order by alias");
+//        this.mails =  Matriz.ResultSetAMatriz(rsMails);
+//        String autorizacionXml = "";
+//        String pkFacturasAutorizadas = "";
+//        String pkRetencionesAutorizadas = "";
+//        String pkNotasCreditoAutorizadas = "";
+//        String pkLiquidacionesAutorizadas = "";
+//        String pkGuiasRemisionAutorizadas = "";
 
 
 
@@ -733,10 +735,10 @@ public class DocumentosElectronicosSri{
 
 
 
-        String _DIR_PDF = Parametro.getRutaArchivos() + "pdfs/";
-        Properties propiedades = new Properties();
-        propiedades.setProperty("starttls", "false");
-        propiedades.setProperty("ssl", "true");
+//        String _DIR_PDF = Parametro.getRutaArchivos() + "pdfs/";
+//        Properties propiedades = new Properties();
+//        propiedades.setProperty("starttls", "false");
+//        propiedades.setProperty("ssl", "true");
 
 
 //            Correo correo = new Correo( Parametro.getSvrMail(), Parametro.getSvrMailPuerto(), Parametro.getRemitente(), Parametro.getRemitenteClave() );
@@ -845,92 +847,92 @@ public class DocumentosElectronicosSri{
 //
 //
 //
-            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Envío de correos de retenciones a proveedores");
-            // RETENCIONES
-
-            if(pkRetencionesAutorizadas.compareTo("")!=0){
-                try{
-                    ResultSet rsP = objDataBase.consulta("select rc.id_retencion_compra, p.razon_social, rc.ret_num_serie||'-'||rc.ret_num_retencion as num_retencion, "
-                        + "rc.ret_fecha_emision, rc.ret_ejercicio_fiscal, rc.ret_impuesto_retenido, rc.ret_ejercicio_fiscal_mes, rc.emision, rc.clave_acceso, p.email "
-                        + "from tbl_retencion_compra rc, tbl_factura_compra fc, tbl_proveedor p "
-                        + "where estado_documento='a' and rc.id_factura_compra=fc.id_factura_compra and fc.id_proveedor=p.id_proveedor "
-                        + "and rc.clave_acceso in ("+pkRetencionesAutorizadas.substring(0, pkRetencionesAutorizadas.length()-1)+");");
-
-                    while(rsP.next()){
-
-                        String email=rsP.getString("email");
-
-                        if( email.compareTo("") != 0 ) {
-                            String id_retencion_compra=rsP.getString("id_retencion_compra");
-                            String nombres=rsP.getString("razon_social");
-                            String num_retencion=rsP.getString("num_retencion");
-                            String fecha_emision=rsP.getString("ret_fecha_emision");
-                            String retenido=rsP.getString("ret_impuesto_retenido");
-                            String ejercicio_fiscal=rsP.getString("ret_ejercicio_fiscal_mes")+"-"+rsP.getString("ret_ejercicio_fiscal");
-                            String clave_acceso=rsP.getString("clave_acceso");
-
-
-                            String documento_xml="";
-                            try{
-                                ResultSet res = objDocumental.consulta("select documentotexto from tbl_documentos where tabla='tbl_retencion_compra' and id_tabla="+id_retencion_compra);
-                                if(res.next()){
-                                    documento_xml = res.getString("documentotexto")!=null ? res.getString("documentotexto") : "";
-                                    res.close();
-                                }
-                            }catch(Exception e){
-                                e.printStackTrace();
-                            }
-
-                            //String path = String.valueOf(request.getRequestURL());
-                            //path = path.substring(0, path.lastIndexOf("/"));
-                            frmGeneraPdf pdf= new frmGeneraPdf();
-                            documento_xml=pdf.quitarTildes(documento_xml);
-                            String xml = _DIR_PDF + this.getArchivoXml(_DIR_PDF, clave_acceso, documento_xml);
-                            pdf.GenerarFactura(objDataBase, xml, _DIR_PDF, clave_acceso);
-
-                            List adjuntos=new ArrayList();
-                            adjuntos.add(xml+".xml");
-                            adjuntos.add(xml+".pdf");
-                            StringBuilder mensaje=new StringBuilder();
-
-                            mensaje.append("<i>Estimado Proveedor.</i><br />");
-                            mensaje.append("<b>"+nombres+"</b /><br /><br />");
-                            mensaje.append("Con el prop&oacute;sito de brindarle un mejor servicio, SAITEL cambi&oacute; sus facturas f&iacute;sicas por electr&oacute;nicas, lo que le permitir&aacute; contar con informaci&oacute;n "
-                                    + "inmediata sobre los valores facturados y fechas l&iacute;mites de pago. Con esta medida adem&aacute;s, contribuimos a la preservaci&oacute;n del medio ambiente.<br />"
-                                    +"El archivo adjunto corresponde a la Factura Electr&oacute;nica, tributaria y legalmente v&aacute;lida para las declaraciones de impuestos ante el SRI.<br /><br />");
-                            mensaje.append("<b>Resumen</b><br />");
-                            mensaje.append("<b>No. DE RETENCION: </b>"+num_retencion+"<br>");
-                            mensaje.append("<b>FECHA DE EMISION: </b>"+fecha_emision+"<br>");
-                            mensaje.append("<b>RETENCION DEL EJERCICIO FICAL: </b>"+ejercicio_fiscal+"<br>");
-                            mensaje.append("<b>IMPUESTO RETENIDO: </b>"+retenido+"<br>");
-                            mensaje.append("<b>CLAVE DE ACCESO: </b>"+clave_acceso+"<br /><br />");
-                            mensaje.append("También puede realizar la impresi&oacute;n de su documento en pdf <a href='http://www.saitel.ec/pag/electronico.html' target='_blank'> www.saitel.ec</a><br><br>");
-                            mensaje.append("Atentamente.<br>");
-                            mensaje.append("<b>Soluciones Inform&aacute;ticas Avanzadas y Telecomunicaciones SAITEL</b><br />");
-                            mensaje.append("<b>IMPORTANTE:</b><br>Este correo es informativo, favor no responder al mismo, ya que no se encuentra habilitada para recibir mensajes.<b>");
-
-                            Correo.enviar( Parametro.getSvrMail(), 
-                                    Parametro.getSvrMailPuerto(), 
-                                    Parametro.getRemitente(), 
-                                    Parametro.getRemitenteClave(), 
-                                    email, 
-                                    "", 
-                                    "",
-                                    "SAITEL - RETENCION ELECTRONICA",
-                                    mensaje, 
-                                    true, 
-                                    adjuntos,
-                                    propiedades);
-                        }
-
-                    } 
-
-                }catch(Exception e){
-                    e.printStackTrace();
-                }
-            }
-
-            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de envío de correos de retenciones a proveedores");
+//            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Envío de correos de retenciones a proveedores");
+//            // RETENCIONES
+//
+//            if(pkRetencionesAutorizadas.compareTo("")!=0){
+//                try{
+//                    ResultSet rsP = objDataBase.consulta("select rc.id_retencion_compra, p.razon_social, rc.ret_num_serie||'-'||rc.ret_num_retencion as num_retencion, "
+//                        + "rc.ret_fecha_emision, rc.ret_ejercicio_fiscal, rc.ret_impuesto_retenido, rc.ret_ejercicio_fiscal_mes, rc.emision, rc.clave_acceso, p.email "
+//                        + "from tbl_retencion_compra rc, tbl_factura_compra fc, tbl_proveedor p "
+//                        + "where estado_documento='a' and rc.id_factura_compra=fc.id_factura_compra and fc.id_proveedor=p.id_proveedor "
+//                        + "and rc.clave_acceso in ("+pkRetencionesAutorizadas.substring(0, pkRetencionesAutorizadas.length()-1)+");");
+//
+//                    while(rsP.next()){
+//
+//                        String email=rsP.getString("email");
+//
+//                        if( email.compareTo("") != 0 ) {
+//                            String id_retencion_compra=rsP.getString("id_retencion_compra");
+//                            String nombres=rsP.getString("razon_social");
+//                            String num_retencion=rsP.getString("num_retencion");
+//                            String fecha_emision=rsP.getString("ret_fecha_emision");
+//                            String retenido=rsP.getString("ret_impuesto_retenido");
+//                            String ejercicio_fiscal=rsP.getString("ret_ejercicio_fiscal_mes")+"-"+rsP.getString("ret_ejercicio_fiscal");
+//                            String clave_acceso=rsP.getString("clave_acceso");
+//
+//
+//                            String documento_xml="";
+//                            try{
+//                                ResultSet res = objDocumental.consulta("select documentotexto from tbl_documentos where tabla='tbl_retencion_compra' and id_tabla="+id_retencion_compra);
+//                                if(res.next()){
+//                                    documento_xml = res.getString("documentotexto")!=null ? res.getString("documentotexto") : "";
+//                                    res.close();
+//                                }
+//                            }catch(Exception e){
+//                                e.printStackTrace();
+//                            }
+//
+//                            //String path = String.valueOf(request.getRequestURL());
+//                            //path = path.substring(0, path.lastIndexOf("/"));
+//                            frmGeneraPdf pdf= new frmGeneraPdf();
+//                            documento_xml=pdf.quitarTildes(documento_xml);
+//                            String xml = _DIR_PDF + this.getArchivoXml(_DIR_PDF, clave_acceso, documento_xml);
+//                            pdf.GenerarFactura(objDataBase, xml, _DIR_PDF, clave_acceso);
+//
+//                            List adjuntos=new ArrayList();
+//                            adjuntos.add(xml+".xml");
+//                            adjuntos.add(xml+".pdf");
+//                            StringBuilder mensaje=new StringBuilder();
+//
+//                            mensaje.append("<i>Estimado Proveedor.</i><br />");
+//                            mensaje.append("<b>"+nombres+"</b /><br /><br />");
+//                            mensaje.append("Con el prop&oacute;sito de brindarle un mejor servicio, SAITEL cambi&oacute; sus facturas f&iacute;sicas por electr&oacute;nicas, lo que le permitir&aacute; contar con informaci&oacute;n "
+//                                    + "inmediata sobre los valores facturados y fechas l&iacute;mites de pago. Con esta medida adem&aacute;s, contribuimos a la preservaci&oacute;n del medio ambiente.<br />"
+//                                    +"El archivo adjunto corresponde a la Factura Electr&oacute;nica, tributaria y legalmente v&aacute;lida para las declaraciones de impuestos ante el SRI.<br /><br />");
+//                            mensaje.append("<b>Resumen</b><br />");
+//                            mensaje.append("<b>No. DE RETENCION: </b>"+num_retencion+"<br>");
+//                            mensaje.append("<b>FECHA DE EMISION: </b>"+fecha_emision+"<br>");
+//                            mensaje.append("<b>RETENCION DEL EJERCICIO FICAL: </b>"+ejercicio_fiscal+"<br>");
+//                            mensaje.append("<b>IMPUESTO RETENIDO: </b>"+retenido+"<br>");
+//                            mensaje.append("<b>CLAVE DE ACCESO: </b>"+clave_acceso+"<br /><br />");
+//                            mensaje.append("También puede realizar la impresi&oacute;n de su documento en pdf <a href='http://www.saitel.ec/pag/electronico.html' target='_blank'> www.saitel.ec</a><br><br>");
+//                            mensaje.append("Atentamente.<br>");
+//                            mensaje.append("<b>Soluciones Inform&aacute;ticas Avanzadas y Telecomunicaciones SAITEL</b><br />");
+//                            mensaje.append("<b>IMPORTANTE:</b><br>Este correo es informativo, favor no responder al mismo, ya que no se encuentra habilitada para recibir mensajes.<b>");
+//
+//                            Correo.enviar( Parametro.getSvrMail(), 
+//                                    Parametro.getSvrMailPuerto(), 
+//                                    Parametro.getRemitente(), 
+//                                    Parametro.getRemitenteClave(), 
+//                                    email, 
+//                                    "", 
+//                                    "",
+//                                    "SAITEL - RETENCION ELECTRONICA",
+//                                    mensaje, 
+//                                    true, 
+//                                    adjuntos,
+//                                    propiedades);
+//                        }
+//
+//                    } 
+//
+//                }catch(Exception e){
+//                    e.printStackTrace();
+//                }
+//            }
+//
+//            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de envío de correos de retenciones a proveedores");
 
 //
 //
@@ -1025,12 +1027,12 @@ public class DocumentosElectronicosSri{
 
                        
             
-        }catch(Exception e){
-            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": " + e.getMessage());
-        }finally{
-            objDataBase.cerrar();
-            objDocumental.cerrar();
-        }
+//        }catch(Exception e){
+//            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": " + e.getMessage());
+//        }finally{
+//            objDataBase.cerrar();
+//            objDocumental.cerrar();
+//        }
         
     }
     
@@ -1064,6 +1066,335 @@ public class DocumentosElectronicosSri{
     }
     
     
+    public void enviarDocumentos()
+    {
+        String doc_ip = Parametro.getDocumentalIp();      //  127.0.0.1     pruebas = 192.168.217.16
+        int doc_puerto = Parametro.getDocumentalPuerto();
+        String doc_db = Parametro.getDocumentalBaseDatos();
+        String doc_usuario = Parametro.getDocumentalUsuario();
+        String doc_clave = Parametro.getDocumentalClave();
+        DataBase objDocumental = new DataBase( doc_ip, doc_puerto, doc_db, doc_usuario, doc_clave );
+        
+        Archivo objDataBase = new Archivo( Parametro.getIp(), Parametro.getPuerto(), Parametro.getBaseDatos(), Parametro.getUsuario(), Parametro.getClave() );
+        String rutaArchivoFirmado = DirectorioConfiguracion.getRutaArchivoFirmado();
+    
+        try {
+
+
+            
+////////////////    ENVIO DE DOCUMENTOS     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+            //  Envio de facturas
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de envio de facturas al SRI. " + rutaArchivoFirmado );
+            String pkFacturasRecibidos = "";
+            try{
+                //  no se enviaran las facturas de 020 > redfacilito,  023 > servipago,   025 > pagomedios(tarjeta de credito desde pag Web)
+                ResultSet rs = objDataBase.consulta("select id_factura_venta, serie_factura || '-' || num_factura as numero, clave_acceso, fecha_emision from tbl_factura_venta where estado_documento='f' and fecha_emision >='2024-01-01'");
+                while(rs.next()){
+                    try{
+                        String clave_acceso = rs.getString("clave_acceso")!=null ? rs.getString("clave_acceso") : "";
+                        String numero = rs.getString("numero")!=null ? rs.getString("numero") : "";
+                        String id_factura_venta = rs.getString("id_factura_venta")!=null ? rs.getString("id_factura_venta") : "";
+                        String fecha_emision = rs.getString("fecha_emision")!=null ? rs.getString("fecha_emision") : "";
+
+                        if ( Fecha.getTimeStamp( fecha_emision )  ==  Fecha.getTimeStamp( Fecha.getFecha("ISO") ) ) {
+                            ec.gob.sri.comprobantes.ws.RespuestaSolicitud respuestaRecepcion = new ec.gob.sri.comprobantes.ws.RespuestaSolicitud();
+                            File ArchivoXML = new File(rutaArchivoFirmado + File.separatorChar + clave_acceso + ".xml");
+
+                            respuestaRecepcion = EnvioComprobantesWS.obtenerRespuestaEnvio(ArchivoXML, clave_acceso, Parametro.getServicioWebEnvio());
+                            String estado = respuestaRecepcion.getEstado();
+                            if(estado != null){
+                                if(estado.equals("RECIBIDA")){
+    //                                System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": " + clave_acceso);
+                                    pkFacturasRecibidos += id_factura_venta + ",";
+                                }else {
+                                    String respuesta = EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion);
+                                    if (estado.equals("DEVUELTA")) {
+                                        objDataBase.ejecutar("update tbl_factura_venta set mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
+                                            "' where id_factura_venta="+id_factura_venta);
+                                    }else{
+                                        objDataBase.ejecutar("update tbl_factura_venta set mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
+                                            "' where id_factura_venta="+id_factura_venta);
+                                    }
+                                }
+                            }else{
+                                objDataBase.ejecutar("update tbl_factura_venta set mensaje=' Error en documento No. " + numero + ". " + EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion)+
+                                    "' where id_factura_venta="+id_factura_venta);
+                            }
+                        }
+                        
+                    }catch(Exception e){
+                        System.out.println("Error en envio: " + e.getMessage());
+                    }
+                }
+
+                rs.close();
+            }catch(Exception e){
+                System.out.println(e.getMessage());
+            }
+            if(pkFacturasRecibidos.compareTo("")!=0){
+                pkFacturasRecibidos = pkFacturasRecibidos.substring( 0, pkFacturasRecibidos.length()-1 );
+                objDataBase.ejecutar("update tbl_factura_venta set estado_documento='r' where id_factura_venta in ("+pkFacturasRecibidos+")");
+            }
+
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalizacion de envio de facturas al SRI");
+
+
+
+
+
+
+
+
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de envio de retenciones al SRI");
+            //  Envio de retenciones
+            String pkRetencionesRecibidos = "";
+            try{
+                ResultSet rs = objDataBase.consulta("select id_retencion_compra, ret_num_serie || '-' || ret_num_retencion as numero, clave_acceso, ret_fecha_emision from tbl_retencion_compra where estado_documento='f' and anulado=false");
+                while(rs.next()){
+                    try{
+                        String clave_acceso = rs.getString("clave_acceso")!=null ? rs.getString("clave_acceso") : "";
+                        String numero = rs.getString("numero")!=null ? rs.getString("numero") : "";
+                        String id_retencion_compra = rs.getString("id_retencion_compra")!=null ? rs.getString("id_retencion_compra") : "";
+                        String fecha_emision = rs.getString("ret_fecha_emision")!=null ? rs.getString("ret_fecha_emision") : "";
+
+                        if ( Fecha.getTimeStamp( fecha_emision )  ==  Fecha.getTimeStamp( Fecha.getFecha("ISO") ) ) {
+                            ec.gob.sri.comprobantes.ws.RespuestaSolicitud respuestaRecepcion = new ec.gob.sri.comprobantes.ws.RespuestaSolicitud();
+                            File ArchivoXML = new File(rutaArchivoFirmado + File.separatorChar + clave_acceso + ".xml");
+
+                            respuestaRecepcion = EnvioComprobantesWS.obtenerRespuestaEnvio(ArchivoXML, clave_acceso, Parametro.getServicioWebEnvio());
+                            String estado = respuestaRecepcion.getEstado();
+                            if(estado != null){
+                                if(estado.equals("RECIBIDA")){
+    //                                System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": " + clave_acceso);
+                                    pkRetencionesRecibidos += id_retencion_compra + ",";
+                                }else {
+                                    String respuesta = EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion);
+                                    if (estado.equals("DEVUELTA")) {
+                                        objDataBase.ejecutar("update tbl_retencion_compra set mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
+                                            "' where id_retencion_compra="+id_retencion_compra);
+                                    }else{
+                                        objDataBase.ejecutar("update tbl_retencion_compra set mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
+                                            "' where id_retencion_compra="+id_retencion_compra);
+                                    }
+                                }
+                            }else{
+                                objDataBase.ejecutar("update tbl_retencion_compra set mensaje=' Error en documento No. " + numero + ". " + EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion)+
+                                    "' where id_retencion_compra="+id_retencion_compra);
+                            }
+                        }
+                    }catch(Exception e){
+                        System.out.println("Error en envio: " + e.getMessage());
+                    }
+                }
+                rs.close();
+            }catch(Exception e){
+                System.out.println(e.getMessage());
+            }
+            if(pkRetencionesRecibidos.compareTo("")!=0){
+                pkRetencionesRecibidos = pkRetencionesRecibidos.substring( 0, pkRetencionesRecibidos.length()-1 );
+                objDataBase.ejecutar("update tbl_retencion_compra set estado_documento='r' where id_retencion_compra in("+pkRetencionesRecibidos+")");
+            }
+
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de envio de retenciones al SRI");
+
+
+
+
+
+
+
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de envio de notas de crédito al SRI");
+            //  Envio de notas de credito
+            String pkNotasCreditoRecibidos = "";
+            try{
+                ResultSet rs = objDataBase.consulta("select id_nota_credito_venta, serie_nota || '-' || num_nota as numero, clave_acceso, fecha_emision from tbl_nota_credito_venta where estado_documento='f' and anulado=false");
+                while(rs.next()){
+                    try{
+                        String clave_acceso = rs.getString("clave_acceso")!=null ? rs.getString("clave_acceso") : "";
+                        String numero = rs.getString("numero")!=null ? rs.getString("numero") : "";
+                        String id_nota_credito_venta = rs.getString("id_nota_credito_venta")!=null ? rs.getString("id_nota_credito_venta") : "";
+                        String fecha_emision = rs.getString("fecha_emision")!=null ? rs.getString("fecha_emision") : "";
+
+                        if ( Fecha.getTimeStamp( fecha_emision )  ==  Fecha.getTimeStamp( Fecha.getFecha("ISO") ) ) {
+                            ec.gob.sri.comprobantes.ws.RespuestaSolicitud respuestaRecepcion = new ec.gob.sri.comprobantes.ws.RespuestaSolicitud();
+                            File ArchivoXML = new File(rutaArchivoFirmado + File.separatorChar + clave_acceso + ".xml");
+
+                            respuestaRecepcion = EnvioComprobantesWS.obtenerRespuestaEnvio(ArchivoXML, clave_acceso, Parametro.getServicioWebEnvio());
+                            String estado = respuestaRecepcion.getEstado();
+                            if(estado != null){
+                                if(estado.equals("RECIBIDA")){
+    //                                System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": " + clave_acceso);
+                                    pkNotasCreditoRecibidos += id_nota_credito_venta + ",";
+                                }else {
+                                    String respuesta = EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion);
+                                    if (estado.equals("DEVUELTA")) {
+                                        objDataBase.ejecutar("update tbl_nota_credito_venta set mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
+                                            "' where id_nota_credito_venta="+id_nota_credito_venta);
+                                    }else{
+                                        objDataBase.ejecutar("update tbl_nota_credito_venta set mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
+                                            "' where id_nota_credito_venta="+id_nota_credito_venta);
+                                    }
+                                }
+                            }else{
+                                objDataBase.ejecutar("update tbl_nota_credito_venta set mensaje=' Error en documento No. " + numero + ". " + EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion)+
+                                    "' where id_nota_credito_venta="+id_nota_credito_venta);
+                            }
+                        }
+                    }catch(Exception e){
+                        System.out.println("Error en envio: " + e.getMessage());
+                    }
+                }
+                rs.close();
+            }catch(Exception e){
+                System.out.println(e.getMessage());
+            }
+            if(pkNotasCreditoRecibidos.compareTo("")!=0){
+                pkNotasCreditoRecibidos = pkNotasCreditoRecibidos.substring( 0, pkNotasCreditoRecibidos.length()-1 );
+                objDataBase.ejecutar("update tbl_nota_credito_venta set estado_documento='r' where id_nota_credito_venta in("+pkNotasCreditoRecibidos+")");
+            }
+
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de envio de notas de crédito al SRI");
+
+
+
+
+
+
+
+
+
+
+
+
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de envio de liquidaciones de compras y servicios al SRI");
+            //  Envio de notas de credito
+            String pkLiquidaciones = "";
+            try{
+                ResultSet rs = objDataBase.consulta("select id_liquidacion_compra, serie_liquidacion || '-' || num_liquidacion as numero, clave_acceso, fecha_emision from tbl_liquidacion_compra where estado_documento='f' and anulado=false");
+                while(rs.next()){
+                    try{
+                        String clave_acceso = rs.getString("clave_acceso")!=null ? rs.getString("clave_acceso") : "";
+                        String numero = rs.getString("numero")!=null ? rs.getString("numero") : "";
+                        String id_liquidacion_compra = rs.getString("id_liquidacion_compra")!=null ? rs.getString("id_liquidacion_compra") : "";
+                        String fecha_emision = rs.getString("fecha_emision")!=null ? rs.getString("fecha_emision") : "";
+
+                        if ( Fecha.getTimeStamp( fecha_emision )  ==  Fecha.getTimeStamp( Fecha.getFecha("ISO") ) ) {
+                            ec.gob.sri.comprobantes.ws.RespuestaSolicitud respuestaRecepcion = new ec.gob.sri.comprobantes.ws.RespuestaSolicitud();
+                            File ArchivoXML = new File(rutaArchivoFirmado + File.separatorChar + clave_acceso + ".xml");
+
+                            respuestaRecepcion = EnvioComprobantesWS.obtenerRespuestaEnvio(ArchivoXML, clave_acceso, Parametro.getServicioWebEnvio());
+                            String estado = respuestaRecepcion.getEstado();
+                            if(estado != null){
+                                if(estado.equals("RECIBIDA")){
+    //                                System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": " + clave_acceso);
+                                    pkLiquidaciones += id_liquidacion_compra + ",";
+                                }else {
+                                    String respuesta = EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion);
+                                    if (estado.equals("DEVUELTA")) {
+                                        objDataBase.ejecutar("update tbl_liquidacion_compra set estado_documento='n', mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
+                                            "' where id_liquidacion_compra="+id_liquidacion_compra);
+                                    }else{
+                                        objDataBase.ejecutar("update tbl_liquidacion_compra set mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
+                                            "' where id_liquidacion_compra="+id_liquidacion_compra);
+                                    }
+                                }
+                            }else{
+                                objDataBase.ejecutar("update tbl_liquidacion_compra set mensaje=' Error en documento No. " + numero + ". " + EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion)+
+                                    "' where id_liquidacion_compra="+id_liquidacion_compra);
+                            }
+                        }
+                    }catch(Exception e){
+                        System.out.println("Error en envio: " + e.getMessage());
+                    }
+                }
+                rs.close();
+            }catch(Exception e){
+                System.out.println(e.getMessage());
+            }
+            if(pkLiquidaciones.compareTo("")!=0){
+                pkLiquidaciones = pkLiquidaciones.substring( 0, pkLiquidaciones.length()-1 );
+                objDataBase.ejecutar("update tbl_liquidacion_compra set estado_documento='r' where id_liquidacion_compra in("+pkLiquidaciones+")");
+            }
+
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de envio de liquidaciones de compras y servicios al SRI");
+
+
+
+
+
+
+
+
+
+
+
+
+
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de envio de guias de remision al SRI");
+            //  Envio de notas de credito
+            String pkguiasRemision= "";
+            try{
+                ResultSet rs = objDataBase.consulta("select id_guia_remision, serie || '-' || numero as numero, clave_acceso from tbl_guia_remision where estado_documento='f' and anulado=false");
+                while(rs.next()){
+                    try{
+                        String clave_acceso = rs.getString("clave_acceso")!=null ? rs.getString("clave_acceso") : "";
+                        String numero = rs.getString("numero")!=null ? rs.getString("numero") : "";
+                        String id_guia_remision = rs.getString("id_guia_remision")!=null ? rs.getString("id_guia_remision") : "";
+                        String fecha_emision = rs.getString("fecha_emision")!=null ? rs.getString("fecha_emision") : "";
+
+                        if ( Fecha.getTimeStamp( fecha_emision )  ==  Fecha.getTimeStamp( Fecha.getFecha("ISO") ) ) {
+                        ec.gob.sri.comprobantes.ws.RespuestaSolicitud respuestaRecepcion = new ec.gob.sri.comprobantes.ws.RespuestaSolicitud();
+                        File ArchivoXML = new File(rutaArchivoFirmado + File.separatorChar + clave_acceso + ".xml");
+
+                        respuestaRecepcion = EnvioComprobantesWS.obtenerRespuestaEnvio(ArchivoXML, clave_acceso, Parametro.getServicioWebEnvio());
+                        String estado = respuestaRecepcion.getEstado();
+                        if(estado != null){
+                            if(estado.equals("RECIBIDA")){
+//                                System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": " + clave_acceso);
+                                pkguiasRemision += id_guia_remision + ",";
+                            }else {
+                                String respuesta = EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion);
+                                if (estado.equals("DEVUELTA")) {
+                                    objDataBase.ejecutar("update tbl_guia_remision set estado_documento='n', mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
+                                        "' where id_guia_remision="+id_guia_remision);
+                                }else{
+                                    objDataBase.ejecutar("update tbl_guia_remision set mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
+                                        "' where id_guia_remision="+id_guia_remision);
+                                }
+                            }
+                        }else{
+                            objDataBase.ejecutar("update tbl_guia_remision set mensaje=' Error en documento No. " + numero + ". " + EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion)+
+                                "' where id_guia_remision="+id_guia_remision);
+                        }
+                      }
+                    }catch(Exception e){
+                        System.out.println("Error en envio: " + e.getMessage());
+                    }
+                }
+                rs.close();
+            }catch(Exception e){
+                System.out.println(e.getMessage());
+            }
+            if(pkguiasRemision.compareTo("")!=0){
+                pkguiasRemision = pkguiasRemision.substring( 0, pkguiasRemision.length()-1 );
+                objDataBase.ejecutar("update tbl_guia_remision set estado_documento='r' where id_guia_remision in("+pkguiasRemision+")");
+            }
+
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de envio de guias de remision al SRI");
+            
+            
+            
+        }catch(Exception e){
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": " + e.getMessage());
+        }finally{
+            objDataBase.cerrar();
+            objDocumental.cerrar();
+        }
+    }
+    
+                
     public void obtenerAutorizaciones()
     {
 
@@ -1104,10 +1435,11 @@ public class DocumentosElectronicosSri{
                             Xml xml = new Xml();
                             xml.SetXml(autorizacionXml);
                             String numAutorizacion = xml.getValor("numeroAutorizacion");
-                            String fechaAutorizacion = xml.getValor("fechaAutorizacion");
-                            if ( fechaAutorizacion.length() > 10 ) {
-                                fechaAutorizacion = Fecha.SQLaISO( fechaAutorizacion.substring(0, 10) );
-                            }
+                            String fechaAutorizacion = Fecha.getFecha("ISO");
+//                            String fechaAutorizacion = xml.getValor("fechaAutorizacion");
+//                            if ( fechaAutorizacion.length() > 10 ) {
+//                                fechaAutorizacion = Fecha.SQLaISO( fechaAutorizacion.substring(0, 10) );
+//                            }
                             
                             if( objDataBase.ejecutar("update tbl_factura_venta set autorizacion_fecha='"+fechaAutorizacion+"', estado_documento='a', numero_autorizacion='"+numAutorizacion+"', mensaje=null, documento_xml=null where id_factura_venta="+id_documento) ){
                                 if( this.existeArchivo(objDocumental, "tbl_factura_venta", id_documento) ){
@@ -1170,11 +1502,13 @@ public class DocumentosElectronicosSri{
                             Xml xml = new Xml();
                             xml.SetXml(autorizacionXml);
                             String numAutorizacion = xml.getValor("numeroAutorizacion");String fechaAutorizacion = xml.getValor("fechaAutorizacion");
-                            if ( fechaAutorizacion.length() > 10 ) {
-                                fechaAutorizacion = Fecha.SQLaISO( fechaAutorizacion.substring(0, 10) );
-                            }
+                            String fechaAutorizacionR = Fecha.getFecha("ISO");
+//                            String fechaAutorizacion = xml.getValor("fechaAutorizacion");
+//                            if ( fechaAutorizacion.length() > 10 ) {
+//                                fechaAutorizacion = Fecha.SQLaISO( fechaAutorizacion.substring(0, 10) );
+//                            }
                             
-                            if( objDataBase.ejecutar("update tbl_retencion_compra set autorizacion_fecha='"+fechaAutorizacion+"', estado_documento='a', numero_autorizacion='"+numAutorizacion+"', mensaje=null, documento_xml=null where id_retencion_compra="+id_documento) ){
+                            if( objDataBase.ejecutar("update tbl_retencion_compra set autorizacion_fecha='"+fechaAutorizacionR+"', estado_documento='a', numero_autorizacion='"+numAutorizacion+"', mensaje=null, documento_xml=null where id_retencion_compra="+id_documento) ){
                                 if( this.existeArchivo(objDocumental, "tbl_retencion_compra", id_documento) ){
                                     objDocumental.ejecutar("update tbl_documentos set documentotexto='"+autorizacionXml+"' where tabla='tbl_retencion_compra' and id_tabla="+id_documento);
                                 }else{
@@ -1235,10 +1569,11 @@ public class DocumentosElectronicosSri{
                             Xml xml = new Xml();
                             xml.SetXml(autorizacionXml);
                             String numAutorizacion = xml.getValor("numeroAutorizacion");
-                            String fechaAutorizacion = xml.getValor("fechaAutorizacion");
-                            if ( fechaAutorizacion.length() > 10 ) {
-                                fechaAutorizacion = Fecha.SQLaISO( fechaAutorizacion.substring(0, 10) );
-                            }
+                            String fechaAutorizacion = Fecha.getFecha("ISO");
+//                            String fechaAutorizacion = xml.getValor("fechaAutorizacion");
+//                            if ( fechaAutorizacion.length() > 10 ) {
+//                                fechaAutorizacion = Fecha.SQLaISO( fechaAutorizacion.substring(0, 10) );
+//                            }
                             
                             if( objDataBase.ejecutar("update tbl_nota_credito_venta set autorizacion_fecha='"+fechaAutorizacion+"', estado_documento='a', numero_autorizacion='"+numAutorizacion+"', mensaje=null, documento_xml=null where id_nota_credito_venta="+id_documento) ){
                                 if( this.existeArchivo(objDocumental, "tbl_nota_credito_venta", id_documento) ){
@@ -1304,10 +1639,11 @@ public class DocumentosElectronicosSri{
                             Xml xml = new Xml();
                             xml.SetXml(autorizacionXml);
                             String numAutorizacion = xml.getValor("numeroAutorizacion");
-                            String fechaAutorizacion = xml.getValor("fechaAutorizacion");
-                            if ( fechaAutorizacion.length() > 10 ) {
-                                fechaAutorizacion = Fecha.SQLaISO( fechaAutorizacion.substring(0, 10) );
-                            }
+                            String fechaAutorizacion = Fecha.getFecha("ISO");
+//                            String fechaAutorizacion = xml.getValor("fechaAutorizacion");
+//                            if ( fechaAutorizacion.length() > 10 ) {
+//                                fechaAutorizacion = Fecha.SQLaISO( fechaAutorizacion.substring(0, 10) );
+//                            }
                             
                             if( objDataBase.ejecutar("update tbl_liquidacion_compra set autorizacion_fecha='"+fechaAutorizacion+"', estado_documento='a', numero_autorizacion='"+numAutorizacion+"', mensaje=null where id_liquidacion_compra="+id_documento) ){
                                 if( this.existeArchivo(objDocumental, "tbl_liquidacion_compra", id_documento) ){
@@ -1375,10 +1711,11 @@ public class DocumentosElectronicosSri{
                             Xml xml = new Xml();
                             xml.SetXml(autorizacionXml);
                             String numAutorizacion = xml.getValor("numeroAutorizacion");
-                            String fechaAutorizacion = xml.getValor("fechaAutorizacion");
-                            if ( fechaAutorizacion.length() > 10 ) {
-                                fechaAutorizacion = Fecha.SQLaISO( fechaAutorizacion.substring(0, 10) );
-                            }
+                            String fechaAutorizacion = Fecha.getFecha("ISO");
+//                            String fechaAutorizacion = xml.getValor("fechaAutorizacion");
+//                            if ( fechaAutorizacion.length() > 10 ) {
+//                                fechaAutorizacion = Fecha.SQLaISO( fechaAutorizacion.substring(0, 10) );
+//                            }
                             
                             if( objDataBase.ejecutar("update tbl_guia_remision set autorizacion_fecha='"+fechaAutorizacion+"', estado_documento='a', numero_autorizacion='"+numAutorizacion+"', mensaje=null where id_guia_remision="+id_documento) ){
                                 if( this.existeArchivo(objDocumental, "tbl_guia_remision", id_documento) ){
