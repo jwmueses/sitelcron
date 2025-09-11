@@ -29,7 +29,7 @@ public class DataBase
     {
         try{
             Class.forName("org.postgresql.Driver");
-            this.con = DriverManager.getConnection("jdbc:postgresql://127.0.0.1:5432/db_isp", "postgres", "postgres");
+            this.con = DriverManager.getConnection("jdbc:postgresql://127.0.0.1:5432/db_isp", "postgres", "Gi%9875.-*5+$)");
         }catch(ClassNotFoundException e){
             System.out.println("Error: "+e.getMessage()+". El driver no puede ser cargado.");
         }catch(Exception ex){

@@ -306,58 +306,65 @@ public class Recaudacion {
         
         if(claveEmpresa.compareTo("")!=0){
             
-            codigoError = "02";
-            mensaje = "Clave de acceso erronea";
-            String puntoEmision[] = this.getPuntoEmision(claveEmpresa);
-            if(puntoEmision[0].compareTo("-1")!=0){     //      idPuntoEmision
-                
-                codigoError = "04";
-                mensaje = "SISTEMA FUERA DE LINEA";
-                
-                String fecha_inicio = Fecha.getAnio() + "-" + Fecha.getMes() + "-" + Fecha.getDia();
-                long iniEjecucion = Fecha.getTimeStamp(fecha_inicio, "05:59");
-                long finEjecucion = Fecha.getTimeStamp(fecha_inicio, "20:59");
-                long actual = Fecha.getTimeStamp(fecha_inicio, Fecha.getHora());
+            codigoError = "18";
+            mensaje = "Número de documento no ingresado";
+            if(numDocumento.compareTo("")!=0 && numDocumento.toLowerCase().compareTo("null")!=0) {
+            
+                codigoError = "02";
+                mensaje = "Clave de acceso erronea";
+                String puntoEmision[] = this.getPuntoEmision(claveEmpresa);
+                if(puntoEmision[0].compareTo("-1")!=0){     //      idPuntoEmision
 
-                if(actual >= iniEjecucion && actual <= finEjecucion ){
-                    
-                
-//                if( (puntoEmision[1].compareTo("t")==0 && saldo>0) || puntoEmision[1].compareTo("f")==0 ){      //  valida si es prepago
-                
-                    String idPrefactura = idRegistroConsulta.compareTo("")!=0 ? idRegistroConsulta : "";
-                    codigoError = "10";
-                    mensaje = "Número de ID "+idPrefactura+" de prefactura mal formado";
-                    if(idPrefactura.indexOf("P")==0){
-                        
-                        DataBase objDB = new DataBase(maquina, puerto, db, usuario, clave);
-                        try{
-                            codigoError = "16";
-                            mensaje = "Error al validar monto a pagar";
-                            ResultSet rsPrF = objDB.consulta("select total from vta_prefactura where id_prefactura = " + idRegistroConsulta.replace("P", "") );
-                            if(rsPrF != null){
-                                if(rsPrF.next()){
-                                    double total = rsPrF.getString("total")!=null ? rsPrF.getDouble("total") : 0;
-                                    codigoError = "17";
-                                    mensaje = "Monto ingresado "+totalCobrado+" diferente del monto a pagar en la factura " + (Math.round(total * Math.pow(10, 2)) / Math.pow(10, 2)) ;
-                                    if( total == Double.parseDouble(totalCobrado)  ) {
-                                        this.prefacturaEmitir(idRegistroConsulta.replace("P", ""), numDocumento, totalCobrado, puntoEmision[0], puntoEmision[5]);
-                                        /*}else if(id_prefactura.indexOf("F")==0){
-                                                  return this.facturaCobrar(idRegistroConsulta.replace("F", ""), numDocumento, idPuntoEmision);*/
+                    codigoError = "04";
+                    mensaje = "SISTEMA FUERA DE LINEA";
+
+                    String fecha_inicio = Fecha.getAnio() + "-" + Fecha.getMes() + "-" + Fecha.getDia();
+                    long iniEjecucion = Fecha.getTimeStamp(fecha_inicio, "05:59");
+                    long finEjecucion = Fecha.getTimeStamp(fecha_inicio, "20:59");
+                    long actual = Fecha.getTimeStamp(fecha_inicio, Fecha.getHora());
+
+                    if(actual >= iniEjecucion && actual <= finEjecucion ){
+
+
+    //                if( (puntoEmision[1].compareTo("t")==0 && saldo>0) || puntoEmision[1].compareTo("f")==0 ){      //  valida si es prepago
+
+                        String idPrefactura = idRegistroConsulta.compareTo("")!=0 ? idRegistroConsulta : "";
+                        codigoError = "10";
+                        mensaje = "Número de ID "+idPrefactura+" de prefactura mal formado";
+                        if(idPrefactura.indexOf("P")==0){
+
+                            DataBase objDB = new DataBase(maquina, puerto, db, usuario, clave);
+                            try{
+                                codigoError = "16";
+                                mensaje = "Error al validar monto a pagar";
+                                ResultSet rsPrF = objDB.consulta("select total from vta_prefactura where id_prefactura = " + idRegistroConsulta.replace("P", "") );
+                                if(rsPrF != null){
+                                    if(rsPrF.next()){
+                                        double total = rsPrF.getString("total")!=null ? rsPrF.getDouble("total") : 0;
+                                        codigoError = "17";
+                                        mensaje = "Monto ingresado "+totalCobrado+" diferente del monto a pagar en la factura " + (Math.round(total * Math.pow(10, 2)) / Math.pow(10, 2)) ;
+                                        if( total == Double.parseDouble(totalCobrado)  ) {
+                                            this.prefacturaEmitir(idRegistroConsulta.replace("P", ""), numDocumento, totalCobrado, puntoEmision[0], puntoEmision[5]);
+                                            /*}else if(id_prefactura.indexOf("F")==0){
+                                                      return this.facturaCobrar(idRegistroConsulta.replace("F", ""), numDocumento, idPuntoEmision);*/
+                                        }
                                     }
+                                    rsPrF.close();
                                 }
-                                rsPrF.close();
+                            }catch(Exception e){
+                                e.printStackTrace();
+                            } finally {
+                                objDB.cerrar();
                             }
-                        }catch(Exception e){
-                            e.printStackTrace();
-                        } finally {
-                            objDB.cerrar();
+
                         }
-                        
+
                     }
-                    
+
                 }
                 
             }
+            
         }
             
         xml.append("<codigo>");

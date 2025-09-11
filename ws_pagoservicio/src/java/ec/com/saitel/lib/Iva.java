@@ -6,6 +6,9 @@ package ec.com.saitel.lib;
 import java.sql.ResultSet;
 
 public class Iva extends DataBase{
+    public Iva(){
+        super();
+    }
     public Iva(String m, int p, String db, String u, String c){
         super(m, p, db, u, c);
     }
@@ -87,6 +90,21 @@ public class Iva extends DataBase{
     public ResultSet getIvas()
     {
         return this.consulta("SELECT id_iva,concepto from tbl_iva;");
+    }
+    
+    public String getCodigoIva(String porcentajeIva)
+    {
+        String codigo = "4";
+        try{
+            ResultSet rs = this.consulta("SELECT codigo from tbl_iva where porcentaje="+porcentajeIva);
+            if(rs.next()){
+                codigo = rs.getString(1)!=null ? rs.getString(1) : "4";
+                rs.close();
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        return codigo;
     }
     
     public ResultSet getCodigosIva()
