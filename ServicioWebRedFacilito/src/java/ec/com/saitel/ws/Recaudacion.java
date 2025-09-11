@@ -249,51 +249,59 @@ public class Recaudacion {
     @WebMethod(operationName = "facturar")
     public String facturar(@WebParam(name = "clave") String clave, @WebParam(name = "idRegistroConsulta") String idRegistroConsulta, @WebParam(name = "numDocumento") String numDocumento) 
     {
-        //TODO write your implementation code here:
+
         if(clave.compareTo("")!=0){
             
-            String puntoEmision[] = this.getPuntoEmision(clave);
-            if(puntoEmision[0].compareTo("-1")!=0){     //      idPuntoEmision
-                
-                String fecha_inicio = Fecha.getAnio() + "-" + Fecha.getMes() + "-" + Fecha.getDia();
-                long iniEjecucion = Fecha.getTimeStamp(fecha_inicio, "05:59");
-                long finEjecucion = Fecha.getTimeStamp(fecha_inicio, "21:00");
-                long actual = Fecha.getTimeStamp(fecha_inicio, Fecha.getHora());
+            if(numDocumento.compareTo("")!=0 && numDocumento.toLowerCase().compareTo("null")!=0) {
+            
+                String puntoEmision[] = this.getPuntoEmision(clave);
+                if(puntoEmision[0].compareTo("-1")!=0){     //      idPuntoEmision
 
-                if(actual >= iniEjecucion && actual <= finEjecucion ){
-                    
-                
-                    float saldo = puntoEmision[1].compareTo("t")==0 ? this.getSaldoCuentaContable(puntoEmision[2]) - this.getSaldoPorContabilizar(puntoEmision[0]) : 0;      //  idPlanCuentaCaja de parametro
-                
-                    if(puntoEmision[1].compareTo("t")==0){
-                        float fondoPrepago = Float.parseFloat( puntoEmision[3] );
-                        if( (fondoPrepago/8) >= saldo  ){    // 12.5%
-                            this.notificacion(3, puntoEmision[4]);
-                        }else if( (fondoPrepago/4) >= saldo  ){ // 25%
-                                  this.notificacion(2, puntoEmision[4]);
-                        }else if( (fondoPrepago/2) >= saldo  ){ // 50%
-                                  this.notificacion(1, puntoEmision[4]);
-                              }
-                    }
+                    String fecha_inicio = Fecha.getAnio() + "-" + Fecha.getMes() + "-" + Fecha.getDia();
+                    long iniEjecucion = Fecha.getTimeStamp(fecha_inicio, "05:59");
+                    long finEjecucion = Fecha.getTimeStamp(fecha_inicio, "21:00");
+                    long actual = Fecha.getTimeStamp(fecha_inicio, Fecha.getHora());
 
-                    if( (puntoEmision[1].compareTo("t")==0 && saldo>0) || puntoEmision[1].compareTo("f")==0 ){      //  valida si es prepago
+                    if(actual >= iniEjecucion && actual <= finEjecucion ){
 
-                        String idPrefactura = idRegistroConsulta.compareTo("")!=0 ? idRegistroConsulta : "P0";
-                        if(idPrefactura.indexOf("P")==0){
-                            return this.prefacturaEmitir(idRegistroConsulta.replace("P", ""), numDocumento, puntoEmision[0], puntoEmision[1], saldo);
-                        /*}else if(id_prefactura.indexOf("F")==0){
-                                  return this.facturaCobrar(idRegistroConsulta.replace("F", ""), numDocumento, idPuntoEmision);*/
+
+                        float saldo = puntoEmision[1].compareTo("t")==0 ? this.getSaldoCuentaContable(puntoEmision[2]) - this.getSaldoPorContabilizar(puntoEmision[0]) : 0;      //  idPlanCuentaCaja de parametro
+
+                        if(puntoEmision[1].compareTo("t")==0){
+                            float fondoPrepago = Float.parseFloat( puntoEmision[3] );
+                            if( (fondoPrepago/8) >= saldo  ){    // 12.5%
+                                this.notificacion(3, puntoEmision[4]);
+                            }else if( (fondoPrepago/4) >= saldo  ){ // 25%
+                                      this.notificacion(2, puntoEmision[4]);
+                            }else if( (fondoPrepago/2) >= saldo  ){ // 50%
+                                      this.notificacion(1, puntoEmision[4]);
+                                  }
                         }
-                    }else{
-                        return "Fondo contable sin saldo suficiente, para poder emitir la factura";
+
+                        if( (puntoEmision[1].compareTo("t")==0 && saldo>0) || puntoEmision[1].compareTo("f")==0 ){      //  valida si es prepago
+
+                            String idPrefactura = idRegistroConsulta.compareTo("")!=0 ? idRegistroConsulta : "P0";
+                            if(idPrefactura.indexOf("P")==0){
+                                return this.prefacturaEmitir(idRegistroConsulta.replace("P", ""), numDocumento, puntoEmision[0], puntoEmision[1], saldo);
+                            /*}else if(id_prefactura.indexOf("F")==0){
+                                      return this.facturaCobrar(idRegistroConsulta.replace("F", ""), numDocumento, idPuntoEmision);*/
+                            }
+                        }else{
+                            return "Fondo contable sin saldo suficiente, para poder emitir la factura";
+                        }
+
+                    } else {
+                        return "SISTEMA FUERA DE LINEA";
                     }
                     
-                } else {
-                    return "SISTEMA FUERA DE LINEA";
+                }else{
+                    return "Clave de acceso erronea";
                 }
+            
             }else{
-                return "Clave de acceso erronea";
+                return "Número de documento no ingresado";
             }
+            
         }else{
             return "No se ha proporcionado una clave de acceso";
         }
@@ -776,7 +784,7 @@ public class Recaudacion {
             //                                          ok = true;
                                                     } else { 
                                                         String respuesta = EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion);
-                                                        estadoDocumento = "n";
+//                                                        estadoDocumento = "n";
                                                         error = respuesta;
                                                     }
                                                 } catch(Exception e) {
