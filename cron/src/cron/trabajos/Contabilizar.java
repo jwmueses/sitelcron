@@ -85,7 +85,7 @@ public class Contabilizar implements Job{
                 String vendedor = rs1.getString("vendedor")!=null ? rs1.getString("vendedor") : "";
                 String mailEmpleado = this.getEmailEmpleado(objDataBase, vendedor);
                 if(vendedor.contains("virtual")){
-                    if(dia >= 1 && dia <= 10){
+                    if(dia >= 1 && dia < 10){
                         continue;
                     }
                 }

@@ -1336,39 +1336,39 @@ public class DocumentosElectronicosSri{
             //  Envio de notas de credito
             String pkguiasRemision= "";
             try{
-                ResultSet rs = objDataBase.consulta("select id_guia_remision, serie || '-' || numero as numero, clave_acceso from tbl_guia_remision where estado_documento='f' and anulado=false");
+                ResultSet rs = objDataBase.consulta("select id_guia_remision, serie || '-' || numero as numero, clave_acceso, fecha_inicio from tbl_guia_remision where estado_documento='f' and anulado=false");
                 while(rs.next()){
                     try{
                         String clave_acceso = rs.getString("clave_acceso")!=null ? rs.getString("clave_acceso") : "";
                         String numero = rs.getString("numero")!=null ? rs.getString("numero") : "";
                         String id_guia_remision = rs.getString("id_guia_remision")!=null ? rs.getString("id_guia_remision") : "";
-                        String fecha_emision = rs.getString("fecha_emision")!=null ? rs.getString("fecha_emision") : "";
+                        String fecha_emision = rs.getString("fecha_inicio")!=null ? rs.getString("fecha_inicio") : "";
 
                         if ( Fecha.getTimeStamp( fecha_emision )  ==  Fecha.getTimeStamp( Fecha.getFecha("ISO") ) ) {
-                        ec.gob.sri.comprobantes.ws.RespuestaSolicitud respuestaRecepcion = new ec.gob.sri.comprobantes.ws.RespuestaSolicitud();
-                        File ArchivoXML = new File(rutaArchivoFirmado + File.separatorChar + clave_acceso + ".xml");
+                            ec.gob.sri.comprobantes.ws.RespuestaSolicitud respuestaRecepcion = new ec.gob.sri.comprobantes.ws.RespuestaSolicitud();
+                            File ArchivoXML = new File(rutaArchivoFirmado + File.separatorChar + clave_acceso + ".xml");
 
-                        respuestaRecepcion = EnvioComprobantesWS.obtenerRespuestaEnvio(ArchivoXML, clave_acceso, Parametro.getServicioWebEnvio());
-                        String estado = respuestaRecepcion.getEstado();
-                        if(estado != null){
-                            if(estado.equals("RECIBIDA")){
-//                                System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": " + clave_acceso);
-                                pkguiasRemision += id_guia_remision + ",";
-                            }else {
-                                String respuesta = EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion);
-                                if (estado.equals("DEVUELTA")) {
-                                    objDataBase.ejecutar("update tbl_guia_remision set estado_documento='n', mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
-                                        "' where id_guia_remision="+id_guia_remision);
-                                }else{
-                                    objDataBase.ejecutar("update tbl_guia_remision set mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
-                                        "' where id_guia_remision="+id_guia_remision);
+                            respuestaRecepcion = EnvioComprobantesWS.obtenerRespuestaEnvio(ArchivoXML, clave_acceso, Parametro.getServicioWebEnvio());
+                            String estado = respuestaRecepcion.getEstado();
+                            if(estado != null){
+                                if(estado.equals("RECIBIDA")){
+    //                                System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": " + clave_acceso);
+                                    pkguiasRemision += id_guia_remision + ",";
+                                }else {
+                                    String respuesta = EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion);
+                                    if (estado.equals("DEVUELTA")) {
+                                        objDataBase.ejecutar("update tbl_guia_remision set estado_documento='n', mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
+                                            "' where id_guia_remision="+id_guia_remision);
+                                    }else{
+                                        objDataBase.ejecutar("update tbl_guia_remision set mensaje='"+respuesta.replace("\n", ". ").replace("\r", ". ").replace("\t", " ")+
+                                            "' where id_guia_remision="+id_guia_remision);
+                                    }
                                 }
+                            }else{
+                                objDataBase.ejecutar("update tbl_guia_remision set mensaje=' Error en documento No. " + numero + ". " + EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion)+
+                                    "' where id_guia_remision="+id_guia_remision);
                             }
-                        }else{
-                            objDataBase.ejecutar("update tbl_guia_remision set mensaje=' Error en documento No. " + numero + ". " + EnvioComprobantesWS.obtenerMensajeRespuesta(respuestaRecepcion)+
-                                "' where id_guia_remision="+id_guia_remision);
                         }
-                      }
                     }catch(Exception e){
                         System.out.println("Error en envio: " + e.getMessage());
                     }

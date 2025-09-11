@@ -134,12 +134,28 @@ public class EjecutarProcesos  implements Job{
         
         
         
+        
+        
+        
+        
+        
 
         
 
+        
+        
+        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando proceso de verificacion de planes pendientes");
+        try{
+            objDataBase.consulta("select proc_verificar_planes_pendientes();");
+        }finally{
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de proceso de verificacion de planes pendientes");
+        }
 
 
 
+        
+        
+        
 
          //  liberar ips sin reutilizar
         System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando generación de ips que no se utilizan en las redes");
@@ -434,7 +450,7 @@ public class EjecutarProcesos  implements Job{
                     "select id_sucursal, 4, id_instalacion, '"+fecha+"'::date, 'Reconexión'::varchar, "+baseReconexion+" from \n" +
                     "vta_prefactura as P where fecha_emision is null and periodo between '"+fecha+"'::date and '"+fechaFinMes+"'::date and txt_convenio_pago='prepago' and id_sucursal in('7','11') \n" +
 //                    "and not (select case when count(*)>0 then true else false end from vta_prefactura_diferir as PD where P.periodo between desde and hasta) \n" + 
-                    "and id_instalacion not in (select id_instalacion from tbl_prefactura_rubro where periodo='"+fecha+"'::date and lower(rubro) like 'reconexi%');")){
+                    "and id_instalacion not in (select id_instalacion from tbl_prefactura_rubro where periodo between '"+fecha+"'::date and '"+fechaFinMes+"'::date and lower(rubro) like 'reconexi%');")){
                     System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Error en generación de reconexiones prepago. " + objDataBase.getError());
                 }
 
@@ -492,7 +508,7 @@ public class EjecutarProcesos  implements Job{
                     "select id_sucursal, 4, id_instalacion, '"+fecha+"'::date, 'Reconexión'::varchar, "+baseReconexion+" from \n" +
                     "vta_prefactura as P where fecha_emision is null and periodo between '"+fecha+"'::date and '"+fechaFinMes+"'::date and txt_convenio_pago='prepago' and id_sucursal not in('7','11') \n" +
 //                    "and not (select case when count(*)>0 then true else false end from vta_prefactura_diferir as PD where P.periodo between desde and hasta) \n" +         
-                    "and id_instalacion not in (select id_instalacion from tbl_prefactura_rubro where periodo between '"+fecha+"'::date and '"+fechaFinMes+"'::date and lower(rubro) like 'reconexi%');")){
+                    "and (P.id_instalacion, P.periodo) not in (select id_instalacion, periodo from tbl_prefactura_rubro where periodo between '"+fecha+"'::date and '"+fechaFinMes+"'::date and lower(rubro) like 'reconexi%');")){
                     System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Error en generación de reconexiones prepago. " + objDataBase.getError());
                 }
 
@@ -523,7 +539,7 @@ public class EjecutarProcesos  implements Job{
                     "select id_sucursal, 4, id_instalacion, '"+fecha+"'::date, 'Reconexión'::varchar, "+baseReconexion+" from \n" +
                     "vta_prefactura as P where fecha_emision is null and periodo between '"+fecha+"'::date and '"+fechaFinMes+"'::date and txt_convenio_pago='postpago' \n" +
 //                    "and not (select case when count(*)>0 then true else false end from vta_prefactura_diferir as PD where P.periodo between desde and hasta) \n" +         
-                    "and id_instalacion not in (select id_instalacion from tbl_prefactura_rubro where periodo between '"+fecha+"'::date and '"+fechaFinMes+"'::date and lower(rubro) like 'reconexi%');")){
+                    "and (P.id_instalacion, P.periodo) not in (select id_instalacion, periodo from tbl_prefactura_rubro where periodo between '"+fecha+"'::date and '"+fechaFinMes+"'::date and lower(rubro) like 'reconexi%');")){
                     System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Error en generación de reconexiones postgpago. " + objDataBase.getError());
                 }
 
@@ -542,7 +558,7 @@ public class EjecutarProcesos  implements Job{
             System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando recalculo de prefacturas postpago");
             try{
                 objDataBase.ejecutar("update tbl_prefactura set recalcular=true where id_prefactura in ( select id_prefactura from vta_prefactura where periodo='"+fecha+"'::date and fecha_emision is null and txt_convenio_pago='postpago' )");
-                ResultSet rs = objDataBase.consulta("select id_prefactura from vta_prefactura where periodo>='"+fecha+"'::date");
+                ResultSet rs = objDataBase.consulta("select id_prefactura from vta_prefactura where recalcular or periodo>='"+fecha+"'::date");
                 while(rs.next()){
                     String idPrefactura = rs.getString("id_prefactura")!=null ? rs.getString("id_prefactura") : "-1";
                     try{
@@ -758,6 +774,29 @@ public class EjecutarProcesos  implements Job{
         
         
         
+        
+        
+        
+        
+        
+        
+        //  ACTUALIZACION DE ESTADOS TERMINADO Y SALDADO DE CLIENTES CON EQUIPOS RETIRADOS O SALDADOS
+        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando actualizacion de estado a terminado y saldado de clientes con equipos retirados y saldados");
+        try{
+            ResultSet rs = objDataBase.consulta("select id_instalacion from tbl_instalacion where estado_servicio in('d', 'e')");
+            while(rs.next()){
+                String id_instalacion = rs.getString("id_instalacion")!=null ? rs.getString("id_instalacion") : "-1";
+                try{
+                    objDataBase.consulta("select fun_actualizainstalacionestadoservicio("+id_instalacion+");");
+                }catch(Exception e){
+                    System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Error en actualizacion de estado a terminado y saldado. " + e.getMessage());
+                }
+            }
+        }catch(Exception e){
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Error en la consulta de actualizacion de estado a terminado y saldado. " + e.getMessage());
+        }finally{
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalizando actualizacion de estado a terminado y saldado de clientes con equipos retirados y saldados");
+        }
         
         
         

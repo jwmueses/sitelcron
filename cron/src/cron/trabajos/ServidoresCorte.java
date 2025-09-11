@@ -285,6 +285,17 @@ public class ServidoresCorte implements Job{
 
 
 
+                    
+                    
+                    
+                    System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando proceso de cambio de clientes");
+                    try{
+                        objDataBase.consulta("select proc_cambio_cliente(null);");
+                    }finally{
+                        System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de proceso de cambio de clientes");
+                    }
+        
+        
 
 
 

@@ -54,7 +54,7 @@ public class FacturaVenta extends DataBase{
         
         String id_plan_cuenta_banco="10";
         try{
-            ResultSet rsBanco = this.consulta("SELECT * FROM vta_banco where lower(banco) like '%pichincha%'");
+            ResultSet rsBanco = this.consulta("SELECT * FROM vta_banco where lower(banco) like '%pichincha%' order by id_banco limit 1");
             if(rsBanco.next()){
                 id_plan_cuenta_banco = rsBanco.getString("id_plan_cuenta")!=null ? rsBanco.getString("id_plan_cuenta") : "10";
                 rsBanco.close();
