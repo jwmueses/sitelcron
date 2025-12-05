@@ -447,7 +447,7 @@ public class EjecutarProcesos  implements Job{
             System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando generación de reconexiones prepago");
             try{
                 if(!objDataBase.ejecutar("insert into tbl_prefactura_rubro(id_sucursal, id_rubro, id_instalacion, periodo, rubro, monto) \n" +
-                    "select id_sucursal, 4, id_instalacion, '"+fecha+"'::date, 'Reconexión'::varchar, "+baseReconexion+" from \n" +
+                    "select distinct id_sucursal, 4, id_instalacion, '"+fecha+"'::date, 'Reconexión'::varchar, "+baseReconexion+" from \n" +
                     "vta_prefactura as P where fecha_emision is null and periodo between '"+fecha+"'::date and '"+fechaFinMes+"'::date and txt_convenio_pago='prepago' and id_sucursal in('7','11') \n" +
 //                    "and not (select case when count(*)>0 then true else false end from vta_prefactura_diferir as PD where P.periodo between desde and hasta) \n" + 
                     "and id_instalacion not in (select id_instalacion from tbl_prefactura_rubro where periodo between '"+fecha+"'::date and '"+fechaFinMes+"'::date and lower(rubro) like 'reconexi%');")){
@@ -505,7 +505,7 @@ public class EjecutarProcesos  implements Job{
             System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando generación de reconexiones prepago");
             try{
                 if(!objDataBase.ejecutar("insert into tbl_prefactura_rubro(id_sucursal, id_rubro, id_instalacion, periodo, rubro, monto) \n" +
-                    "select id_sucursal, 4, id_instalacion, '"+fecha+"'::date, 'Reconexión'::varchar, "+baseReconexion+" from \n" +
+                    "select distinct id_sucursal, 4, id_instalacion, '"+fecha+"'::date, 'Reconexión'::varchar, "+baseReconexion+" from \n" +
                     "vta_prefactura as P where fecha_emision is null and periodo between '"+fecha+"'::date and '"+fechaFinMes+"'::date and txt_convenio_pago='prepago' and id_sucursal not in('7','11') \n" +
 //                    "and not (select case when count(*)>0 then true else false end from vta_prefactura_diferir as PD where P.periodo between desde and hasta) \n" +         
                     "and (P.id_instalacion, P.periodo) not in (select id_instalacion, periodo from tbl_prefactura_rubro where periodo between '"+fecha+"'::date and '"+fechaFinMes+"'::date and lower(rubro) like 'reconexi%');")){
@@ -536,7 +536,7 @@ public class EjecutarProcesos  implements Job{
             System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando generación de reconexiones postpago");
             try{
                 if(!objDataBase.ejecutar("insert into tbl_prefactura_rubro(id_sucursal, id_rubro, id_instalacion, periodo, rubro, monto) \n" +
-                    "select id_sucursal, 4, id_instalacion, '"+fecha+"'::date, 'Reconexión'::varchar, "+baseReconexion+" from \n" +
+                    "select distinct id_sucursal, 4, id_instalacion, '"+fecha+"'::date, 'Reconexión'::varchar, "+baseReconexion+" from \n" +
                     "vta_prefactura as P where fecha_emision is null and periodo between '"+fecha+"'::date and '"+fechaFinMes+"'::date and txt_convenio_pago='postpago' \n" +
 //                    "and not (select case when count(*)>0 then true else false end from vta_prefactura_diferir as PD where P.periodo between desde and hasta) \n" +         
                     "and (P.id_instalacion, P.periodo) not in (select id_instalacion, periodo from tbl_prefactura_rubro where periodo between '"+fecha+"'::date and '"+fechaFinMes+"'::date and lower(rubro) like 'reconexi%');")){

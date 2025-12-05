@@ -51,12 +51,13 @@ public class FacturaVenta extends DataBase{
         String matPuntosVirtuales[][] = this.getPuntosEmisionVirtuales();
         
         
-        
         String id_plan_cuenta_banco="10";
+        String ax_id_plan_cuenta_banco="10";
         try{
             ResultSet rsBanco = this.consulta("SELECT * FROM vta_banco where lower(banco) like '%pichincha%' order by id_banco limit 1");
             if(rsBanco.next()){
-                id_plan_cuenta_banco = rsBanco.getString("id_plan_cuenta")!=null ? rsBanco.getString("id_plan_cuenta") : "10";
+                ax_id_plan_cuenta_banco = rsBanco.getString("id_plan_cuenta")!=null ? rsBanco.getString("id_plan_cuenta") : "10";
+                id_plan_cuenta_banco = ax_id_plan_cuenta_banco;
                 rsBanco.close();
             }
         }catch(Exception e){
@@ -198,134 +199,160 @@ public class FacturaVenta extends DataBase{
                     String id_plan_cuenta_anticipo = (rs.getString("id_plan_cuenta_anticipo") != null) ? rs.getString("id_plan_cuenta_anticipo") : "-1";
                     //double totalCash = rs.getString("total_cash")!=null ? rs.getDouble("total_cash") : 0;
                     String emailCliente = rs.getString("email")!=null ? rs.getString("email") : "";
-                    String por_emitir_destino = rs.getString("por_emitir_destino")!=null ? rs.getString("por_emitir_destino") : "";
+                    String por_emitir_destino = rs.getString("por_emitir_destino")!=null ? rs.getString("por_emitir_destino").trim().toLowerCase() : "";
                             
                     
                     if ( Float.parseFloat(total_pagar) > 0 ) {
                         
-                        try {
-                            ResultSet r = this.consulta("SELECT nombre_comercial, mail_info, num_contacto, sitio_web FROM tbl_sucursal where id_sucursal=" + id_sucursal);
-                            if (r.next()) {
-                                nombre_comercial = (r.getString("nombre_comercial") != null) ? r.getString("nombre_comercial") : "";
-                                emalSaitel = (r.getString("mail_info") != null) ? r.getString("mail_info") : "";
-                                numContSaitel = (r.getString("num_contacto") != null) ? r.getString("num_contacto") : "";
-                                sitioWeb = (r.getString("sitio_web") != null) ? r.getString("sitio_web") : "";
-                                r.close();
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-
-
-                        String idFormaPago="97";        //  id forma de pago cash
-                        String formaPago="20";          //  con utilizacion del sistema financiero
-                        String formaPagoCodInterno="h"; //  cash
-
-
-
-                        // CONVENIO DE DEBITO
-
-                        if( Matriz.enMatriz(matDebitos, id_instalacion, 0) >=0 && registro_archivo_cash.compareTo("")==0){
-                            idFormaPago="99";        //  id forma de pago credito
-                            formaPago="20";          //  con utilizacion del sistema financiero
-                            formaPagoCodInterno="d";
-                        }
-
-
-                        if(por_emitir_destino.trim().compareTo("")!=0){
-
-                            // WEB SERVICES => SERVIPAGOS    -   PRODUBANCO
-                            if( por_emitir_destino.toLowerCase().compareTo("servipagos")==0 && registro_archivo_cash.compareTo("")!=0){
-                                idFormaPago="23";        //  id forma de pago pagomedios
-                                formaPago="20";          //  con utilizacion del sistema financiero
-                                formaPagoCodInterno="s2";
-                                id_plan_cuenta_banco="284";
-                            } 
-
-                            // WEB SERVICES => PAGOMEDIOS
-        //System.out.println("por_emitir_destino " + por_emitir_destino + ", registro_archivo_cash " + registro_archivo_cash);
-                            if( por_emitir_destino.compareTo("pagomedios")==0 && registro_archivo_cash.compareTo("")!=0){
-                                idFormaPago="24";        //  id forma de pago pagomedios
-                                formaPago="20";          //  con utilizacion del sistema financiero
-                                formaPagoCodInterno="s3";
-                                id_plan_cuenta_banco="569";
-                            }
-
-                            try{
-                                ResultSet rsBanco = this.consulta("SELECT id_plan_cuenta_caja FROM tbl_empresa as E inner join tbl_punto_emision as PE on E.id_punto_emision =PE.id_punto_emision where upper(empresa) like '%" + por_emitir_destino.trim().toUpperCase() + "%'");
-                                if(rsBanco.next()){
-                                    id_plan_cuenta_banco = rsBanco.getString("id_plan_cuenta_caja")!=null ? rsBanco.getString("id_plan_cuenta_caja") : id_plan_cuenta_banco;
-                                    rsBanco.close();
-                                }
-                            }catch(Exception e){
-                                e.printStackTrace();
-                            }
-
-                        }
-
-                        //  POR ANTICIPOS
-                        String idCliAnt = "";
-                        String monto_vajar = "";
-                        if(matAnticipos != null){
-                            if(!matAnticipos.isEmpty()){    
-                                idFormaPago="98";
-                                formaPagoCodInterno="a";
-
-                                double totalPagar = Double.parseDouble(total_pagar);
-                                double minTotalPagarACredito = Double.parseDouble(total_pagar) * pminValorVajaCredito / 100;
-                                double abonos = 0;
-                                double axUltimoAbono = 0;
-                                String axIdCliAnt = "";
-                                String axMontoVajar = "";
-                                Iterator it = matAnticipos.iterator();
-                                while(it.hasNext()){
-                                    String matAnticipo[] = (String[])it.next();
-
-        //                            System.out.println("mat anticipo " + matAnticipo[1] + " - " + matAnticipo[3]);
-
-                                    if(matAnticipo[1].compareTo(id_cliente)==0 && matAnticipo[3].compareTo(id_instalacion)==0){    //  verificao si el cliente tiene registrado anticipo
-                                        if( Double.parseDouble(matAnticipo[2]) >= totalPagar){    //  si el anticipo cubre el total de la factura 
-                                            idCliAnt = matAnticipo[0];
-                                            monto_vajar = total_pagar;
-                                            break;
-                                        } else {        //  si el anticipo no cubre el monto
-                                            abonos += Double.parseDouble(matAnticipo[2]);
-                                            axUltimoAbono = Double.parseDouble(matAnticipo[2]);
-                                            axIdCliAnt += matAnticipo[0] + ",";
-                                            axMontoVajar += matAnticipo[2] + ",";
-                                            if(abonos >= totalPagar){     //  si el o los abonos cubren el total se salta al pago
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
-
-                                if(axIdCliAnt.compareTo("")!=0 && abonos>0){
-                                    idCliAnt = axIdCliAnt.substring(0, axIdCliAnt.length()-1);
-                                    monto_vajar = axMontoVajar = axMontoVajar.substring(0, axMontoVajar.length()-1);
-                                    if(abonos == totalPagar){       //  si los abonos cubre el total de la factura se vaja la factura completa
-                                        monto_vajar = axMontoVajar;
-                                    } else if(abonos > totalPagar){     // se cubre más del total de la factura se vaja la factura completa
-                                                monto_vajar = axMontoVajar.substring( 0, axMontoVajar.lastIndexOf(",") )  + ","  +  Addons.redondear(totalPagar - (abonos - axUltimoAbono) ) + ","; //    el ultimo abono debe ser 
-                                    } else if(abonos >= minTotalPagarACredito){     //  si los abono cubren por lo menos el minimo a vajar se vana credito
-                                                monto_vajar = axMontoVajar;
-                                    }
-                                }
-                            }
-                        }    
-
-
-    //System.out.println("por_emitir_destino " + por_emitir_destino + ", registro_archivo_cash " + registro_archivo_cash + ", idFormaPago " + idFormaPago);
-
                         int p = Matriz.enMatriz(matPuntosVirtuales, id_sucursal, 0);
                         if(p!=-1){
-
 
                             String idPuntoEmision = matPuntosVirtuales[p][1];
                             String usuario = matPuntosVirtuales[p][2];
                             String serie_factura = matPuntosVirtuales[p][3];
                             String num_factura = matPuntosVirtuales[p][4];
                             String direccion_sucursal = matPuntosVirtuales[p][5];
+                            
+                            try {
+                                ResultSet r = this.consulta("SELECT nombre_comercial, mail_info, num_contacto, sitio_web FROM tbl_sucursal where id_sucursal=" + id_sucursal);
+                                if (r.next()) {
+                                    nombre_comercial = (r.getString("nombre_comercial") != null) ? r.getString("nombre_comercial") : "";
+                                    emalSaitel = (r.getString("mail_info") != null) ? r.getString("mail_info") : "";
+                                    numContSaitel = (r.getString("num_contacto") != null) ? r.getString("num_contacto") : "";
+                                    sitioWeb = (r.getString("sitio_web") != null) ? r.getString("sitio_web") : "";
+                                    r.close();
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+
+
+                            String idFormaPago="97";        //  id forma de pago cash
+                            String formaPago="20";          //  con utilizacion del sistema financiero
+                            String formaPagoCodInterno="h"; //  cash
+
+
+
+                            // CONVENIO DE DEBITO
+
+                            if( Matriz.enMatriz(matDebitos, id_instalacion, 0) >=0 && registro_archivo_cash.compareTo("")==0){
+                                idFormaPago="99";        //  id forma de pago credito
+                                formaPago="20";          //  con utilizacion del sistema financiero
+                                formaPagoCodInterno="d";
+                            }
+
+                            id_plan_cuenta_banco = ax_id_plan_cuenta_banco;
+
+                            if(por_emitir_destino.compareTo("")!=0){
+                                
+                                int p1 = -1;
+                                
+                                // WEB SERVICES => RED FACILITO
+                                if( ( por_emitir_destino.compareTo("redfacilito")==0 || por_emitir_destino.compareTo("red facilito")==0 ) && registro_archivo_cash.compareTo("")!=0){
+                                    p1 = Matriz.enMatriz(matPuntosVirtuales, "redfacilito", 2);
+                                    
+                                    idFormaPago="22";        //  id forma de pago pagomedios
+                                    formaPago="20";          //  con utilizacion del sistema financiero
+                                    formaPagoCodInterno="s1";
+                                    id_plan_cuenta_banco=matPuntosVirtuales[p1][6]; //  442
+                                }
+
+                                // WEB SERVICES => SERVIPAGOS    -   PRODUBANCO
+                                if( por_emitir_destino.contains("servipago") && registro_archivo_cash.compareTo("")!=0){
+                                    p1 = Matriz.enMatriz(matPuntosVirtuales, "servipago", 2);
+                                    
+                                    idFormaPago="23";        //  id forma de pago pagomedios
+                                    formaPago="20";          //  con utilizacion del sistema financiero
+                                    formaPagoCodInterno="s2";
+                                    id_plan_cuenta_banco=matPuntosVirtuales[p1][6]; // 284
+                                } 
+
+                                // WEB SERVICES => PAGOMEDIOS   -   TARJETAS DE CREDITO -   PAGINA WEB
+            //System.out.println("por_emitir_destino " + por_emitir_destino + ", registro_archivo_cash " + registro_archivo_cash);
+                                if( ( por_emitir_destino.compareTo("pagomedios")==0 || por_emitir_destino.compareTo("pago medios")==0 ) && registro_archivo_cash.compareTo("")!=0){
+                                    p1 = Matriz.enMatriz(matPuntosVirtuales, "pagomedios", 2);
+                                    
+                                    idFormaPago="24";        //  id forma de pago pagomedios
+                                    formaPago="20";          //  con utilizacion del sistema financiero
+                                    formaPagoCodInterno="s3";
+                                    id_plan_cuenta_banco=matPuntosVirtuales[p1][6];    // 569
+                                }
+                                
+                                p = p1==-1 ? p : p1;
+                                        
+                                idPuntoEmision = matPuntosVirtuales[p][1];
+                                usuario = matPuntosVirtuales[p][2];
+                                serie_factura = matPuntosVirtuales[p][3];
+                                num_factura = matPuntosVirtuales[p][4];
+                                direccion_sucursal = matPuntosVirtuales[p][5];
+
+//                                try{
+//                                    ResultSet rsBanco = this.consulta("SELECT id_plan_cuenta_caja FROM tbl_empresa as E inner join tbl_punto_emision as PE on E.id_punto_emision =PE.id_punto_emision where upper(empresa) like '%" + por_emitir_destino.trim().toUpperCase() + "%'");
+//                                    if(rsBanco.next()){
+//                                        id_plan_cuenta_banco = rsBanco.getString("id_plan_cuenta_caja")!=null ? rsBanco.getString("id_plan_cuenta_caja") : id_plan_cuenta_banco;
+//                                        rsBanco.close();
+//                                    }
+//                                }catch(Exception e){
+//                                    e.printStackTrace();
+//                                }
+
+                            }
+
+                            //  POR ANTICIPOS
+                            String idCliAnt = "";
+                            String monto_vajar = "";
+                            if(matAnticipos != null){
+                                if(!matAnticipos.isEmpty()){    
+                                    idFormaPago="98";
+                                    formaPagoCodInterno="a";
+
+                                    double totalPagar = Double.parseDouble(total_pagar);
+                                    double minTotalPagarACredito = Double.parseDouble(total_pagar) * pminValorVajaCredito / 100;
+                                    double abonos = 0;
+                                    double axUltimoAbono = 0;
+                                    String axIdCliAnt = "";
+                                    String axMontoVajar = "";
+                                    Iterator it = matAnticipos.iterator();
+                                    while(it.hasNext()){
+                                        String matAnticipo[] = (String[])it.next();
+
+            //                            System.out.println("mat anticipo " + matAnticipo[1] + " - " + matAnticipo[3]);
+
+                                        if(matAnticipo[1].compareTo(id_cliente)==0 && matAnticipo[3].compareTo(id_instalacion)==0){    //  verificao si el cliente tiene registrado anticipo
+                                            if( Double.parseDouble(matAnticipo[2]) >= totalPagar){    //  si el anticipo cubre el total de la factura 
+                                                idCliAnt = matAnticipo[0];
+                                                monto_vajar = total_pagar;
+                                                break;
+                                            } else {        //  si el anticipo no cubre el monto
+                                                abonos += Double.parseDouble(matAnticipo[2]);
+                                                axUltimoAbono = Double.parseDouble(matAnticipo[2]);
+                                                axIdCliAnt += matAnticipo[0] + ",";
+                                                axMontoVajar += matAnticipo[2] + ",";
+                                                if(abonos >= totalPagar){     //  si el o los abonos cubren el total se salta al pago
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    if(axIdCliAnt.compareTo("")!=0 && abonos>0){
+                                        idCliAnt = axIdCliAnt.substring(0, axIdCliAnt.length()-1);
+                                        monto_vajar = axMontoVajar = axMontoVajar.substring(0, axMontoVajar.length()-1);
+                                        if(abonos == totalPagar){       //  si los abonos cubre el total de la factura se vaja la factura completa
+                                            monto_vajar = axMontoVajar;
+                                        } else if(abonos > totalPagar){     // se cubre más del total de la factura se vaja la factura completa
+                                                    monto_vajar = axMontoVajar.substring( 0, axMontoVajar.lastIndexOf(",") )  + ","  +  Addons.redondear(totalPagar - (abonos - axUltimoAbono) ) + ","; //    el ultimo abono debe ser 
+                                        } else if(abonos >= minTotalPagarACredito){     //  si los abono cubren por lo menos el minimo a vajar se vana credito
+                                                    monto_vajar = axMontoVajar;
+                                        }
+                                    }
+                                }
+                            }    
+
+
+    //System.out.println("por_emitir_destino " + por_emitir_destino + ", registro_archivo_cash " + registro_archivo_cash + ", idFormaPago " + idFormaPago);
+
+                        
                             String num_comp_pago = registro_archivo_cash.compareTo("")!=0 
                                     ? registro_archivo_cash 
                                     : fecha_pago.replace("-", "") + hora_pago.replace(":", "") + id_instalacion;
@@ -889,12 +916,14 @@ public class FacturaVenta extends DataBase{
     
     public String[][] getPuntosEmisionVirtuales()
     {
-        ResultSet rs = this.consulta("SELECT P.id_sucursal, P.id_punto_emision, usuario_caja, fac_num_serie, " + 
-            "case when max(num_factura)>0 then max(num_factura)+1 else 1 end, direccion_establecimiento " +
-            "from tbl_punto_emision as P left join tbl_factura_venta as F on F.serie_factura=P.fac_num_serie " +
-            "where caja_virtual=true " +
-            "group by P.id_sucursal, P.id_punto_emision, usuario_caja, fac_num_serie, direccion_establecimiento " +
-            "order by id_sucursal");
+        ResultSet rs = this.consulta("SELECT P.id_sucursal, P.id_punto_emision, usuario_caja, fac_num_serie, \n" +
+                "case when max(num_factura)>0 then max(num_factura)+1 else 1 end as num_factura, \n" +
+                "case direccion_establecimiento when 'DIRECCION DE LA SUCURSAL' then S.ubicacion else direccion_establecimiento end as direccion_establecimiento, id_plan_cuenta_caja \n" +
+                "from tbl_punto_emision as P left join tbl_factura_venta as F on F.serie_factura=P.fac_num_serie \n" +
+                "left join tbl_sucursal S on P.id_sucursal = S.id_sucursal \n" +
+                "where caja_virtual=true or P.id_punto_emision in(59, 93, 105) \n" +
+                "group by P.id_sucursal, P.id_punto_emision, usuario_caja, fac_num_serie, S.ubicacion, direccion_establecimiento \n" +
+                "order by P.id_sucursal, P.id_punto_emision");
         return Matriz.ResultSetAMatriz(rs);
     }
     
@@ -986,9 +1015,9 @@ public class FacturaVenta extends DataBase{
                 String ubicacionNombreComercial[] = this.getDireccionDePuntoEmision(String.valueOf(id_sucursal));
                 direccion_sucursal = ubicacionNombreComercial[0].compareTo("")!=0 ? ubicacionNombreComercial[0] : direccion_sucursal;
                 nombre_comercial = ubicacionNombreComercial[1].compareTo("")!=0 ? ubicacionNombreComercial[1] : nombre_comercial;
-                String email_info = ubicacionNombreComercial[2].compareTo("")!=0 ? ubicacionNombreComercial[2] : emalSaitel;
-                String num_contacto = ubicacionNombreComercial[3].compareTo("")!=0 ? ubicacionNombreComercial[3] : numContSaitel;
-                String sitio_web = ubicacionNombreComercial[4].compareTo("")!=0 ? ubicacionNombreComercial[4] : sitioWeb;
+//                String email_info = ubicacionNombreComercial[2].compareTo("")!=0 ? ubicacionNombreComercial[2] : emalSaitel;
+//                String num_contacto = ubicacionNombreComercial[3].compareTo("")!=0 ? ubicacionNombreComercial[3] : numContSaitel;
+//                String sitio_web = ubicacionNombreComercial[4].compareTo("")!=0 ? ubicacionNombreComercial[4] : sitioWeb;
         
                 String codigoFormaPago = "01";
                 try{

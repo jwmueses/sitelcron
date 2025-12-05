@@ -157,8 +157,8 @@ public class Prefactura implements Job{
                     + "select distinct I.id_sucursal, RI.id_rubro, I.id_instalacion, '"+fechaPrefactura+"'::date, R.rubro, RI.cantidad, RI.monto "
                     + "from ((tbl_rubro as R inner join tbl_rubro_instalacion as RI on RI.id_rubro=R.id_rubro) "
                     + "inner join tbl_instalacion as I on I.id_instalacion=RI.id_instalacion) "
-                    + "where '"+fechaPrefactura+"' between R.fecha_inicio and R.fecha_fin and R.temporal=false and R.bloqueado=false and I.convenio_pago='0' "
-                    + "and I.id_instalacion not in (select id_instalacion from tbl_prefactura_rubro where id_rubro=RI.id_rubro and periodo='"+fechaPrefactura+"')");
+                    + "where '"+fechaPrefactura+"'::date between R.fecha_inicio and R.fecha_fin and R.temporal=false and R.bloqueado=false and I.convenio_pago='0' "
+                    + "and I.id_instalacion not in (select id_instalacion from tbl_prefactura_rubro where id_rubro=RI.id_rubro and periodo='"+fechaPrefactura+"'::date)");
             
 // del periodo anterior, postpago
             objDataBase.ejecutar("insert into tbl_prefactura_rubro(id_sucursal, id_rubro, id_instalacion, periodo, rubro, canproductos, monto) "

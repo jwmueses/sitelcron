@@ -244,22 +244,16 @@ public class ServidoresCorte implements Job{
 
                             //  emisión con forma de pago anticipo
         //                    ResultSet rsFacturar = objDataBase.consulta("select *, total as total_comision from vta_prefactura_todas as F where (select sum(A.saldo) from tbl_cliente_anticipo as A where F.id_cliente=A.id_cliente and F.id_instalacion=A.id_instalacion) >= F.total and fecha_emision is null order by periodo;");                   
-                            ResultSet rsFacturar = objDataBase.consulta("with tmpPre as( \n" +
-                                "select id_instalacion, min(periodo) as periodo \n" +
-                                "from tbl_prefactura \n" +
-                                "where fecha_emision is null \n" +
-                                "group by id_instalacion "+ 
-                                "), \n" +
-                                "tmpAnt as( \n" +
-                                "select id_instalacion, id_cliente, sum(saldo) as saldo \n" +
-                                "from tbl_cliente_anticipo \n" +
-                                "where saldo>1.7 and modo_bajada='i' \n" +
-                                "group by id_instalacion, id_cliente \n" +
-                                ") \n" +
-                                "select *, total as total_comision from vta_prefactura_todas as F \n" +
-                                "where (select saldo from tmpAnt as A where F.id_instalacion=A.id_instalacion and F.id_cliente=A.id_cliente) >= F.total \n" +
-                                "and (id_instalacion, periodo) in(select id_instalacion, periodo from tmpPre) \n" +
-                                "and fecha_emision is null order by periodo;");                   
+                            ResultSet rsFacturar = objDataBase.consulta("with A as( \n" +
+                                        "	select id_instalacion, id_cliente, sum(saldo) as saldo \n" +
+                                        "	from tbl_cliente_anticipo \n" +
+                                        "	where saldo>0 and modo_bajada='i' \n" +
+                                        "	group by id_instalacion, id_cliente \n" +
+                                        ") \n" +
+                                        "select *, total as total_comision \n" +
+                                        "from vta_prefactura_todas as F inner join A on F.id_instalacion=A.id_instalacion and F.id_cliente=A.id_cliente \n" +
+                                        "where A.saldo >= F.total and fecha_emision is null\n" +
+                                        "order by periodo;");                   
                             objFacturaVenta.emitir(rsFacturar, matAnticipos, matConveniosTarjetas, 100);
 
                         }catch(Exception e){
@@ -279,9 +273,9 @@ public class ServidoresCorte implements Job{
 
 
 
-                    System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de actualización de cambios de razon social.");
-                    objDataBase.consulta("select proc_cambio_cliente(null);");
-                    System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de actualización de cambios de razon social");
+//                    System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Inicio de actualización de cambios de razon social.");
+//                    objDataBase.consulta("select proc_cambio_cliente(null);");
+//                    System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalización de actualización de cambios de razon social");
 
 
 
