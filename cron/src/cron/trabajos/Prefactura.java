@@ -157,7 +157,7 @@ public class Prefactura implements Job{
                     + "select distinct I.id_sucursal, RI.id_rubro, I.id_instalacion, '"+fechaPrefactura+"'::date, R.rubro, RI.cantidad, RI.monto "
                     + "from ((tbl_rubro as R inner join tbl_rubro_instalacion as RI on RI.id_rubro=R.id_rubro) "
                     + "inner join tbl_instalacion as I on I.id_instalacion=RI.id_instalacion) "
-                    + "where '"+fechaPrefactura+"'::date between R.fecha_inicio and R.fecha_fin and R.temporal=false and R.bloqueado=false and I.convenio_pago='0' "
+                    + "where '"+fechaPrefactura+"'::date between R.fecha_inicio and R.fecha_fin and R.temporal=false and lower(R.rubro) not like 'reconexi%' and R.bloqueado=false and I.convenio_pago='0' "
                     + "and I.id_instalacion not in (select id_instalacion from tbl_prefactura_rubro where id_rubro=RI.id_rubro and periodo='"+fechaPrefactura+"'::date)");
             
 // del periodo anterior, postpago
@@ -165,7 +165,7 @@ public class Prefactura implements Job{
                     + "select distinct I.id_sucursal, RI.id_rubro, I.id_instalacion, '"+fechaPrefactura+"'::date -'1 month'::interval, R.rubro, RI.cantidad, RI.monto "
                     + "from ((tbl_rubro as R inner join tbl_rubro_instalacion as RI on RI.id_rubro=R.id_rubro) "
                     + "inner join tbl_instalacion as I on I.id_instalacion=RI.id_instalacion) "
-                    + "where '"+fechaPrefactura+"'::date-'1 month'::interval between R.fecha_inicio and R.fecha_fin and R.temporal=false and R.bloqueado=false and I.convenio_pago='1' "
+                    + "where '"+fechaPrefactura+"'::date-'1 month'::interval between R.fecha_inicio and R.fecha_fin and R.temporal=false and lower(R.rubro) not like 'reconexi%' and R.bloqueado=false and I.convenio_pago='1' "
                     + "and I.id_instalacion not in (select id_instalacion from tbl_prefactura_rubro where id_rubro=RI.id_rubro and periodo='"+fechaPrefactura+"'::date-'1 month'::interval)");
             
         }finally{
@@ -283,16 +283,16 @@ public class Prefactura implements Job{
         try{
             
             //  actualizacion de rubros en instalaciones prepago
-            objDataBase.ejecutar("update tbl_prefactura_rubro set periodo='"+fecha+"' where estadocobro=false and (idproductos is not null or id_rubro>=14) "
-                    + "and id_rubro<>25 and id_instalacion in(select id_instalacion from tbl_instalacion where estado_servicio='a' and convenio_pago='0')");
+            objDataBase.ejecutar("update tbl_prefactura_rubro set periodo='"+fecha+"' where estadocobro=false and ( id_rubro<>1 and (idproductos is not null or lower(rubro) not like 'reconexi%') ) "
+                    + "and lower(rubro) not like 'serv. instalaci%n penalizaci%n 10%' and id_instalacion in(select id_instalacion from tbl_instalacion where estado_servicio='a' and convenio_pago='0')");
             
             //  actualizacion de rubros en instalaciones postpago
-            objDataBase.ejecutar("update tbl_prefactura_rubro set periodo=('"+fecha+"'::date - '1 month'::interval)::date where estadocobro=false and (idproductos is not null or id_rubro>=14) "
-                    + "and id_rubro<>25 and id_instalacion in(select id_instalacion from tbl_instalacion where estado_servicio='a' and convenio_pago='1')");
+            objDataBase.ejecutar("update tbl_prefactura_rubro set periodo=('"+fecha+"'::date - '1 month'::interval)::date where estadocobro=false and ( id_rubro<>1 and (idproductos is not null or lower(rubro) not like 'reconexi%') ) "   
+                    + "and lower(rubro) not like 'serv. instalaci%n penalizaci%n 10%' and id_instalacion in(select id_instalacion from tbl_instalacion where estado_servicio='a' and convenio_pago='1')");
             
             //  actualizar prefacturas para que se recalculen los cambios de periodos de rubros
             objDataBase.ejecutar("update tbl_prefactura set recalcular=true where fecha_emision is null and recalcular=false and "
-                    + "id_instalacion in(select distinct id_instalacion from tbl_prefactura_rubro where estadocobro=false and (idproductos is not null or id_rubro>=14 or id_rubro=1) )");
+                    + "id_instalacion in(select distinct id_instalacion from tbl_prefactura_rubro where estadocobro=false and ( idproductos is not null or lower(rubro) not like 'reconexi%' ) )");
             
             ResultSet rs = objDataBase.consulta("select id_prefactura from vta_prefactura where periodo>='"+fecha+"'::date or recalcular=true");
             while(rs.next()){
@@ -355,8 +355,8 @@ public class Prefactura implements Job{
         //      actualizacion de saldos de los libros mayores de todo el plan de cuentas
         System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando actualizacion de saldos de los libros mayores de todo el plan de cuentas");
         try{
-            String fechaIni = (Fecha.getAnio()-1) + "-12-31";
-            objDataBase.consulta("select proc_actualizaSaldosLibrosTodos('" + fechaIni + "'::date);");
+//            String fechaIni = (Fecha.getAnio()-1) + "-12-31";
+            objDataBase.consulta("select proc_actualizaSaldosLibrosTodos( (date_trunc('month', now()) - '1 day 1 month'::interval)::date );");
         }finally{
             System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Finalizando actualizacion de saldos de los libros mayores de todo el plan de cuentas");
         }

@@ -28,6 +28,21 @@ import org.quartz.impl.StdSchedulerFactory;
 /**
  *
  * @author jorge
+ * 
+ServidoresCorte			->	 	todos los días, cada hora, 00:55:00
+SRIEnvio			->		todos los días, cada hora, 00:10:00
+SRIAutorizacion			->		todos los días, cada hora, 00:30:00
+Facturar			->		todos los días, hora exacta 19:00:00
+Contabilizar			->		todos los días, hora exacta 21:00:00
+ActualizaAsistencias            ->	 	todos los días, cada hora, 06:30:00
+EjecutarProcesos		->	 	todos los días, cada hora, 00:00:01
+Prefactura			->		1 de cada mes, hora exacta 00:00:01
+Comisiones			->		último día de cada mes, hora exacta 00:00:00
+RolesPago			->		último día de cada mes, hora exacta 00:30:00
+FinMes				->		último día de cada mes, hora exacta 00:01:00
+decimoCuarto			->	 	todos los años, 31 de julio, hora exacta 23:00:00
+decimoTercero			->	 	todos los años, 30 de nviembre, hora exacta 23:00:00
+* 
  */
 public class SaitelCron implements Daemon{
     
