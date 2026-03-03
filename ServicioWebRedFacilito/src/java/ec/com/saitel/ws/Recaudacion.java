@@ -252,7 +252,7 @@ public class Recaudacion {
 
         if(clave.compareTo("")!=0){
             
-            if(numDocumento.compareTo("")!=0 && numDocumento.toLowerCase().compareTo("null")!=0) {
+            if(numDocumento.trim().compareTo("")!=0 && numDocumento.trim().toLowerCase().compareTo("null")!=0) {
             
                 String puntoEmision[] = this.getPuntoEmision(clave);
                 if(puntoEmision[0].compareTo("-1")!=0){     //      idPuntoEmision
@@ -550,9 +550,9 @@ public class Recaudacion {
                             String ini = anio + "-" + mes + "-01";
                             String fin = anio + "-" + mes + "-" + Fecha.getUltimoDiaMes(anio, mes);
                             // rubros adicionales generados automaticamente por el sistema
-                            ResultSet rsRubrosAdicionales = objDB.consulta("SELECT * FROM vta_prefactura_rubro WHERE id_sucursal="+id_sucursal+" and id_instalacion="+id_instalacion+" and tiporubro='a' and periodo between '"+ini+"' and '"+fin+"' "
+                            ResultSet rsRubrosAdicionales = objDB.consulta("SELECT * FROM vta_prefactura_rubro WHERE id_sucursal="+id_sucursal+" and id_instalacion="+id_instalacion+" and not estadocobro and tiporubro='a' and periodo <= '"+fin+"' "
                                     + "union "
-                                    + "SELECT * FROM vta_prefactura_rubro WHERE id_sucursal=" + id_sucursal + " and id_instalacion=" + id_instalacion + " and tiporubro='p' and estadocobro='false' and periodo<='" + fin + "'");
+                                    + "SELECT * FROM vta_prefactura_rubro WHERE id_sucursal=" + id_sucursal + " and id_instalacion=" + id_instalacion + " and tiporubro='p' and not estadocobro and periodo <= '" + fin + "'");
                             String rubrosAdicionales[][] = Matriz.ResultSetAMatriz(rsRubrosAdicionales);
                             if(rubrosAdicionales!=null){
                                 for(int a=0; a<rubrosAdicionales.length; a++){
@@ -590,7 +590,7 @@ public class Recaudacion {
                                     + "FROM (((tbl_prefactura_rubro as PR inner join vta_producto_n as P on PR.idproductos::int=P.id_producto) "
                                     + "inner join tbl_sucursal_producto as SP on P.id_producto=SP.id_producto) "
                                     + "inner join tbl_iva as I on I.id_iva=SP.id_iva) "
-                                    + "WHERE id_rubro is null and estadocobro=false and tiporubro='p' and id_instalacion=" + id_instalacion + " and periodo<='" + fin + "'");
+                                    + "WHERE id_rubro is null and estadocobro=false and tiporubro='p' and id_instalacion=" + id_instalacion + " and periodo <= '" + fin + "'");
                             String rubrosAdicionales1[][] = Matriz.ResultSetAMatriz(rsRubrosAdicionales1);
                             if(rubrosAdicionales1!=null){
                                 for(int a=0; a<rubrosAdicionales1.length; a++){
@@ -628,7 +628,7 @@ public class Recaudacion {
                                     + "(select (monto + (PR.monto * valor::numeric / 100))::numeric(13,2) as total from tbl_configuracion where parametro='p_iva1'), "
                                     + "P.id_plan_cuenta, P.id_plan_cuenta_gasto, P.id_plan_cuenta_grupo, P.valor_depreciado "
                                     + "FROM (tbl_prefactura_rubro as PR inner join vta_activo_n as P on PR.idproductos::int=P.id_activo) "
-                                    + "WHERE id_rubro is null and estadocobro=false and tiporubro='1' and id_instalacion=" + id_instalacion + " and periodo<='" + fin + "'");
+                                    + "WHERE id_rubro is null and estadocobro=false and tiporubro='1' and id_instalacion=" + id_instalacion + " and periodo <= '" + fin + "'");
                             String rubrosAdicionales2[][] = Matriz.ResultSetAMatriz(rsRubrosAdicionales2);
                             if(rubrosAdicionales2!=null){
                                 for(int a=0; a<rubrosAdicionales2.length; a++){
