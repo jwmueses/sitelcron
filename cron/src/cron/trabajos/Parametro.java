@@ -10,7 +10,7 @@ package cron.trabajos;
  * @author jorge
  */
 public class Parametro {
-    private static final String _ip = "127.0.0.1";      //  127.0.0.1     pruebas = 192.168.217.16     produccion = 192.168.217.21
+    private static final String _ip = "192.168.217.21";      //  127.0.0.1     pruebas = 192.168.217.16     produccion = 192.168.217.21
     private static final int _puerto = 5432;
     private static final String _db = "db_isp";
     private static final String _usuario = "postgres";
@@ -28,13 +28,13 @@ public class Parametro {
     private static final String mssql_usuario = "userBio";
     private static final String mssql_clave = "sa2005"; 
     
-    private static final String esta_ip = "127.0.0.1";      
+    private static final String esta_ip = "192.168.217.21";      
     private static final int esta_puerto = 5432;
     private static final String esta_db = "db_isp_consulta";
     private static final String esta_usuario = "postgres";
     private static final String esta_clave = "Gi%9875.-*5+$)";  
     
-    private static final String red_social_ip = "127.0.0.1";
+    private static final String red_social_ip = "192.168.217.21";
     private static final String red_social_esquema = "correo";
     private static final int red_social_puerto = 5432;
     private static final String red_social_db = "db_red_social";

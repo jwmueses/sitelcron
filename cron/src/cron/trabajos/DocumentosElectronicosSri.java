@@ -1501,7 +1501,8 @@ public class DocumentosElectronicosSri{
                             // obtengo en numero de autorizacion
                             Xml xml = new Xml();
                             xml.SetXml(autorizacionXml);
-                            String numAutorizacion = xml.getValor("numeroAutorizacion");String fechaAutorizacion = xml.getValor("fechaAutorizacion");
+                            String numAutorizacion = xml.getValor("numeroAutorizacion");
+//                            String fechaAutorizacion = xml.getValor("fechaAutorizacion");
                             String fechaAutorizacionR = Fecha.getFecha("ISO");
 //                            String fechaAutorizacion = xml.getValor("fechaAutorizacion");
 //                            if ( fechaAutorizacion.length() > 10 ) {

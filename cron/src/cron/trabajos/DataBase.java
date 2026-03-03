@@ -157,7 +157,7 @@ public class DataBase
                 return true;
             }            
         }catch(Exception e){  
-//            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Error DataBase.ejecutar("+sql+") -> " + e.getMessage());
+            System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Error DataBase.ejecutar("+sql+") -> " + e.getMessage());
             this.error = e.getMessage();
             return false;
         }     

@@ -433,7 +433,7 @@ public class FacturaVenta extends DataBase{
                                 "periodo, monto, subtotal_12, iva_12, codigo, descripcion, porcentaje, codigo_iva, tipo, id_plan_cuenta_venta, " +
                                 "id_iva, id_plan_cuenta_venta_servicio, id_plan_cuenta_venta_bien, canproductos, rubro_prefactura, tiporubro, estadocobro, id_prefactura_rubro " +
                                 "from vta_prefactura_rubro "+ 
-                                "WHERE estadocobro=false and id_instalacion="+id_instalacion+" and id_sucursal="+id_sucursal+" and tiporubro='a' and periodo between '" + ini + "' and '" + fin + "' " +
+                                "WHERE estadocobro=false and id_instalacion="+id_instalacion+" and id_sucursal="+id_sucursal+" and tiporubro='a' and periodo <= '" + fin + "' " +
                                 "union all " +
                                 "SELECT distinct id_rubro, usuario, fecha_creacion, id_producto, rubro, temporal, fecha_inicio, fecha_fin, id_sucursal, id_instalacion, " +
                                 "periodo, monto, subtotal_12, iva_12, codigo, descripcion, porcentaje, codigo_iva, tipo, id_plan_cuenta_venta, " +

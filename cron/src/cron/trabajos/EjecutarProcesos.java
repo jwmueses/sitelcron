@@ -291,26 +291,26 @@ public class EjecutarProcesos  implements Job{
                         if(inst_objetivo_es_porcentaje && inst_objetivo_basado_en.compareTo("n")==0){   
                             double prorrateoReferencialTotal = inst_base_referencia_total * inst_objetivo_a_cumplir / 100;
                             objDataBase.ejecutar("update tbl_promocion set inst_objetivo_total="+matRs1[i][1]+
-                                " "+(prorrateoReferencialTotal < Double.parseDouble(matRs1[i][1]) ? "true" : "false")+" where id_promocion="+id_promocion);
+                                ", cerrada="+(prorrateoReferencialTotal < Double.parseDouble(matRs1[i][1]) ? "true" : "false")+" where id_promocion="+id_promocion);
                         }
                         
                         // si se basa en un valor fijo y en numero de instalaciones
                         if(!inst_objetivo_es_porcentaje && inst_objetivo_basado_en.compareTo("n")==0){   //  si se basa en porcentaje y en numero de instalaciones
                             objDataBase.ejecutar("update tbl_promocion set inst_objetivo_total="+matRs1[i][1]+
-                                " "+(inst_objetivo_a_cumplir < Double.parseDouble(matRs1[i][1]) ? "true" : "false")+" where id_promocion="+id_promocion);
+                                ", cerrada="+(inst_objetivo_a_cumplir < Double.parseDouble(matRs1[i][1]) ? "true" : "false")+" where id_promocion="+id_promocion);
                         }
                         
                         //  si se basa en porcentaje y en monto total de costo de instalaciones
                         if(inst_objetivo_es_porcentaje && inst_objetivo_basado_en.compareTo("m")==0){   
                             double prorrateoReferencialTotal = inst_base_referencia_total * inst_objetivo_a_cumplir / 100;
                             objDataBase.ejecutar("update tbl_promocion set inst_objetivo_total="+matRs1[i][2]+
-                                " "+(prorrateoReferencialTotal < Double.parseDouble(matRs1[i][2]) ? "true" : "false")+" where id_promocion="+id_promocion);
+                                ", cerrada="+(prorrateoReferencialTotal < Double.parseDouble(matRs1[i][2]) ? "true" : "false")+" where id_promocion="+id_promocion);
                         }
                         
                         // si se basa en un valor fijo y en monto total de costo de instalaciones
                         if(!inst_objetivo_es_porcentaje && inst_objetivo_basado_en.compareTo("m")==0){   //  si se basa en porcentaje y en numero de instalaciones
                             objDataBase.ejecutar("update tbl_promocion set inst_objetivo_total="+matRs1[i][2]+
-                                " "+(inst_objetivo_a_cumplir < Double.parseDouble(matRs1[i][2]) ? "true" : "false")+" where id_promocion="+id_promocion);
+                                ", cerrada="+(inst_objetivo_a_cumplir < Double.parseDouble(matRs1[i][2]) ? "true" : "false")+" where id_promocion="+id_promocion);
                         }
                         
                     }
@@ -447,16 +447,16 @@ public class EjecutarProcesos  implements Job{
             System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando generación de reconexiones prepago");
             try{
                 if(!objDataBase.ejecutar("insert into tbl_prefactura_rubro(id_sucursal, id_rubro, id_instalacion, periodo, rubro, monto) \n" +
-                    "select distinct id_sucursal, 4, id_instalacion, '"+fecha+"'::date, 'Reconexión'::varchar, "+baseReconexion+" from \n" +
+                    "select distinct id_sucursal, 4, id_instalacion, periodo, 'Reconexión'::varchar, "+baseReconexion+" from \n" +
                     "vta_prefactura as P where fecha_emision is null and periodo between '"+fecha+"'::date and '"+fechaFinMes+"'::date and txt_convenio_pago='prepago' and id_sucursal in('7','11') \n" +
 //                    "and not (select case when count(*)>0 then true else false end from vta_prefactura_diferir as PD where P.periodo between desde and hasta) \n" + 
                     "and id_instalacion not in (select id_instalacion from tbl_prefactura_rubro where periodo between '"+fecha+"'::date and '"+fechaFinMes+"'::date and lower(rubro) like 'reconexi%');")){
                     System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Error en generación de reconexiones prepago. " + objDataBase.getError());
                 }
 
-                if(!objDataBase.ejecutar("update tbl_prefactura_rubro as PR "
-                        + "set id_rubro=(select id_rubro from tbl_rubro where replace(rubro, 'Reconexión ', '')::int=PR.id_sucursal and id_rubro between 2 and 13) "
-                        + "where id_rubro between 2 and 13;")){
+                if(!objDataBase.ejecutar("update tbl_prefactura_rubro as PR \n" +
+                        "set id_rubro=(select id_rubro from tbl_rubro where replace(rubro, 'Reconexión ', '')::int=PR.id_sucursal and lower(rubro) like 'reconexi%') \n" +
+                        "where not PR.estadocobro and PR.id_sucursal in(7,11) and lower(rubro) like 'reconexi%';") ) {
                     System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Error en reasignación del rubro reconexiones a la sucursal correspondiente prepago. " + objDataBase.getError());
                 }
             }finally{
@@ -505,16 +505,16 @@ public class EjecutarProcesos  implements Job{
             System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando generación de reconexiones prepago");
             try{
                 if(!objDataBase.ejecutar("insert into tbl_prefactura_rubro(id_sucursal, id_rubro, id_instalacion, periodo, rubro, monto) \n" +
-                    "select distinct id_sucursal, 4, id_instalacion, '"+fecha+"'::date, 'Reconexión'::varchar, "+baseReconexion+" from \n" +
+                    "select distinct id_sucursal, 4, id_instalacion, periodo, 'Reconexión'::varchar, "+baseReconexion+" from \n" +
                     "vta_prefactura as P where fecha_emision is null and periodo between '"+fecha+"'::date and '"+fechaFinMes+"'::date and txt_convenio_pago='prepago' and id_sucursal not in('7','11') \n" +
 //                    "and not (select case when count(*)>0 then true else false end from vta_prefactura_diferir as PD where P.periodo between desde and hasta) \n" +         
                     "and (P.id_instalacion, P.periodo) not in (select id_instalacion, periodo from tbl_prefactura_rubro where periodo between '"+fecha+"'::date and '"+fechaFinMes+"'::date and lower(rubro) like 'reconexi%');")){
                     System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Error en generación de reconexiones prepago. " + objDataBase.getError());
                 }
 
-                if(!objDataBase.ejecutar("update tbl_prefactura_rubro as PR "
-                        + "set id_rubro=(select id_rubro from tbl_rubro where replace(rubro, 'Reconexión ', '')::int=PR.id_sucursal and rubro like 'Reconexión%') "
-                        + "where rubro = 'Reconexión';")){
+                if(!objDataBase.ejecutar("update tbl_prefactura_rubro as PR \n" +
+                        "set id_rubro=(select id_rubro from tbl_rubro where replace(rubro, 'Reconexión ', '')::int=PR.id_sucursal and lower(rubro) like 'reconexi%') \n" +
+                        "where not PR.estadocobro and PR.id_sucursal not in(7,11) and lower(rubro) like 'reconexi%';")){
                     System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Error en reasignación del rubro reconexiones a la sucursal correspondiente prepago. " + objDataBase.getError());
                 }
             }finally{
@@ -536,7 +536,7 @@ public class EjecutarProcesos  implements Job{
             System.out.println(Fecha.getFecha("SQL") + " " + Fecha.getHora() + ": Iniciando generación de reconexiones postpago");
             try{
                 if(!objDataBase.ejecutar("insert into tbl_prefactura_rubro(id_sucursal, id_rubro, id_instalacion, periodo, rubro, monto) \n" +
-                    "select distinct id_sucursal, 4, id_instalacion, '"+fecha+"'::date, 'Reconexión'::varchar, "+baseReconexion+" from \n" +
+                    "select distinct id_sucursal, 4, id_instalacion, periodo, 'Reconexión'::varchar, "+baseReconexion+" from \n" +
                     "vta_prefactura as P where fecha_emision is null and periodo between '"+fecha+"'::date and '"+fechaFinMes+"'::date and txt_convenio_pago='postpago' \n" +
 //                    "and not (select case when count(*)>0 then true else false end from vta_prefactura_diferir as PD where P.periodo between desde and hasta) \n" +         
                     "and (P.id_instalacion, P.periodo) not in (select id_instalacion, periodo from tbl_prefactura_rubro where periodo between '"+fecha+"'::date and '"+fechaFinMes+"'::date and lower(rubro) like 'reconexi%');")){
