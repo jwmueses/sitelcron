@@ -39,7 +39,7 @@ import javax.jws.WebParam;
 @WebService(serviceName = "Recaudacion")
 public class Recaudacion {
 
-    private static final String maquina = "127.0.0.1";    //   192.168.217.16       127.0.0.1
+    private static final String maquina = "192.168.217.21";    //   192.168.217.16       127.0.0.1
     private static final int puerto = 5432;
     private static final String db = "db_isp";
     private static final String usuario = "postgres";
