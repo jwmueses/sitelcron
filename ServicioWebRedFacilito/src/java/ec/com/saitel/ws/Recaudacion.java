@@ -513,7 +513,7 @@ public class Recaudacion {
                             //String num_comp_pago = fecha_pago.replace("-", "") + hora_pago.replace(":", "") + id_instalacion;
                             int pos = Matriz.enMatriz(matDetalleFactura, new String[]{id_sucursal,id_producto}, new int[]{0,1});
                             String p_u = String.valueOf( this.redondear(Double.parseDouble(valor_internet) / dias_conexion,  4) );
-                            String totalpr = String.valueOf( this.redondear( Double.parseDouble(valor_internet) + Double.parseDouble(iva_internet) ) );
+                            String totalpr = String.valueOf( this.redondear( Double.parseDouble(valor_internet) - Double.parseDouble(descuento) + Double.parseDouble(iva_internet) ) );
 
                             String ids_productos = id_producto;
                             String descripciones = "SERVICIO DE INTERNET PLAN "+plan+" Mbps PERIODO FACTURADO "+txt_periodo+" ~";
@@ -556,7 +556,7 @@ public class Recaudacion {
                             String rubrosAdicionales[][] = Matriz.ResultSetAMatriz(rsRubrosAdicionales);
                             if(rubrosAdicionales!=null){
                                 for(int a=0; a<rubrosAdicionales.length; a++){
-                                    if(rubrosAdicionales[a][8].compareTo(id_sucursal)==0 && rubrosAdicionales[a][9].compareTo(id_instalacion)==0 && rubrosAdicionales[a][10].compareTo(periodo)==0){
+                                    if(rubrosAdicionales[a][8].compareTo(id_sucursal)==0 && rubrosAdicionales[a][9].compareTo(id_instalacion)==0 ){
 
                                         idsPrefacturaRubro += "," + rubrosAdicionales[a][27];
                                         ids_productos += "," + rubrosAdicionales[a][3];
@@ -594,7 +594,7 @@ public class Recaudacion {
                             String rubrosAdicionales1[][] = Matriz.ResultSetAMatriz(rsRubrosAdicionales1);
                             if(rubrosAdicionales1!=null){
                                 for(int a=0; a<rubrosAdicionales1.length; a++){
-                                    if(rubrosAdicionales1[a][1].compareTo(id_sucursal)==0 && rubrosAdicionales1[a][3].compareTo(id_instalacion)==0 && rubrosAdicionales1[a][5].compareTo(periodo)==0){
+                                    if(rubrosAdicionales1[a][1].compareTo(id_sucursal)==0 && rubrosAdicionales1[a][3].compareTo(id_instalacion)==0) {
 
                                         idsPrefacturaRubro += "," + rubrosAdicionales1[a][0];
                                         ids_productos += "," + rubrosAdicionales1[a][9];
@@ -632,7 +632,7 @@ public class Recaudacion {
                             String rubrosAdicionales2[][] = Matriz.ResultSetAMatriz(rsRubrosAdicionales2);
                             if(rubrosAdicionales2!=null){
                                 for(int a=0; a<rubrosAdicionales2.length; a++){
-                                    if(rubrosAdicionales2[a][1].compareTo(id_sucursal)==0 && rubrosAdicionales2[a][3].compareTo(id_instalacion)==0 && rubrosAdicionales2[a][5].compareTo(periodo)==0){
+                                    if(rubrosAdicionales2[a][1].compareTo(id_sucursal)==0 && rubrosAdicionales2[a][3].compareTo(id_instalacion)==0){
 
                                         idsPrefacturaRubro += "," + rubrosAdicionales2[a][0];
                                         ids_productos += "," + rubrosAdicionales2[a][9];
