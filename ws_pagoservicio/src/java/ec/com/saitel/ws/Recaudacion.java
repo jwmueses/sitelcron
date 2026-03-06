@@ -629,7 +629,7 @@ public class Recaudacion {
 
                             int anio = Fecha.datePart("anio", periodo);
                             int mes = Fecha.datePart("mes", periodo);
-                            String ini = anio + "-" + mes + "-01";
+//                            String ini = anio + "-" + mes + "-01";
                             String fin = anio + "-" + mes + "-" + Fecha.getUltimoDiaMes(anio, mes);
                             // rubros adicionales generados automaticamente por el sistema
                             ResultSet rsRubrosAdicionales = objDB.consulta("SELECT * FROM vta_prefactura_rubro WHERE id_sucursal="+id_sucursal+" and id_instalacion="+id_instalacion+" and not estadocobro and tiporubro='a' and periodo <= '"+fin+"' "
@@ -638,7 +638,7 @@ public class Recaudacion {
                             String rubrosAdicionales[][] = Matriz.ResultSetAMatriz(rsRubrosAdicionales);
                             if(rubrosAdicionales!=null){
                                 for(int a=0; a<rubrosAdicionales.length; a++){
-                                    if(rubrosAdicionales[a][8].compareTo(id_sucursal)==0 && rubrosAdicionales[a][9].compareTo(id_instalacion)==0){
+                                    if( rubrosAdicionales[a][9].compareTo(id_instalacion)==0 ){
 
                                         idsPrefacturaRubro += "," + rubrosAdicionales[a][27];
                                         ids_productos += "," + rubrosAdicionales[a][3];
@@ -676,7 +676,7 @@ public class Recaudacion {
                             String rubrosAdicionales1[][] = Matriz.ResultSetAMatriz(rsRubrosAdicionales1);
                             if(rubrosAdicionales1!=null){
                                 for(int a=0; a<rubrosAdicionales1.length; a++){
-                                    if(rubrosAdicionales1[a][1].compareTo(id_sucursal)==0 && rubrosAdicionales1[a][3].compareTo(id_instalacion)==0){
+                                    if( rubrosAdicionales1[a][3].compareTo(id_instalacion)==0 ){
 
                                         idsPrefacturaRubro += "," + rubrosAdicionales1[a][0];
                                         ids_productos += "," + rubrosAdicionales1[a][9];
@@ -714,7 +714,7 @@ public class Recaudacion {
                             String rubrosAdicionales2[][] = Matriz.ResultSetAMatriz(rsRubrosAdicionales2);
                             if(rubrosAdicionales2!=null){
                                 for(int a=0; a<rubrosAdicionales2.length; a++){
-                                    if(rubrosAdicionales2[a][1].compareTo(id_sucursal)==0 && rubrosAdicionales2[a][3].compareTo(id_instalacion)==0 ){
+                                    if( rubrosAdicionales2[a][3].compareTo(id_instalacion)==0 ){
 
                                         idsPrefacturaRubro += "," + rubrosAdicionales2[a][0];
                                         ids_productos += "," + rubrosAdicionales2[a][9];
